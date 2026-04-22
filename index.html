@@ -1,0 +1,3087 @@
+<!DOCTYPE html>
+<!--
+  notariat.co — Admin Dashboard v9
+  Visual system: identical to notariat_dashboard_v48.html
+  Features: office list · case management · onboarding · template library
+  Tokens: --ink #000000 · --white #fafaf8 · --red #d42b2b · --bg #f3f2ef
+  Typography: 11px mono · 14px sans · 24px serif · 40px serif
+  Spacing: 4·8·12·16·24·32·48
+-->
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>notariat.co — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@300;400&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/pizzip@3.1.6/dist/pizzip.js"></script>
+<script src="https://unpkg.com/docxtemplater@3.50.0/build/docxtemplater.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --ink:#000000;--white:#fafaf8;--red:#d42b2b;--red-lt:#f5e0e0;
+  --grey:#555;--grey2:#999;--rule:#dddbd5;--bg:#f3f2ef;
+  --mono:'IBM Plex Mono',monospace;
+  --sans:'IBM Plex Sans',sans-serif;
+  --serif:'DM Serif Display',Georgia,serif;
+}
+html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+.page{max-width:1160px;margin:0 auto;padding:0 44px 96px;}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes cardIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fieldIn{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+.anim-card{animation:cardIn .3s ease both;}
+.anim-card:nth-child(1){animation-delay:.04s}
+.anim-card:nth-child(2){animation-delay:.08s}
+.anim-card:nth-child(3){animation-delay:.12s}
+.anim-card:nth-child(4){animation-delay:.16s}
+.view-container{display:none;animation:fadeIn .15s ease both;}
+.view-container.active{display:block;}
+
+/* ── HEADER ── */
+.header-strip{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:18px 0;border-bottom:2px solid var(--ink);}
+.hs-left{display:flex;align-items:baseline;gap:10px;}
+.brand{font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--grey);line-height:1;}
+.brand-pipe{color:var(--rule);font-weight:300;}
+.brand-sub{font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--grey2);}
+.hs-center{font-family:var(--mono);font-size:11px;color:var(--grey);letter-spacing:1.5px;text-transform:uppercase;text-align:center;}
+.hs-right{display:flex;align-items:center;justify-content:flex-end;gap:16px;}
+.hs-user{font-family:var(--mono);font-size:11px;color:var(--grey);}
+.logout-btn{font-family:var(--mono);font-size:11px;color:var(--grey2);background:none;border:none;cursor:pointer;padding:0;letter-spacing:.5px;transition:color .15s;}
+.logout-btn:hover{color:var(--grey);}
+
+/* ── HERO ── */
+.hero{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--rule);margin-bottom:48px;}
+.hero-left{padding:48px 48px 48px 0;border-right:1px solid var(--rule);}
+.hero-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey2);margin-bottom:24px;}
+.hero-greeting{font-family:var(--serif);font-size:40px;font-weight:800;line-height:1;letter-spacing:-1px;color:var(--ink);}
+.hero-name{font-family:var(--serif);font-size:40px;font-weight:800;line-height:1;letter-spacing:-1px;color:var(--red);}
+.hero-right{padding:48px 0 48px 48px;display:flex;flex-direction:column;justify-content:space-between;}
+/* office block — copied verbatim from v48 */
+.office-label{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey2);margin-bottom:24px;}
+.office-name{font-family:var(--serif);font-size:24px;color:var(--ink);line-height:1.1;}
+.office-meta{font-size:14px;font-weight:300;color:var(--grey2);line-height:1.6;margin-top:24px;}
+/* today block — copied verbatim from v48 */
+.today-block{margin-top:32px;padding-top:32px;border-top:1px solid var(--rule);}
+.today-hdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;}
+.today-label{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey2);}
+.today-count{font-family:var(--mono);font-size:11px;color:var(--grey2);}
+.today-scroll-wrap{position:relative;}
+.today-scroll{max-height:112px;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;}
+.today-scroll::-webkit-scrollbar{display:none;}
+.today-row{display:grid;grid-template-columns:30px 1fr 1fr 80px;gap:12px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--rule);}
+.today-row:last-child{border-bottom:none;}
+.today-num{font-family:var(--mono);font-size:14px;color:var(--grey2);}
+.today-act{font-size:14px;font-weight:400;color:var(--ink);}
+.today-name{font-size:14px;font-weight:400;color:var(--ink);}
+.today-time{font-family:var(--mono);font-size:14px;color:var(--grey2);text-align:right;}
+
+/* ── METRIC CARDS ── */
+.cards{display:grid;gap:1px;background:var(--rule);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-bottom:48px;align-items:stretch;}
+.cards-4{grid-template-columns:repeat(4,1fr);}
+.card{background:var(--white);padding:24px;transition:background .15s;display:flex;flex-direction:column;}
+.card:hover{background:var(--bg);}
+.card-label{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--grey);margin-bottom:10px;}
+.card-value{font-family:var(--serif);font-size:40px;font-weight:800;line-height:1;color:var(--ink);margin-bottom:4px;letter-spacing:-1px;transition:all .25s;}
+.card-value.accent{color:var(--red);}
+.card-sub{font-size:14px;font-weight:300;color:var(--grey);line-height:1.4;}
+
+/* ── RULE + SECTION LABELS ── */
+.rule-hr{border:none;border-top:1px solid var(--rule);margin:48px 0;}
+.section-lbl{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--grey2);margin-bottom:16px;}
+/* vol-toggle-btn — exact v48: mono 22px weight 300 */
+.vol-toggle-btn{font-family:var(--mono);font-size:22px;font-weight:300;line-height:1;color:var(--grey2);background:none;border:none;cursor:pointer;padding:0;width:22px;text-align:center;transition:color 0.15s;flex-shrink:0;}
+.vol-toggle-btn:hover{color:var(--ink);}
+
+/* ── TAGS ── */
+.tag{display:inline-flex;align-items:center;font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase;padding:4px 10px;border:1px solid transparent;line-height:1.2;white-space:nowrap;}
+.tag-nou{background:var(--ink);color:var(--white);border-color:var(--ink);}
+.tag-lucru{background:none;color:var(--grey);border-color:var(--rule);}
+.tag-programat{background:none;color:var(--grey);border-color:var(--rule);}
+.tag-urgent{background:var(--red);color:var(--white);border-color:var(--red);}
+.tag-activ{background:none;color:var(--grey);border-color:var(--rule);}
+.tag-avertisment{background:var(--red-lt);color:var(--red);border-color:var(--red);}
+.tag-acoperit{background:var(--ink);color:var(--white);border-color:var(--ink);}
+.tag-lipsa{background:none;color:var(--red);border-color:var(--red);}
+.tag-arhivat{background:none;color:var(--grey2);border-color:var(--rule);}
+/* doc-chips identical to v48 */
+.doc-chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase;padding:4px 10px;background:var(--ink);color:var(--white);border:1px solid var(--ink);cursor:pointer;transition:opacity .15s;white-space:nowrap;line-height:1.2;}
+.doc-chip:hover{opacity:.85;}
+.doc-chip-alert{background:var(--red);color:var(--white);border-color:var(--red);}
+.doc-chip-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* ── VIEW SWITCHER ── */
+.view-switcher-wrap{display:flex;align-items:center;gap:32px;margin-bottom:24px;}
+.view-switcher{display:flex;border:none;border-bottom:1px solid var(--rule);overflow:visible;margin-left:auto;}
+.view-btn{padding:0 18px 10px;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;background:none;color:var(--grey2);border:none;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:7px;}
+.view-btn svg{width:13px;height:13px;flex-shrink:0;}
+.view-btn.active{color:var(--ink);border-bottom-color:var(--ink);}
+.view-btn:hover:not(.active){color:var(--grey);}
+.filter-group{display:flex;align-items:baseline;gap:0;flex:1;}
+.filter-tag{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:0 18px 10px;background:none;color:var(--grey2);border:none;border-bottom:1px solid var(--rule);margin-bottom:0;cursor:pointer;transition:all .15s;}
+.filter-tag.active{color:var(--ink);border-bottom:2px solid var(--ink);margin-bottom:-1px;padding-bottom:9px;}
+.filter-tag:hover:not(.active){color:var(--grey);}
+.search-inp{font-family:var(--mono);font-size:11px;color:var(--grey2);background:none;border:none;padding:0 0 10px;margin-bottom:0;outline:none;width:180px;transition:color .15s;letter-spacing:.5px;}
+.filter-group .search-inp{border-bottom:1px solid var(--rule);}
+.search-inp::placeholder{color:var(--grey2);}
+.search-inp:focus{color:var(--ink);}
+
+/* ── LIST ROWS (v48 pattern: 6-col grid) ── */
+/* ── LIST ROWS — exact v48 list-hdr-shared / list-row-shared ── */
+.list-hdr-shared{display:grid;grid-template-columns:50px 240px 220px 1fr 240px 160px;padding:12px 20px;background:var(--bg);border-bottom:1px solid var(--rule);gap:24px;}
+.list-hdr-shared span{font-family:var(--mono);font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--grey2);}
+.list-hdr-shared span:nth-child(6){padding-left:40px;}
+.list-row-shared{display:grid;grid-template-columns:50px 240px 220px 1fr 240px 160px;padding:12px 20px;border-bottom:1px solid var(--rule);cursor:pointer;transition:background 0.15s;align-items:center;border-left:3px solid transparent;gap:24px;}
+.list-row-shared:hover{background:var(--bg);}
+.list-row-shared.active{background:var(--bg);border-left-color:var(--red);}
+.l-num{font-family:var(--mono);font-size:14px;color:var(--grey2);}
+.l-act{font-size:14px;font-weight:400;color:var(--ink);line-height:1.3;}
+.l-ref{font-family:var(--mono);font-size:14px;color:var(--grey2);}
+.l-flag{font-family:var(--mono);font-size:11px;color:var(--white);background:var(--red);margin-left:8px;text-transform:none;border:1px solid var(--red);padding:2px 6px;display:inline-flex;align-items:center;line-height:1.2;letter-spacing:.3px;}
+.l-client{font-size:14px;color:var(--ink);}
+.l-date{font-family:var(--mono);font-size:14px;color:var(--grey2);line-height:1.4;white-space:nowrap;}
+.l-date-main{color:var(--ink);}
+.l-date-slot{color:var(--grey2);}
+.l-status{font-family:var(--mono);font-size:14px;color:var(--grey2);text-transform:lowercase;white-space:nowrap;padding-left:40px;}
+.l-status.nou{color:var(--ink);font-weight:400;}
+.list-row-office .l-status{padding-left:0;}
+/* office coverage bar inside list-row-shared */
+.o-name{font-size:14px;font-weight:400;color:var(--ink);}
+.o-progress{display:flex;align-items:center;gap:8px;}
+.o-prog-bar{flex:1;height:2px;background:var(--rule);}
+.o-prog-fill{height:100%;background:var(--ink);transition:width .3s;}
+.o-prog-count{font-family:var(--mono);font-size:14px;color:var(--grey2);white-space:nowrap;}
+
+/* Office list rows */
+.list-hdr-offices{display:grid;grid-template-columns:50px 1fr 140px 140px 120px 160px;gap:24px;padding:12px 20px;background:var(--bg);border-bottom:1px solid var(--rule);}
+.list-hdr-offices span{font-family:var(--mono);font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--grey2);}
+.list-hdr-offices span:nth-child(5),.list-hdr-offices span:nth-child(6){padding-left:32px;}
+.list-row-office{display:grid;grid-template-columns:50px 1fr 140px 140px 120px 160px;gap:24px;padding:12px 20px;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s;align-items:center;border-left:3px solid transparent;}
+.list-row-office>*:nth-child(5),.list-row-office>*:nth-child(6){padding-left:32px;}
+.list-row-office:hover{background:var(--bg);}
+.list-row-office.active{background:var(--bg);border-left-color:var(--ink);}
+
+
+
+/* ── OFFICE OVERLAY (full-width modal) ── */
+.office-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .2s;z-index:200;}
+.office-overlay.open{opacity:1;pointer-events:all;}
+.office-modal{position:fixed;inset:0;background:var(--white);transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:201;display:flex;flex-direction:column;overflow:hidden;}
+.office-modal.open{transform:translateY(0);}
+.om-header{display:grid;grid-template-columns:1fr auto;align-items:center;padding:16px 44px;border-bottom:1px solid var(--rule);flex-shrink:0;background:var(--bg);}
+.om-title{font-family:var(--serif);font-size:24px;color:var(--ink);}
+.om-meta{font-family:var(--mono);font-size:11px;color:var(--grey2);margin-top:4px;letter-spacing:.5px;}
+.om-header-right{display:flex;align-items:center;gap:16px;}
+.close-btn{font-size:22px;font-weight:300;color:var(--grey2);background:none;border:none;cursor:pointer;line-height:1;padding:0 4px;transition:color .15s;}
+.close-btn:hover{color:var(--ink);}
+.om-tabs{display:flex;gap:0;border-bottom:1px solid var(--rule);padding:0 44px;flex-shrink:0;}
+.om-tab{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:12px 18px 10px;background:none;color:var(--grey2);border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;margin-bottom:-1px;}
+.om-tab.active{color:var(--ink);border-bottom-color:var(--ink);}
+.om-tab:hover:not(.active){color:var(--grey);}
+.om-body{flex:1;overflow-y:auto;scrollbar-width:none;}
+.om-body::-webkit-scrollbar{display:none;}
+.om-panel{display:none;padding:32px 44px;}
+.om-panel.active{display:block;animation:fadeIn .15s ease both;}
+/* Uniform 48px top gap across all tabs (32px panel padding + 16px via first-child rule) */
+.om-panel > .section-lbl:first-child,
+.om-panel > div:first-child > .section-lbl:first-child{margin-top:16px;}
+.om-panel > .list-hdr-shared:first-child,
+.om-panel > div:first-child > .list-hdr-shared:first-child{margin-top:16px;}
+
+/* ── FIELD STACKED (identical to v48) ── */
+.detail-category{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--grey2);padding:16px 0 8px;border-bottom:1px solid var(--rule);margin-bottom:0;}
+.detail-category-spaced{margin-top:24px;}
+.field-stacked{padding:12px 0;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s;animation:fieldIn .18s ease both;}
+.field-stacked:hover{background:var(--bg);}
+.field-stacked-inner{display:flex;flex-direction:column;gap:4px;}
+.fs-lbl{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--grey2);}
+.fs-val{font-size:14px;color:var(--ink);}
+.fs-val.mono{font-family:var(--mono);}
+/* field-stacked-plain removes click affordance (used for read-only metadata, e.g. subscription status set by Stripe) */
+.field-stacked.field-stacked-plain{cursor:default;}
+.field-stacked.field-stacked-plain:hover{background:none;}
+/* Subscription status pill — same 24px chip tier as tag-*, mapped to tag tokens by status */
+.sub-pill{display:inline-flex;align-items:center;font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase;padding:4px 10px;border:1px solid transparent;line-height:1.2;white-space:nowrap;}
+.sub-pill.active{background:var(--ink);color:var(--white);border-color:var(--ink);}
+.sub-pill.trial{background:none;color:var(--grey);border-color:var(--rule);}
+.sub-pill.past_due{background:var(--red-lt);color:var(--red);border-color:var(--red);}
+.sub-pill.canceled{background:none;color:var(--grey2);border-color:var(--rule);}
+.sub-pill.paused{background:none;color:var(--grey);border-color:var(--rule);}
+
+/* ── COVERAGE GRID ── */
+.coverage-wrap{margin-bottom:32px;}
+.coverage-group{margin-bottom:24px;}
+.coverage-group-title{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--grey2);padding:12px 0 8px;border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between;}
+.coverage-group-count{font-family:var(--mono);font-size:11px;color:var(--grey);}
+.coverage-row{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid var(--rule);gap:16px;}
+.coverage-row:last-child{border-bottom:none;}
+.coverage-subtype{font-size:14px;color:var(--ink);flex:1;}
+.coverage-meta{font-family:var(--mono);font-size:11px;color:var(--grey2);}
+.coverage-action{flex-shrink:0;}
+/* covered row shows template name + actions; missing row shows upload chip */
+.tpl-row-actions{display:flex;gap:8px;align-items:center;}
+.tpl-btn{font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase;background:none;border:none;border-bottom:1px solid var(--rule);padding:0 0 2px;cursor:pointer;color:var(--grey2);transition:all .15s;}
+.tpl-btn:hover{color:var(--ink);border-bottom-color:var(--ink);}
+.tpl-btn.danger:hover{color:var(--red);border-bottom-color:var(--red);}
+.tpl-btn.tpl-btn-armed{color:var(--red);background:var(--red-lt);border-bottom-color:var(--red);padding:4px 12px;margin:-4px -4px -4px 0;transition:background .15s,padding .15s;}
+
+/* Inline token viewer panel, under an expanded coverage row */
+.tpl-tokens-panel{background:var(--bg);border-bottom:1px solid var(--rule);animation:fadeIn .15s ease both;}
+.tpl-tokens-inner{padding:16px 24px 24px;}
+.tpl-token-group{margin-top:16px;}
+.tpl-token-group:first-child{margin-top:0;}
+.tpl-token-group .detail-category{border-bottom:none;padding:0 0 8px;display:flex;align-items:baseline;justify-content:space-between;cursor:pointer;transition:color .15s;}
+.tpl-token-group .detail-category:hover{color:var(--ink);}
+.tpl-token-group .tg-count{font-family:var(--mono);font-size:11px;color:var(--grey2);letter-spacing:.5px;text-transform:none;font-weight:400;}
+.tpl-token-group.collapsed .tpl-token-chips{display:none;}
+.tpl-token-group.collapsed .detail-category{padding-bottom:0;}
+.tpl-token-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.tpl-tokens-meta{font-family:var(--mono);font-size:11px;color:var(--grey2);letter-spacing:.5px;margin-top:24px;padding-top:12px;border-top:1px solid var(--rule);}
+
+/* Replace-context strip inside upload modal */
+.upload-replace-note{background:var(--red-lt);padding:12px 24px;border-bottom:1px solid var(--red);animation:fadeIn .15s ease both;}
+.upload-replace-label{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:4px;}
+.upload-replace-body{font-size:14px;color:var(--ink);line-height:1.4;}
+.upload-replace-body strong{font-weight:500;}
+.upload-replace-meta{font-family:var(--mono);font-size:11px;color:var(--grey);letter-spacing:.5px;margin-top:4px;}
+
+/* ═══ LIBRARY TAB SYSTEM (replaces old .tpl-view-toggle) ═══════════════════════ */
+/* Tab row: view tabs on left (filter-tag), + Adaugă action button on right */
+.lib-tabs-row{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--rule);margin-bottom:32px;}
+.lib-tabs{display:flex;}
+.lib-tab{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:0 18px 10px;background:none;color:var(--grey2);border:none;cursor:pointer;transition:color .15s;position:relative;display:inline-flex;align-items:center;gap:6px;}
+.lib-tab:first-child{padding-left:0;}
+.lib-tab:hover:not(.active){color:var(--grey);}
+.lib-tab.active{color:var(--ink);}
+.lib-tab.active::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--ink);}
+.lib-tab .tag-count{color:inherit;opacity:.65;}
+.lib-urgent-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--red);animation:libPulse 1.8s infinite;}
+@keyframes libPulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+/* + Adaugă button — filled-black doc-chip pattern */
+.lib-add-btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase;padding:6px 12px;background:var(--ink);color:var(--white);border:1px solid var(--ink);cursor:pointer;transition:opacity .15s;line-height:1.2;margin-bottom:8px;position:relative;}
+.lib-add-btn:hover{opacity:.85;}
+.lib-add-btn .plus{font-family:var(--mono);font-weight:300;font-size:14px;line-height:1;display:inline-block;}
+.lib-add-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+/* Primary action — "Adaugă birou" — sits after view-switcher on view-switcher-wrap */
+.add-office-btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:10px 20px;background:var(--ink);color:var(--white);border:1px solid var(--ink);cursor:pointer;transition:opacity .15s;line-height:1.2;white-space:nowrap;margin-left:8px;}
+.add-office-btn:hover{opacity:.85;}
+.add-office-btn .plus{font-family:var(--mono);font-weight:300;font-size:14px;line-height:1;display:inline-block;}
+
+/* ═══ LIBRARY BODY + DROP OVERLAY ═══ */
+.lib-body{position:relative;min-height:120px;}
+.lib-drop-overlay{position:absolute;inset:-8px;background:rgba(250,250,248,.94);border:1px dashed var(--ink);display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:60;pointer-events:none;}
+.lib-drop-overlay .line{font-family:var(--mono);font-size:11px;color:var(--ink);letter-spacing:1px;text-transform:uppercase;}
+.lib-drop-overlay .sub{font-family:var(--mono);font-size:11px;color:var(--grey2);letter-spacing:1px;text-transform:uppercase;opacity:.6;}
+.lib-body.dragover .lib-drop-overlay{display:flex;}
+
+/* ═══ FLAT ACT-GROUP (Active + Istoric share) ═══ */
+.act-group{margin-bottom:32px;}
+.act-group:last-child{margin-bottom:0;}
+.act-group-title{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey2);padding-bottom:10px;border-bottom:1px solid var(--rule);}
+.act-group-title .count{color:inherit;}
+
+/* ═══ ROW TYPOGRAPHY (14/14 rule: sans/ink primary, mono/grey2 secondary) ═══ */
+.lib-row-active{display:grid;grid-template-columns:1fr 120px auto;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--rule);font-size:14px;transition:background .15s;}
+.lib-row-active:last-child{border-bottom:none;}
+.lib-row-active:hover{background:var(--bg);}
+.lib-row-active .row-sub{font-family:var(--sans);font-size:14px;font-weight:300;color:var(--ink);}
+.lib-row-active .row-date{font-family:var(--mono);font-size:14px;color:var(--grey2);}
+
+.lib-row-hist{display:grid;grid-template-columns:1fr 60px 120px 140px auto;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--rule);font-size:14px;transition:background .15s;}
+.lib-row-hist:last-child{border-bottom:none;}
+.lib-row-hist:hover{background:var(--bg);}
+.lib-row-hist .row-sub{font-family:var(--sans);font-size:14px;font-weight:300;color:var(--ink);}
+.lib-row-hist .row-version{font-family:var(--mono);font-size:14px;color:var(--grey2);}
+.lib-row-hist .row-date{font-family:var(--mono);font-size:14px;color:var(--grey2);}
+
+.lib-row-brute{display:grid;grid-template-columns:280px 180px 220px 1fr auto;gap:16px;align-items:baseline;padding:16px 0;border-bottom:1px solid var(--rule);}
+.lib-row-brute:last-child{border-bottom:none;}
+.lib-row-brute .row-fname-wrap{display:flex;flex-direction:column;gap:4px;min-width:0;}
+.lib-row-brute .row-fname{font-family:var(--sans);font-size:14px;font-weight:300;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2;}
+.lib-row-brute .row-fname-meta{font-family:var(--mono);font-size:11px;color:var(--grey2);letter-spacing:.5px;line-height:1.2;}
+
+/* Action clusters */
+.row-actions{display:flex;gap:18px;align-items:center;justify-content:flex-end;}
+/* Primary chip = .doc-chip (v48 idiom — already defined elsewhere as filled black) */
+/* Secondary action = inline mono link */
+.lib-act-link{font-family:var(--mono);font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--grey2);background:none;border:none;padding:0;cursor:pointer;transition:color .15s;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--rule);text-decoration-thickness:1px;}
+.lib-act-link:hover{color:var(--ink);text-decoration-color:var(--ink);}
+.lib-act-link.inactive{opacity:.5;cursor:not-allowed;}
+/* Status pill — outline, mono 11 */
+.lib-status-pill{display:inline-flex;align-items:center;font-family:var(--mono);font-size:11px;letter-spacing:.8px;text-transform:uppercase;padding:2px 8px;color:var(--grey2);border:1px solid var(--rule);background:var(--white);}
+.lib-status-pill.archived{color:var(--red);border-color:var(--red);}
+
+/* Empty state panels */
+.lib-empty{padding:96px 0;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;}
+.lib-empty-line{font-family:var(--mono);font-size:11px;color:var(--grey2);letter-spacing:1px;text-transform:uppercase;}
+.lib-empty-sub{font-family:var(--mono);font-size:11px;color:var(--grey2);letter-spacing:1px;text-transform:uppercase;opacity:.6;}
+
+/* ═══ INTRĂRI BRUTE per-row cdd triggers — keep working with existing cdd IIFE ═══ */
+/* (The cdd CSS already exists; raw-intake rows use .cdd.raw-intake-cdd which inherits) */
+
+/* History row variant — superseded/archived (legacy class still referenced) */
+.coverage-row.hist-row{opacity:.7;}
+.coverage-row.hist-row .coverage-subtype{color:var(--grey);}
+.coverage-row .hist-status{font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--grey2);padding:2px 8px;border:1px solid var(--rule);}
+.coverage-row .hist-status.superseded{color:var(--grey2);}
+.coverage-row .hist-status.archived{color:var(--red);border-color:var(--red);}
+
+/* ── CI MODAL SHELL (identical to v48) ── */
+.ci-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .2s;z-index:300;}
+.ci-modal-overlay.open{opacity:1;pointer-events:all;}
+.ci-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-48%);width:min(900px,92vw);max-height:88vh;background:var(--white);display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:301;overflow:hidden;}
+.ci-modal.open{opacity:1;pointer-events:all;transform:translate(-50%,-50%);}
+.ci-modal-hdr{padding:16px 24px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.ci-modal-title{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--ink);}
+.ci-modal-body{flex:1;overflow-y:auto;padding:24px;scrollbar-width:none;}
+.ci-modal-body::-webkit-scrollbar{display:none;}
+
+/* Upload form inside modal */
+.upload-form{display:flex;flex-direction:column;gap:24px;}
+.form-group{display:flex;flex-direction:column;gap:8px;}
+.form-lbl{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey2);}
+.form-sel,.form-inp{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--white);border:none;border-bottom:1px solid var(--rule);padding:8px 0;outline:none;width:100%;transition:border-color .15s;}
+.form-sel:focus,.form-inp:focus{border-bottom-color:var(--ink);}
+.form-sel option{background:var(--white);}
+/* Custom dropdown (cdd) — explorator-parity, replaces native select in upload modal */
+.cdd{position:relative;width:100%;}
+.cdd-trigger{font-family:var(--sans);font-size:14px;font-weight:300;color:var(--ink);background:transparent;border:none;border-bottom:1px solid var(--rule);padding:8px 20px 8px 0;width:100%;text-align:left;cursor:pointer;outline:none;transition:border-color .15s;position:relative;display:block;}
+.cdd.open .cdd-trigger,.cdd-trigger:hover,.cdd-trigger:focus{border-bottom-color:var(--ink);}
+.cdd-trigger.empty{color:var(--grey2);}
+.cdd-trigger.disabled{color:var(--grey2);cursor:not-allowed;}
+.cdd-trigger::after{content:'';position:absolute;right:6px;top:50%;width:7px;height:7px;border-right:1.5px solid var(--grey2);border-bottom:1.5px solid var(--grey2);transform:translateY(-70%) rotate(45deg);pointer-events:none;transition:border-color .15s,transform .2s;}
+.cdd.open .cdd-trigger::after{border-right-color:var(--ink);border-bottom-color:var(--ink);transform:translateY(-30%) rotate(225deg);}
+.cdd-trigger.disabled::after{border-right-color:var(--grey2);border-bottom-color:var(--grey2);opacity:.5;}
+.cdd-panel{position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--white);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);z-index:300;max-height:240px;overflow-y:auto;scrollbar-width:none;display:none;}
+.cdd-panel::-webkit-scrollbar{display:none;}
+.cdd.open .cdd-panel{display:block;animation:cddIn .15s ease;}
+@keyframes cddIn{from{opacity:0;transform:translateY(-2px);}to{opacity:1;transform:translateY(0);}}
+.cdd-opt{display:block;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:10px 16px;background:none;border:none;border-bottom:1px solid var(--rule);cursor:pointer;color:var(--grey2);width:100%;text-align:left;transition:all .15s;white-space:nowrap;}
+.cdd-opt:last-child{border-bottom:none;}
+.cdd-opt:hover,.cdd-opt.kb-focus{color:var(--ink);background:var(--bg);}
+.cdd-opt.selected{color:var(--ink);}
+.cdd-opt.selected::before{content:'✓ ';color:var(--ink);}
+.form-textarea{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--white);border:1px solid var(--rule);padding:12px;outline:none;width:100%;resize:vertical;min-height:80px;transition:border-color .15s;}
+.form-textarea:focus{border-color:var(--ink);}
+/* Create-office form: field-stacked hosts an inline input; row lights up when focused */
+.field-stacked:has(.co-inp:focus){background:var(--bg);border-bottom-color:var(--ink);}
+.co-inp{background:transparent !important;}
+.co-inp::placeholder{color:var(--grey2);font-weight:300;}
+/* Create-office form: scoped spacing overrides for single-column creation flow */
+#om-create .field-stacked{padding:18px 0;}
+#om-create .detail-category-spaced{margin-top:48px;}
+.file-drop{border:1px solid var(--rule);padding:32px 24px;text-align:center;cursor:pointer;transition:background .15s;position:relative;}
+.file-drop:hover{background:var(--bg);}
+.file-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.file-drop-text{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--grey2);}
+.file-drop-name{font-size:14px;color:var(--ink);margin-top:8px;}
+/* validation result */
+.val-result{padding:16px;border:1px solid var(--rule);background:var(--bg);}
+.val-ok{border-color:var(--ink);}
+.val-err{border-color:var(--red);background:var(--red-lt);}
+.val-title{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;}
+.val-title.ok{color:var(--ink);}
+.val-title.err{color:var(--red);}
+.val-tokens{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.val-token{font-family:var(--mono);font-size:11px;padding:2px 8px;background:var(--ink);color:var(--white);}
+.val-token.bad{background:var(--red);}
+/* modal footer */
+.ci-modal-footer{padding:16px 24px;border-top:1px solid var(--rule);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;}
+.btn-primary{font-family:var(--sans);font-size:14px;color:var(--white);background:var(--ink);border:none;padding:12px 22px;cursor:pointer;transition:opacity .15s;}
+.btn-primary:hover{opacity:.85;}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed;}
+.btn-ghost{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--grey2);background:none;border:1px solid var(--rule);padding:10px 18px;cursor:pointer;transition:all .15s;}
+.btn-ghost:hover{color:var(--ink);border-color:var(--ink);}
+
+/* Placeholder viewer */
+.placeholder-list{display:flex;gap:6px;flex-wrap:wrap;padding:16px 0;}
+
+/* ── VOL EXPLORER (copied verbatim from v48) ── */
+.vol-tabs-row{display:flex;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap;}
+.vol-tabs-label{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey2);white-space:nowrap;}
+.vol-tabs{display:flex;border:none;border-bottom:1px solid var(--rule);overflow:visible;}
+.vol-tab{padding:0 18px 10px;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;background:none;color:var(--grey2);border:none;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;transition:all 0.15s;border-radius:0;}
+.vol-tab.active{background:none;color:var(--ink);border-bottom-color:var(--ink);}
+.vol-tab:hover:not(.active){background:none;color:var(--grey);}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:20px 52px;margin-bottom:32px;padding:24px;background:var(--bg);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);}
+.ctrl-group{display:flex;flex-direction:column;gap:24px;}
+.ctrl-header{display:flex;justify-content:space-between;align-items:baseline;}
+.ctrl-label{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--grey);}
+.ctrl-val{font-family:var(--mono);font-size:14px;color:var(--ink);}
+.ctrl-group input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;background:var(--rule);border-radius:2px;outline:none;cursor:pointer;}
+.ctrl-group input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--ink);cursor:pointer;border:2px solid var(--white);box-shadow:0 0 0 1px var(--ink);}
+.ctrl-group input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--ink);border:2px solid var(--white);box-shadow:0 0 0 1px var(--ink);cursor:pointer;}
+.ctrl-hint{font-size:14px;font-weight:300;color:var(--grey2);line-height:1.5;}
+.chart-legend{display:flex;gap:22px;margin-bottom:14px;flex-wrap:wrap;}
+.leg{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;letter-spacing:0.5px;color:var(--grey);}
+.leg-bar{width:12px;height:12px;border-radius:0;flex-shrink:0;}
+.leg-line{width:22px;height:2px;border-radius:0;flex-shrink:0;background:var(--ink);}
+.leg-line.dashed{background:none;border-top:2px dashed var(--red);}
+.chart-wrap{position:relative;width:100%;height:240px;}
+.chart-note{font-size:14px;font-weight:300;color:var(--grey);margin-top:8px;line-height:1.55;}
+.chart-note strong{font-weight:500;color:var(--ink);}
+
+.expl-search-wrap{position:relative;margin-left:24px;display:inline-flex;align-items:baseline;transition:margin-left .25s ease;}
+.expl-search-border.has-value .expl-search-wrap{margin-left:0;}
+.expl-search-wrap .search-inp{font-family:var(--mono);font-size:11px;font-weight:400;letter-spacing:1px;border-bottom:none;padding:0 0 10px;margin-bottom:0;width:200px;color:var(--grey2);transition:width .25s ease,color .15s;}
+.expl-search-wrap .search-inp::placeholder{color:var(--grey2);text-transform:none;letter-spacing:.5px;}
+.expl-search-wrap .search-inp:focus{color:var(--ink);}
+.expl-search-border.has-value .search-inp{width:380px;color:var(--ink);padding-right:30px;text-transform:uppercase;}
+.expl-clear{color:var(--grey2);background:none;border:none;cursor:pointer;padding:0;margin:0;transition:color .15s;display:none;width:22px;height:22px;position:absolute;right:0;top:50%;transform:translateY(calc(-50% - 5px));line-height:0;}
+.expl-clear svg{display:block;}
+.expl-clear:hover{color:var(--ink);}
+.expl-search-border.has-value .expl-clear{display:block;}
+.expl-search-border{border-bottom:1px solid var(--rule);margin-bottom:0;padding-bottom:0;display:inline-flex;align-items:baseline;position:relative;transition:border-color .15s,border-width .15s;}
+.expl-search-border.has-value{border-bottom-width:2px;border-bottom-color:var(--ink);margin-bottom:-1px;}
+.expl-results-panel{position:absolute;top:calc(100% + 2px);right:0;left:auto;background:var(--white);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);z-index:200;min-width:280px;max-height:200px;overflow-y:auto;scrollbar-width:none;}
+.expl-results-panel::-webkit-scrollbar{display:none;}
+.expl-result-btn{display:flex;align-items:baseline;gap:10px;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:10px 16px;background:none;border:none;border-bottom:1px solid var(--rule);cursor:pointer;color:var(--grey2);width:100%;text-align:left;transition:all .15s;white-space:nowrap;}
+.expl-result-btn:last-child{border-bottom:none;}
+.expl-result-btn:hover{color:var(--ink);background:var(--bg);}
+.expl-result-btn.expl-result-city-agg{color:var(--ink);}
+.expl-result-city{font-family:var(--mono);font-size:11px;color:var(--grey2);letter-spacing:.5px;margin-left:auto;}
+.dosare-wrap{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);}
+.dosare-scroll{overflow-y:auto;scrollbar-width:none;}
+.dosare-scroll::-webkit-scrollbar{display:none;}
+
+/* ── CASE MODAL (full-screen, same shell as BIROURI overlay) ── */
+.case-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .2s;z-index:400;}
+.case-modal-overlay.open{opacity:1;pointer-events:all;}
+.case-modal{position:fixed;inset:0;background:var(--white);transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:401;display:flex;flex-direction:column;overflow:hidden;}
+.case-modal.open{transform:translateY(0);}
+.cm-header{display:grid;grid-template-columns:1fr auto;align-items:center;padding:16px 44px;border-bottom:1px solid var(--rule);flex-shrink:0;background:var(--bg);}
+.cm-title{font-family:var(--serif);font-size:24px;color:var(--ink);}
+.cm-meta{font-family:var(--mono);font-size:11px;color:var(--grey2);margin-top:4px;letter-spacing:.5px;}
+.cm-header-right{display:flex;align-items:center;gap:12px;}
+.cm-body{flex:1;overflow-y:auto;scrollbar-width:none;padding:32px 44px;}
+.cm-body::-webkit-scrollbar{display:none;}
+.cm-cols{display:grid;grid-template-columns:1fr 1fr;gap:48px;}
+.cm-footer{padding:16px 44px;border-top:1px solid var(--rule);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;}
+/* status selector inside case modal — copied from v48 */
+.status-sel-wrap{margin-top:24px;}
+.status-sel-lbl{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey2);margin-bottom:12px;padding-bottom:7px;border-bottom:1px solid var(--rule);display:block;}
+.status-sel{display:flex;gap:0;border-bottom:1px solid var(--rule);}
+.status-sel-btn{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:0 18px 10px;background:none;color:var(--grey2);border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all 0.15s;margin-bottom:-1px;border-radius:0;}
+.status-sel-btn.sel-active{color:var(--ink);border-bottom-color:var(--ink);}
+.status-sel-btn:hover:not(.sel-active){color:var(--grey);}
+/* urgency dot */
+.urgency-dot{width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;margin-left:5px;vertical-align:middle;animation:pulse 1.4s ease-in-out infinite;}
+/* action button (terminating) */
+.btn-action{font-family:var(--sans);font-size:14px;color:var(--white);background:var(--ink);border:none;padding:12px 22px;cursor:pointer;transition:opacity .15s;display:inline-flex;align-items:center;gap:8px;}
+.btn-action:hover{opacity:.85;}
+.btn-action.danger{background:var(--red);}
+.btn-ghost-sm{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--grey2);background:none;border:1px solid var(--rule);padding:8px 16px;cursor:pointer;transition:all .15s;}
+.btn-ghost-sm:hover{color:var(--ink);border-color:var(--ink);}
+/* inline editable input — shared by case modal */
+.cd-edit-val{font-size:14px;color:var(--ink);background:none;border:none;outline:none;width:100%;font-family:var(--sans);padding:0;cursor:text;transition:background .12s;}
+.cd-edit-val:focus{background:var(--bg);padding:2px 4px;}
+.cd-sel{font-family:var(--sans);font-size:14px;color:var(--ink);background:none;border:none;outline:none;width:100%;cursor:pointer;padding:0;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--ink);color:#ffffff;font-family:var(--mono);font-size:11px;letter-spacing:.5px;padding:10px 24px;opacity:0;transition:opacity .15s,transform .2s;pointer-events:none;white-space:nowrap;z-index:999;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── FOOTER ── */
+.footer{border-top:1px solid var(--rule);padding-top:16px;margin-top:48px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--grey2);letter-spacing:.5px;}
+
+/* ── LOADING / AUTH ── */
+.app-loading{position:fixed;inset:0;background:var(--white);display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:16px;}
+.app-loading.hidden{display:none;}
+.loading-brand{font-family:var(--sans);font-size:14px;font-weight:500;color:var(--ink);}
+.loading-sub{font-family:var(--mono);font-size:11px;color:var(--grey2);letter-spacing:2px;text-transform:uppercase;}
+.loading-dot{display:inline-block;animation:pulse 1.4s ease-in-out infinite;}
+/* Auth screen */
+.auth-screen{position:fixed;inset:0;background:var(--white);display:flex;align-items:center;justify-content:center;z-index:900;}
+.auth-screen.hidden{display:none;}
+.auth-box{width:360px;display:flex;flex-direction:column;gap:24px;}
+.auth-brand{display:flex;align-items:baseline;justify-content:space-between;width:100%;}
+.auth-title{font-family:var(--serif);font-size:24px;color:var(--ink);line-height:1;}
+.auth-badge{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;background:var(--red);color:var(--white);padding:4px 10px;display:inline-flex;align-items:center;line-height:1.2;border:1px solid var(--red);white-space:nowrap;}
+.auth-err{font-family:var(--mono);font-size:11px;color:var(--red);letter-spacing:.5px;display:none;}
+.auth-err.show{display:block;}
+.auth-demo{font-family:var(--mono);font-size:11px;color:var(--grey2);letter-spacing:.5px;text-align:center;background:none;border:none;cursor:pointer;text-decoration:underline;padding:0;transition:color .15s;}
+.auth-demo:hover{color:var(--grey);}
+/* db-status banner */
+.db-banner{background:var(--bg);border-bottom:1px solid var(--rule);padding:8px 44px;font-family:var(--mono);font-size:11px;color:var(--grey2);display:flex;align-items:center;gap:8px;letter-spacing:.5px;}
+.db-banner.hidden{display:none;}
+.db-dot{width:6px;height:6px;border-radius:50%;background:var(--grey2);display:inline-block;}
+.db-dot.live{background:var(--ink);}
+.db-dot.mock{background:var(--grey2);}
+
+.empty-state{text-align:center;padding:48px 0;color:var(--grey2);}
+.empty-glyph{font-size:36px;font-family:var(--serif);color:var(--grey2);display:block;margin-bottom:16px;}
+.empty-text{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey2);}
+
+/* ── PROGRESS BAR ── */
+.prog-wrap{margin:16px 0 32px;}
+.prog-bar-bg{height:2px;background:var(--rule);width:100%;}
+.prog-bar-fill{height:100%;background:var(--ink);transition:width .4s;}
+.prog-label{font-family:var(--mono);font-size:11px;color:var(--grey2);margin-top:16px;letter-spacing:.5px;}
+</style>
+</head>
+<body>
+<!-- LOADING -->
+<div class="app-loading" id="app-loading">
+  <div class="loading-brand">notariat<span class="loading-dot">.</span></div>
+  <div class="loading-sub">Se încarcă<span class="loading-dot">...</span></div>
+</div>
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen hidden" id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-brand">
+      <div class="auth-title">notariat.co</div>
+    </div>
+    <div class="form-group">
+      <span class="form-lbl">Email</span>
+      <input class="form-inp" type="email" id="auth-email" placeholder="george@super.works" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <span class="form-lbl">Parolă</span>
+      <input class="form-inp" type="password" id="auth-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <div class="auth-err" id="auth-err"></div>
+    <button class="btn-primary" id="auth-btn">Intră în cont ⟶</button>
+    <button class="auth-demo" id="auth-demo-btn">Continuă în mod demonstrativ →</button>
+  </div>
+</div>
+
+<!-- DB STATUS BANNER -->
+<div class="db-banner hidden" id="db-banner">
+  <span class="db-dot" id="db-dot"></span>
+  <span id="db-banner-text">—</span>
+</div>
+
+<div class="page" id="main-page" style="display:none;">
+
+<!-- HEADER -->
+<div class="header-strip">
+  <div class="hs-left">
+    <span class="brand">notariat</span>
+    <span class="brand-pipe">/</span>
+    <span class="brand-sub">Admin</span>
+  </div>
+  <div class="hs-center"></div>
+  <div class="hs-right">
+    <span class="hs-user" id="hs-user">george@super.works</span>
+    <button class="logout-btn">Ieșire ⟶</button>
+  </div>
+</div>
+
+<!-- HERO — copied from v48 structure -->
+<div class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow" id="hero-date">—</div>
+    <div class="hero-greeting">Salut,</div>
+    <div class="hero-name">George.</div>
+  </div>
+  <div class="hero-right">
+    <div>
+      <div class="office-label" id="live-clock-hero">—</div>
+      <div class="office-name" id="hr-line1">— birouri active</div>
+      <div class="office-name" id="hr-line2">— dosare în lucru</div>
+    </div>
+    <div class="today-block">
+      <div class="today-hdr">
+        <span class="today-label">Programări azi</span>
+        <span class="today-count" id="today-count">—</span>
+      </div>
+      <div class="today-scroll-wrap" id="today-wrap">
+        <div class="today-scroll" id="today-scroll"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- METRIC CARDS — v48 pattern: gap:1px grid dividers -->
+<div class="cards cards-4">
+  <div class="card anim-card">
+    <div class="card-label">Fără confirmare<span class="urgency-dot"></span></div>
+    <div class="card-value accent" id="kpi-unconf">3</div>
+    <div class="card-sub">programare &lt;48h</div>
+  </div>
+  <div class="card anim-card">
+    <div class="card-label">Dosare active</div>
+    <div class="card-value" id="kpi-total">15</div>
+    <div class="card-sub">toată platforma</div>
+  </div>
+  <div class="card anim-card">
+    <div class="card-label">Urgențe</div>
+    <div class="card-value" id="kpi-urgente">4</div>
+    <div class="card-sub">necesită intervenție</div>
+  </div>
+  <div class="card anim-card">
+    <div class="card-label">Birouri active</div>
+    <div class="card-value" id="kpi-birouri">3</div>
+    <div class="card-sub" id="kpi-birouri-sub">din 4 înregistrate</div>
+  </div>
+</div>
+
+<!-- VOL EXPLORER — v48 structure, admin-customised -->
+<hr class="rule-hr" style="margin-bottom:24px;">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+  <div class="section-lbl" style="margin-bottom:0;">Explorator</div>
+  <button class="vol-toggle-btn" id="vol-toggle" onclick="toggleVolExplorer()" aria-expanded="false">+</button>
+</div>
+<div style="display:flex;align-items:baseline;margin-bottom:0;">
+  <div class="vol-tabs" id="expl-act-tabs">
+    <button class="vol-tab active" onclick="setAdminActFilter('toate',this)">Toate</button>
+    <button class="vol-tab" onclick="setAdminActFilter('procuri',this)">Procuri</button>
+    <button class="vol-tab" onclick="setAdminActFilter('declaratii',this)">Declarații</button>
+    <button class="vol-tab" onclick="setAdminActFilter('acorduri',this)">Acorduri</button>
+    <button class="vol-tab" onclick="setAdminActFilter('legalizari',this)">Legalizări</button>
+    <button class="vol-tab" onclick="setAdminActFilter('imputerniciri',this)">Împuterniciri</button>
+  </div>
+  <div style="margin-left:auto;flex-shrink:0;">
+    <div class="expl-search-border" id="expl-search-border">
+      <div class="expl-search-wrap">
+        <input class="search-inp" id="expl-office-search" placeholder="Caută birou/oraș..." autocomplete="off" oninput="onExplSearch(this.value)">
+        <button class="expl-clear" id="expl-clear-btn" onclick="clearExplSearch()" aria-label="Șterge filtrul"><svg viewBox="0 0 22 22" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="butt"><line x1="6" y1="11" x2="16" y2="11"/></svg></button>
+      </div>
+      <div id="expl-results-panel" class="expl-results-panel" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+<div id="vol-explorer" style="display:none;margin-top:24px;">
+  <div class="controls">
+    <div class="ctrl-group">
+      <div class="ctrl-header"><span class="ctrl-label">Dosare / lună</span><span class="ctrl-val" id="v-vol">20</span></div>
+      <input type="range" id="s-vol" min="5" max="80" step="1" value="20" oninput="soundSlider();updateVolChart();">
+      <div class="ctrl-hint">Volum lunar țintă per platformă.</div>
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-header"><span class="ctrl-label">Timp confirmare (zile)</span><span class="ctrl-val" id="v-wait">4</span></div>
+      <input type="range" id="s-wait" min="1" max="14" step="1" value="4" oninput="soundSlider();updateVolChart();">
+      <div class="ctrl-hint">Timp mediu de confirmare programare.</div>
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-header"><span class="ctrl-label">Rată finalizare (%)</span><span class="ctrl-val" id="v-rate">85</span></div>
+      <input type="range" id="s-rate" min="50" max="100" step="1" value="85" oninput="soundSlider();updateVolChart();">
+      <div class="ctrl-hint">Procent dosare finalizate din total înregistrate.</div>
+    </div>
+  </div>
+  <div class="chart-legend">
+    <span class="leg"><span class="leg-bar" style="background:var(--ink);"></span>Înregistrate</span>
+    <span class="leg"><span class="leg-bar" style="background:var(--rule);"></span>Finalizate</span>
+    <span class="leg"><span class="leg-line dashed"></span>Tendință</span>
+  </div>
+  <div class="chart-wrap"><canvas id="volChart"></canvas></div>
+  <div class="chart-note" id="chart-note"></div>
+</div>
+
+<hr class="rule-hr">
+
+<!-- VIEW SWITCHER -->
+<div class="view-switcher-wrap">
+  <div id="filter-row-a" class="filter-group">
+    <button class="filter-tag active" data-sort="name">A–Z</button>
+    <button class="filter-tag" data-sort="coverage">Acoperire ↑</button>
+    <button class="filter-tag" data-sort="dosare">Dosare ↓</button>
+    <button class="filter-tag" data-sort="avertisment">! Avertisment</button>
+    <input class="search-inp" id="search-a" placeholder="Caută birou/oraș..." autocomplete="off" style="margin-left:16px;">
+  </div>
+  <div id="filter-row-b" class="filter-group" style="display:none;">
+    <button class="filter-tag active" data-status="toate">Toate</button>
+    <button class="filter-tag" data-status="nou">Noi</button>
+    <button class="filter-tag" data-status="in-lucru">Active</button>
+    <button class="filter-tag" data-status="programat">Programate</button>
+    <button class="filter-tag" data-status="urgent">Urgențe</button>
+    <input class="search-inp" id="search-b" placeholder="Caută dosar..." autocomplete="off" style="margin-left:16px;">
+  </div>
+  <div class="view-switcher">
+    <button class="view-btn active" id="vbtn-a" onclick="switchView('a')">
+      <svg viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.2"><rect x=".7" y=".7" width="5" height="11.6"/><rect x="7.3" y=".7" width="5" height="11.6"/></svg>Birouri
+    </button>
+    <button class="view-btn" id="vbtn-b" onclick="switchView('b')">
+      <svg viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.2"><rect x=".7" y=".7" width="11.6" height="4.2"/><rect x=".7" y="7.1" width="11.6" height="4.2"/></svg>Dosare
+    </button>
+  </div>
+  <button class="add-office-btn" type="button" id="btn-add-office" onclick="openCreateOffice()" title="Adaugă birou nou"><span class="plus">+</span><span>Adaugă birou</span></button>
+</div>
+
+<!-- VIEW A — BIROURI -->
+<div class="view-container active" id="view-a">
+  <div class="list-hdr-offices">
+    <span>#</span><span>Birou</span><span>Oraș</span><span>Șabloane</span><span>Dosare</span><span>Status</span>
+  </div>
+  <div id="list-a"></div>
+</div>
+
+<!-- VIEW B — DOSARE: adaptive height, scrollable -->
+<div class="view-container" id="view-b">
+  <div class="dosare-wrap">
+    <div class="list-hdr-shared">
+      <span>#</span><span>Act · Dosar</span><span>Client</span><span></span><span>Data preferată</span><span>Status</span>
+    </div>
+    <div class="dosare-scroll" id="list-b-scroll">
+      <div id="list-b"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CASE MODAL — full-screen (item 7: same shell as BIROURI overlay) -->
+<div class="case-modal-overlay" id="cm-overlay"></div>
+<div class="case-modal" id="cm">
+  <div class="cm-header">
+    <div>
+      <div class="cm-title" id="cm-title">—</div>
+      <div class="cm-meta" id="cm-meta">—</div>
+    </div>
+    <div class="cm-header-right">
+      <span id="cm-status-tag"></span>
+      <button class="close-btn" id="cm-close">&#x2212;</button>
+    </div>
+  </div>
+  <div class="cm-body">
+    <div class="cm-cols">
+      <!-- LEFT: Date dosar + Date client -->
+      <div id="cm-left">
+        <div class="detail-category">Date dosar</div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Referință</span><span class="fs-val mono" id="cm-ref">—</span></div></div>
+        <div class="field-stacked"><div class="field-stacked-inner">
+          <span class="fs-lbl">Tip act</span>
+          <input class="cd-edit-val" id="cm-act" value="—">
+        </div></div>
+        <div class="field-stacked"><div class="field-stacked-inner">
+          <span class="fs-lbl">Subtip</span>
+          <input class="cd-edit-val" id="cm-subtype" value="—">
+        </div></div>
+        <div class="field-stacked"><div class="field-stacked-inner">
+          <span class="fs-lbl">Client</span>
+          <input class="cd-edit-val" id="cm-client" value="—">
+        </div></div>
+        <div class="field-stacked"><div class="field-stacked-inner">
+          <span class="fs-lbl">Data preferată</span>
+          <input class="cd-edit-val" id="cm-pref" value="—">
+        </div></div>
+        <div class="field-stacked"><div class="field-stacked-inner">
+          <span class="fs-lbl">Birou</span>
+          <div class="cdd" id="cdd-cm-office">
+            <button class="cdd-trigger empty" type="button">— selectează birou —</button>
+            <div class="cdd-panel" role="listbox"></div>
+            <input type="hidden" id="cm-office" value="">
+          </div>
+        </div></div>
+        <div class="detail-category detail-category-spaced">Notă internă admin</div>
+        <div style="padding:12px 0;">
+          <textarea class="form-textarea" id="cm-notes" placeholder="Observații, corecții, motive override..."></textarea>
+        </div>
+      </div>
+      <!-- RIGHT: Admin controls + audit trail + actions -->
+      <div id="cm-right">
+        <div class="detail-category">Control admin</div>
+        <div class="status-sel-wrap">
+          <span class="status-sel-lbl">Status dosar</span>
+          <div class="status-sel" id="cm-status-sel">
+            <button class="status-sel-btn" data-s="nou" onclick="cmSetStatus('nou',this)">Nou</button>
+            <button class="status-sel-btn" data-s="in-lucru" onclick="cmSetStatus('in-lucru',this)">Activ</button>
+            <button class="status-sel-btn" data-s="programat" onclick="cmSetStatus('programat',this)">Programat</button>
+          </div>
+        </div>
+        <div class="field-stacked" style="margin-top:24px;"><div class="field-stacked-inner" style="flex-direction:row;align-items:center;justify-content:space-between;">
+          <span class="fs-lbl">Urgent<span class="urgency-dot" id="cm-urgent-dot" style="display:none;"></span></span>
+          <button class="doc-chip" id="cm-urgent-btn" onclick="cmToggleUrgent()">—</button>
+        </div></div>
+        <div class="detail-category detail-category-spaced">Acțiuni rapide</div>
+        <div style="display:flex;flex-direction:column;gap:8px;padding-top:16px;">
+          <button class="btn-action" onclick="cmAction('nudge')">Trimite nudge client ⟶</button>
+          <button class="btn-action" onclick="cmAction('notary')">Contactează notarul ⟶</button>
+        </div>
+        <div class="detail-category detail-category-spaced">Audit</div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Creat</span><span class="fs-val mono" id="cm-created">—</span></div></div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Ultima modificare</span><span class="fs-val mono" id="cm-updated">—</span></div></div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">ID Supabase</span><span class="fs-val mono" id="cm-id" style="font-size:11px;color:var(--grey2);">—</span></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="cm-footer">
+    <button class="btn-ghost-sm" id="cm-cancel">Anulează</button>
+    <button class="btn-action" id="cm-save">Salvează modificările ⟶</button>
+  </div>
+</div>
+
+<!-- OFFICE OVERLAY -->
+<div class="office-overlay" id="om-overlay"></div>
+<div class="office-modal" id="om">
+  <div class="om-header">
+    <div>
+      <div class="om-title" id="om-title">—</div>
+      <div class="om-meta" id="om-meta">—</div>
+    </div>
+    <div class="om-header-right">
+      <span class="tag" id="om-status-tag">—</span>
+      <button class="close-btn" id="om-close">&#x2212;</button>
+    </div>
+  </div>
+  <div class="om-tabs">
+    <button class="om-tab active" data-tab="detalii">Detalii</button>
+    <button class="om-tab" data-tab="sabloane">Șabloane</button>
+    <button class="om-tab" data-tab="dosare">Dosare</button>
+    <button class="om-tab" data-tab="onboarding">Onboarding</button>
+  </div>
+  <div class="om-body">
+
+    <!-- Tab: Detalii -->
+    <div class="om-panel active" id="tab-detalii">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:48px;">
+        <div>
+          <div class="detail-category">Date birou</div>
+          <div class="field-stacked" id="of-name-row"><div class="field-stacked-inner"><span class="fs-lbl">Denumire</span><span class="fs-val" id="of-name">—</span></div></div>
+          <div class="field-stacked" id="of-cui-row" onclick="copyOfficeField('cui')"><div class="field-stacked-inner"><span class="fs-lbl">CUI</span><span class="fs-val mono" id="of-cui">—</span></div></div>
+          <div class="field-stacked" id="of-website-row" onclick="openOfficeWebsite()"><div class="field-stacked-inner"><span class="fs-lbl">Website</span><span class="fs-val mono" id="of-website">—</span></div></div>
+          <div class="field-stacked" id="of-city-row"><div class="field-stacked-inner"><span class="fs-lbl">Oraș</span><span class="fs-val" id="of-city">—</span></div></div>
+          <div class="field-stacked" id="of-addr-row" onclick="openOfficeMaps()"><div class="field-stacked-inner"><span class="fs-lbl">Adresă</span><span class="fs-val" id="of-addr">—</span></div></div>
+          <div class="field-stacked" id="of-email-row" onclick="openOfficeMail('office')"><div class="field-stacked-inner"><span class="fs-lbl">Email</span><span class="fs-val mono" id="of-email">—</span></div></div>
+          <div class="field-stacked" id="of-phone-row" onclick="openOfficeTel('office')"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><span class="fs-val mono" id="of-phone">—</span></div></div>
+        </div>
+        <div>
+          <div class="detail-category">Persoană de contact</div>
+          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Nume</span><span class="fs-val" id="of-contact-name">—</span></div></div>
+          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Rol</span><span class="fs-val" id="of-contact-role">—</span></div></div>
+          <div class="field-stacked" id="of-contact-email-row" onclick="openOfficeMail('contact')"><div class="field-stacked-inner"><span class="fs-lbl">Email</span><span class="fs-val mono" id="of-contact-email">—</span></div></div>
+          <div class="field-stacked" id="of-contact-phone-row" onclick="openOfficeTel('contact')"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><span class="fs-val mono" id="of-contact-phone">—</span></div></div>
+        </div>
+        <div>
+          <div class="detail-category">Abonament</div>
+          <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Status</span><span class="fs-val"><span class="sub-pill" id="of-sub-status">—</span></span></div></div>
+          <div class="field-stacked field-stacked-plain" id="of-plan-row"><div class="field-stacked-inner"><span class="fs-lbl">Plan</span><span class="fs-val" id="of-plan">—</span></div></div>
+          <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Ciclu</span><span class="fs-val mono" id="of-cycle">—</span></div></div>
+          <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Expiră la</span><span class="fs-val mono" id="of-period-end">—</span></div></div>
+          <div class="field-stacked field-stacked-plain" id="of-trial-row" style="display:none;"><div class="field-stacked-inner"><span class="fs-lbl">Expiră trial</span><span class="fs-val mono" id="of-trial-end">—</span></div></div>
+        </div>
+        <div>
+          <div class="detail-category">Statistici</div>
+          <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Dosare active</span><span class="fs-val mono" id="of-stat-dosare">—</span></div></div>
+          <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Urgențe</span><span class="fs-val mono" id="of-stat-urgente">—</span></div></div>
+          <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Tipuri de acte acoperite</span><span class="fs-val mono" id="of-stat-tpl">—</span></div></div>
+          <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Înregistrat</span><span class="fs-val mono" id="of-stat-since">—</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Șabloane -->
+    <div class="om-panel" id="tab-sabloane">
+      <!-- Library header -->
+      <div class="section-lbl" style="margin-bottom:32px;">Bibliotecă șabloane</div>
+
+      <!-- Tab row: view tabs left, + Adaugă right -->
+      <div class="lib-tabs-row">
+        <div class="lib-tabs">
+          <button class="lib-tab active" id="lib-tab-active" type="button" onclick="switchLibTab('active')">Active <span class="tag-count" id="lib-count-active">· 0</span></button>
+          <button class="lib-tab" id="lib-tab-brute" type="button" onclick="switchLibTab('brute')">Intrări brute <span class="tag-count" id="lib-count-brute">· 0</span><span class="lib-urgent-dot" id="lib-dot-brute" style="display:none;"></span></button>
+          <button class="lib-tab" id="lib-tab-istoric" type="button" onclick="switchLibTab('istoric')">Istoric <span class="tag-count" id="lib-count-istoric">· 0</span></button>
+        </div>
+        <label class="lib-add-btn" title="Adaugă șabloane .docx">
+          <span class="plus">+</span>
+          <span>Adaugă</span>
+          <input type="file" id="raw-intake-file" accept=".docx,.pdf" multiple>
+        </label>
+      </div>
+
+      <!-- Summary + progress -->
+      <div id="tpl-summary" style="font-family:var(--sans);font-size:14px;font-weight:300;color:var(--grey);margin-bottom:16px;"></div>
+      <div class="prog-wrap">
+        <div class="prog-bar-bg"><div class="prog-bar-fill" id="tpl-prog-fill" style="width:0%"></div></div>
+        <div class="prog-label" id="tpl-prog-label">0 / 5 tipuri de acte acoperite</div>
+      </div>
+
+      <!-- Library body — drop target for drag-drop; hosts all three panes -->
+      <div class="lib-body" id="lib-body">
+        <div class="lib-drop-overlay"><div class="line">Eliberează fișierele aici</div><div class="sub">vor apărea în Intrări brute</div></div>
+        <div id="lib-pane-active" class="lib-pane"></div>
+        <div id="lib-pane-brute" class="lib-pane" style="display:none;"></div>
+        <div id="lib-pane-istoric" class="lib-pane" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Dosare -->
+    <div class="om-panel" id="tab-dosare">
+      <div class="list-hdr-shared">
+        <span>#</span><span>Act · Dosar</span><span>Client</span><span></span><span>Data preferată</span><span>Status</span>
+      </div>
+      <div id="om-dosare-list"></div>
+    </div>
+
+    <!-- Tab: Onboarding -->
+    <div class="om-panel" id="tab-onboarding">
+      <div style="max-width:600px;">
+        <div class="section-lbl" style="margin-bottom:16px;">Onboarding birou notarial</div>
+        <div class="detail-category">Checklist onboarding</div>
+        <div id="onboarding-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CREATE OFFICE MODAL (office-modal shell, single-column form) -->
+<div class="office-overlay" id="om-create-overlay"></div>
+<div class="office-modal" id="om-create">
+  <div class="om-header">
+    <div>
+      <div class="om-title">Birou nou</div>
+      <div class="om-meta">Configurare birou nou</div>
+    </div>
+    <div class="om-header-right">
+      <button class="close-btn" id="om-create-close" type="button">&#x2212;</button>
+    </div>
+  </div>
+  <div class="om-body">
+    <div class="om-panel active" id="create-panel">
+      <div id="co-error" style="display:none;background:var(--red-lt);color:var(--ink);font-family:var(--sans);font-size:14px;font-weight:300;padding:12px 16px;margin-bottom:24px;border-left:2px solid var(--red);"></div>
+      <div style="max-width:720px;">
+
+        <div class="detail-category">Date birou</div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Denumire</span><input class="form-inp co-inp" id="co-name" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Cabinet Notarial — obligatoriu"></div></div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">CUI</span><input class="form-inp co-inp mono" id="co-cui" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="RO12345678 — obligatoriu"></div></div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Website</span><input class="form-inp co-inp mono" id="co-website" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="https://..."></div></div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Oraș</span><input class="form-inp co-inp" id="co-city" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="București"></div></div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Adresă</span><input class="form-inp co-inp" id="co-address" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Str. ..."></div></div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Email</span><input class="form-inp co-inp mono" id="co-email" type="email" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="birou@..."></div></div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><input class="form-inp co-inp mono" id="co-phone" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="0700 000 000"></div></div>
+
+        <div class="detail-category detail-category-spaced">Persoană de contact</div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Nume</span><input class="form-inp co-inp" id="co-contact-name" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Prenume Nume"></div></div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Rol</span><input class="form-inp co-inp" id="co-contact-role" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="notar titular"></div></div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Email</span><input class="form-inp co-inp mono" id="co-contact-email" data-req="1" type="email" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="contact@... — obligatoriu"></div></div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><input class="form-inp co-inp mono" id="co-contact-phone" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="0700 000 000"></div></div>
+
+        <div class="detail-category detail-category-spaced">Plan</div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Plan abonament</span>
+          <div class="cdd" id="cdd-co-plan" data-placeholder="— selectează plan —" style="margin-top:4px;">
+            <button class="cdd-trigger empty" type="button" style="border-bottom:none;padding:0;font-family:var(--sans);font-size:14px;font-weight:300;text-transform:none;letter-spacing:0;">— selectează plan — obligatoriu</button>
+            <div class="cdd-panel" role="listbox">
+              <button class="cdd-opt" type="button" data-v="trial_30d">Trial 30 zile</button>
+              <button class="cdd-opt" type="button" data-v="starter">Starter</button>
+              <button class="cdd-opt" type="button" data-v="standard">Standard</button>
+              <button class="cdd-opt" type="button" data-v="pro">Pro</button>
+              <button class="cdd-opt" type="button" data-v="complimentary">Complimentary</button>
+            </div>
+            <input type="hidden" id="co-plan" value="">
+          </div>
+        </div></div>
+
+        <div style="font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--grey2);margin-top:24px;line-height:1.6;">
+          La creare, Stripe generează clientul, abonamentul pe planul ales și trimite link-ul de checkout pe email-ul de contact.
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <div style="padding:16px 44px;border-top:1px solid var(--rule);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;background:var(--bg);">
+    <button class="btn-ghost" id="co-cancel" type="button">Anulează</button>
+    <button class="btn-primary" id="co-submit" type="button" disabled>Creează birou ⟶</button>
+  </div>
+</div>
+
+<!-- UPLOAD MODAL (ci-modal shell) -->
+<div class="ci-modal-overlay" id="upload-overlay"></div>
+<div class="ci-modal" id="upload-modal">
+  <div class="ci-modal-hdr">
+    <span class="ci-modal-title" id="upload-modal-title">Adaugă șablon</span>
+    <button class="close-btn" id="upload-close">&#x2212;</button>
+  </div>
+  <div class="upload-replace-note" id="upload-replace-note" style="display:none;"></div>
+  <div class="ci-modal-body">
+    <div class="upload-form">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div class="form-group">
+          <span class="form-lbl">Tip act</span>
+          <div class="cdd" id="cdd-up-act-type">
+            <button class="cdd-trigger empty" type="button">— selectează —</button>
+            <div class="cdd-panel" role="listbox">
+              <button class="cdd-opt" type="button" data-v="procuri">Procuri</button>
+              <button class="cdd-opt" type="button" data-v="declaratii">Declarații</button>
+              <button class="cdd-opt" type="button" data-v="imputerniciri">Împuterniciri</button>
+              <button class="cdd-opt" type="button" data-v="acorduri">Acorduri</button>
+              <button class="cdd-opt" type="button" data-v="legalizari">Legalizări</button>
+            </div>
+            <input type="hidden" id="up-act-type" value="">
+          </div>
+        </div>
+        <div class="form-group">
+          <span class="form-lbl">Subtip</span>
+          <div class="cdd" id="cdd-up-subtype">
+            <button class="cdd-trigger empty disabled" type="button">— selectează tip act mai întâi —</button>
+            <div class="cdd-panel" role="listbox"></div>
+            <input type="hidden" id="up-subtype" value="">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <span class="form-lbl">Nume șablon (opțional)</span>
+        <input class="form-inp" id="up-name" placeholder="ex: Procură — Vânzare imobil (Cabinet Ionescu)">
+      </div>
+      <div class="form-group">
+        <span class="form-lbl">Fișier .docx</span>
+        <div class="file-drop" id="file-drop">
+          <input type="file" id="up-file" accept=".docx">
+          <div class="file-drop-text">Trage fișierul aici sau click pentru a selecta</div>
+          <div class="file-drop-name" id="file-drop-name"></div>
+        </div>
+        <div class="ctrl-hint" style="margin-top:12px;">Editează fișierul în Word: adaugă tokenii acolo unde e nevoie, apoi încarcă-l aici. Verificăm doar dacă tokenii sunt scriși corect — nu și unde i-ai pus.</div>
+      </div>
+      <div class="form-group">
+        <span class="form-lbl">Notă internă (opțional)</span>
+        <textarea class="form-textarea" id="up-notes" placeholder="Observații despre această versiune a șablonului..."></textarea>
+      </div>
+      <!-- Validation result area -->
+      <div id="val-area" style="display:none;"></div>
+    </div>
+  </div>
+  <div class="ci-modal-footer">
+    <button class="btn-ghost" id="upload-cancel">Anulează</button>
+    <button class="btn-primary" id="upload-submit" disabled>Validează ⟶</button>
+  </div>
+</div>
+
+<!-- PLACEHOLDERS VIEWER (inline expanded row, no modal) -->
+
+<hr class="rule-hr">
+<div class="footer">
+  <span>notariat.co · Admin · <span id="footer-user">—</span></span>
+  <span id="footer-date">—</span>
+</div>
+</div><!-- end main-page -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══ SUPABASE CLIENT ═══════════════════════════════════════════════
+var SUPA_URL = 'https://geuogfnlybyrsnlrjdit.supabase.co';
+var SUPA_KEY = 'sb_publishable_kd6KYiBJG_MKQJJsSTOa3Q_rGljVwoX';
+var sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// ── DATA LAYER ────────────────────────────────────────────────────
+// OFFICES, CASES, TEMPLATES are populated by loadAll() on boot.
+// While infra is unavailable the in-memory seeds below are used.
+var OFFICES = [];
+var CASES   = [];
+var TEMPLATES = [];
+var RAW_INTAKE = []; // pending raw .docx/.pdf files awaiting tokenization (UI-only mock pending contract amendment)
+var OM = {};        // office_id → office object
+var CURRENT_USER = null;
+var DB_LIVE = false; // true once Supabase responds
+
+// Seeds — used only when Supabase is unreachable (validation phase)
+var SEED_OFFICES = [
+  {id:'seed-1',name:'Cabinet Notarial Ionescu', city:'Timișoara',  notary:'Ana Golana',   email:'ionescu@notariat.co', phone:'0721 111 222',status:'activ',   since:'Ian 2026',address:'Str. Vasile Alecsandri nr. 1',cui:'RO45123456',website:'https://ionescu-notariat.ro',contact_name:'Ana Golana',     contact_role:'notar titular',contact_email:'ana.golana@ionescu-notariat.ro',contact_phone:'0721 111 223',subscription_status:'active', plan:'standard',billing_cycle:'monthly',current_period_end:'12 mai 2026',trial_ends_at:null},
+  {id:'seed-2',name:'Cabinet Notarial Popescu', city:'București',  notary:'Dan Popescu',  email:'popescu@notariat.co', phone:'0722 333 444',status:'activ',   since:'Feb 2026',address:'Bd. Unirii nr. 45',           cui:'RO45234567',website:'https://popescu-not.ro',      contact_name:'Dan Popescu',    contact_role:'notar titular',contact_email:'dan.popescu@popescu-not.ro',    contact_phone:'0722 333 445',subscription_status:'active', plan:'pro',     billing_cycle:'yearly', current_period_end:'03 feb 2027',trial_ends_at:null},
+  {id:'seed-3',name:'Cabinet Notarial Moldovan',city:'Cluj-Napoca',notary:'Ioana Moldovan',email:'moldovan@notariat.co',phone:'0733 555 666',status:'avertisment',since:'Mar 2026',address:'Str. Republicii nr. 12',      cui:'RO45345678',website:'',                            contact_name:'Ioana Moldovan', contact_role:'notar titular',contact_email:'ioana@moldovan-notariat.ro',    contact_phone:'0733 555 667',subscription_status:'past_due',plan:'starter', billing_cycle:'monthly',current_period_end:'28 apr 2026',trial_ends_at:null},
+  {id:'seed-4',name:'Cabinet Notarial Ardelean',city:'Timișoara',  notary:'Radu Ardelean',email:'ardelean@notariat.co',phone:'0744 777 888',status:'activ',   since:'Apr 2026',address:'Bd. Revoluției nr. 23',       cui:'RO45456789',website:'https://ardelean-notariat.ro',contact_name:'Radu Ardelean',  contact_role:'notar titular',contact_email:'radu@ardelean-notariat.ro',     contact_phone:'0744 777 889',subscription_status:'trial',  plan:'standard',billing_cycle:'monthly',current_period_end:'05 mai 2026',trial_ends_at:'28 apr 2026'}
+];
+var SEED_CASES = [
+  {id:'c1', oid:'seed-1',type:'procuri',      act:'Procură',       subtype:'Vânzare imobil',       ref:'NOT-2026-0041',client:'Popescu Maria-Elena',status:'nou',      urgent:true, pref:'17 apr, 14:00',created:'10 apr'},
+  {id:'c2', oid:'seed-1',type:'declaratii',   act:'Declarație',    subtype:'Acceptare succesiune', ref:'NOT-2026-0039',client:'Ionescu Alexandru',  status:'in-lucru', urgent:false,pref:'22 apr, 10:00',created:'8 apr'},
+  {id:'c3', oid:'seed-1',type:'acorduri',     act:'Acord',         subtype:'Partaj bunuri',        ref:'NOT-2026-0036',client:'Stan Gabriela',      status:'programat',urgent:false,pref:'16 apr, 11:00',created:'5 apr'},
+  {id:'c4', oid:'seed-1',type:'legalizari',   act:'Legalizare',    subtype:'Semnătură',            ref:'NOT-2026-0034',client:'Dumitrescu Radu',    status:'nou',      urgent:false,pref:'24 apr, 09:00',created:'4 apr'},
+  {id:'c5', oid:'seed-1',type:'imputerniciri',act:'Împuternicire', subtype:'Bancară',              ref:'NOT-2026-0031',client:'Marin Cristina',     status:'in-lucru', urgent:false,pref:'25 apr, 15:00',created:'2 apr'},
+  {id:'c6', oid:'seed-2',type:'procuri',      act:'Procură',       subtype:'Generală',             ref:'NOT-2026-0045',client:'Georgescu Pavel',    status:'nou',      urgent:false,pref:'16 apr, 16:00',created:'11 apr'},
+  {id:'c7', oid:'seed-2',type:'declaratii',   act:'Declarație',    subtype:'Luare în spațiu',      ref:'NOT-2026-0043',client:'Constantin Elena',   status:'in-lucru', urgent:true, pref:'16 apr, 10:00',created:'10 apr'},
+  {id:'c8', oid:'seed-2',type:'acorduri',     act:'Acord',         subtype:'Între soți — divorț',  ref:'NOT-2026-0040',client:'Radu Mihai',         status:'programat',urgent:false,pref:'18 apr, 14:00',created:'9 apr'},
+  {id:'c9', oid:'seed-2',type:'procuri',      act:'Procură',       subtype:'Cumpărare imobil',     ref:'NOT-2026-0038',client:'Popa Ioana',         status:'nou',      urgent:false,pref:'23 apr, 11:00',created:'8 apr'},
+  {id:'c10',oid:'seed-2',type:'legalizari',   act:'Legalizare',    subtype:'Copie',                ref:'NOT-2026-0035',client:'Dima Silviu',        status:'in-lucru', urgent:false,pref:'26 apr, 09:00',created:'6 apr'},
+  {id:'c11',oid:'seed-2',type:'imputerniciri',act:'Împuternicire', subtype:'Generală',             ref:'NOT-2026-0033',client:'Niculescu Adela',    status:'programat',urgent:false,pref:'19 apr, 15:00',created:'4 apr'},
+  {id:'c12',oid:'seed-2',type:'declaratii',   act:'Declarație',    subtype:'De notorietate',       ref:'NOT-2026-0030',client:'Tudose George',      status:'nou',      urgent:true, pref:'17 apr, 09:00',created:'3 apr'},
+  {id:'c13',oid:'seed-3',type:'procuri',      act:'Procură',       subtype:'ANAF / fiscală',       ref:'NOT-2026-0044',client:'Suciu Mihaela',      status:'nou',      urgent:true, pref:'16 apr, 14:00',created:'11 apr'},
+  {id:'c14',oid:'seed-3',type:'acorduri',     act:'Acord',         subtype:'Mediere',              ref:'NOT-2026-0042',client:'Bota Andrei',        status:'in-lucru', urgent:false,pref:'20 apr, 11:00',created:'10 apr'},
+  {id:'c15',oid:'seed-3',type:'declaratii',   act:'Declarație',    subtype:'Pierdere act',         ref:'NOT-2026-0037',client:'Muresan Dana',       status:'in-lucru', urgent:false,pref:'28 apr, 10:00',created:'7 apr'},
+  {id:'c16',oid:'seed-4',type:'procuri',      act:'Procură',       subtype:'Vânzare imobil',       ref:'NOT-2026-0046',client:'Ardelean Stefania',  status:'nou',      urgent:false,pref:'21 apr, 13:00',created:'12 apr'},
+  {id:'c17',oid:'seed-4',type:'declaratii',   act:'Declarație',    subtype:'Luare în spațiu',      ref:'NOT-2026-0047',client:'Neagu Victor',       status:'in-lucru', urgent:true, pref:'16 apr, 15:30',created:'12 apr'},
+  {id:'c18',oid:'seed-4',type:'legalizari',   act:'Legalizare',    subtype:'Copie',                ref:'NOT-2026-0048',client:'Oprea Liliana',      status:'programat',urgent:false,pref:'22 apr, 09:30',created:'11 apr'}
+];
+var SEED_TEMPLATES = [
+  {id:'st1',office_id:'seed-1',act_type:'procuri',   subtype:'Vânzare imobil',      name:'Procură — Vânzare imobil',       status:'active',uploaded_at:'15 apr 2026',placeholders:['MANDANT_NAME','MANDANT_CNP','MANDATAR_NAME','CASE_REF'],storage_path:'seed-1/procuri/vanzare-imobil.docx'},
+  {id:'st2',office_id:'seed-1',act_type:'declaratii',subtype:'Acceptare succesiune',name:'Declarație — Acceptare succesiune',status:'active',uploaded_at:'15 apr 2026',placeholders:['DECLARANT_NAME','DECLARANT_CNP','CASE_REF'],storage_path:'seed-1/declaratii/acceptare-succesiune.docx'},
+  {id:'st3',office_id:'seed-2',act_type:'procuri',   subtype:'Generală',            name:'Procură Generală',               status:'active',uploaded_at:'16 apr 2026',placeholders:['MANDANT_NAME','MANDANT_CNP','MANDATAR_NAME','CASE_REF'],storage_path:'seed-2/procuri/generala.docx'},
+  {id:'st4',office_id:'seed-2',act_type:'legalizari',subtype:'Semnătură',           name:'Legalizare Semnătură',           status:'active',uploaded_at:'16 apr 2026',placeholders:['SEMNATAR_NAME','SEMNATAR_CNP','CASE_REF'],storage_path:'seed-2/legalizari/semnatura.docx'},
+  {id:'st5',office_id:'seed-4',act_type:'procuri',   subtype:'Vânzare imobil',      name:'Procură — Vânzare imobil',       status:'active',uploaded_at:'18 apr 2026',placeholders:['MANDANT_NAME','MANDANT_CNP','MANDATAR_NAME','CASE_REF'],storage_path:'seed-4/procuri/vanzare-imobil.docx'},
+  // Historical seeds — demonstrate Istoric view (superseded/archived)
+  {id:'st6',office_id:'seed-1',act_type:'procuri',   subtype:'Vânzare imobil',      name:'Procură — Vânzare imobil (v1)',  status:'superseded',uploaded_at:'28 mar 2026',placeholders:['MANDANT_NAME','MANDATAR_NAME','CASE_REF'],storage_path:'seed-1/procuri/vanzare-imobil-v1.docx'},
+  {id:'st7',office_id:'seed-2',act_type:'declaratii',subtype:'De notorietate',      name:'Declarație de notorietate',      status:'archived',  uploaded_at:'12 feb 2026',placeholders:['DECLARANT_NAME','DECLARANT_CNP','CASE_REF'],storage_path:'seed-2/declaratii/notorietate.docx'},
+  {id:'st8',office_id:'seed-2',act_type:'procuri',   subtype:'Generală',            name:'Procură Generală (v1)',          status:'superseded',uploaded_at:'3 mar 2026', placeholders:['MANDANT_NAME','MANDATAR_NAME','CASE_REF'],storage_path:'seed-2/procuri/generala-v1.docx'}
+];
+// Raw intake seed (UI-only mock; schema matches finalized office_raw_intake — see doc_generator_raw_intake_coordination.md)
+var SEED_RAW_INTAKE = [
+  {id:'ri1',office_id:'seed-1',filename:'procura_cumparare_imobil_ionescu.docx',storage_path:'seed-1/ri1.docx',content_type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',file_size_bytes:48211,uploaded_at:'18 apr',uploaded_by:null,act_type:'procuri',   subtype:'Cumpărare imobil',    status:'pending',linked_template_id:null,notes:null},
+  {id:'ri2',office_id:'seed-1',filename:'acord_partaj_raw.docx',                storage_path:'seed-1/ri2.docx',content_type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',file_size_bytes:31744,uploaded_at:'19 apr',uploaded_by:null,act_type:'acorduri',  subtype:'Partaj bunuri',       status:'pending',linked_template_id:null,notes:null},
+  {id:'ri3',office_id:'seed-2',filename:'declaratie_acceptare_succ_v2.docx',    storage_path:'seed-2/ri3.docx',content_type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',file_size_bytes:27135,uploaded_at:'17 apr',uploaded_by:null,act_type:'declaratii',subtype:'Acceptare succesiune',status:'pending',linked_template_id:null,notes:null},
+  {id:'ri4',office_id:'seed-4',filename:'legalizare_copie.pdf',                 storage_path:'seed-4/ri4.pdf', content_type:'application/pdf',file_size_bytes:112409,uploaded_at:'19 apr',uploaded_by:null,act_type:'',          subtype:'',                    status:'pending',linked_template_id:null,notes:null}
+];
+
+// ══ CANONICAL DATA (contract §6) ══════════════════════════════════
+var SUBTYPES = {
+  procuri:     ['Generală','Specială (generic)','Vânzare imobil','Cumpărare imobil','Administrare imobil','Vânzare auto','Înmatriculare auto','Bancară','Pensie','Cazier judiciar','Pașaport','ANAF / fiscală','Succesiune','Judiciară','Divorț'],
+  declaratii:  ['Acceptare succesiune','Renunțare succesiune','Neacceptare succesiune','Plecare minor în străinătate','Recunoaștere paternitate','Luare în spațiu','Radiere ipotecă','Renunțare uzufruct','Acord vecini construcție','Administrator / asociat ONRC','Sediul social','De notorietate','Pierdere act','Revocare procură'],
+  imputerniciri:['Generală','Bancară','Reprezentare instituție','Ridicare documente'],
+  acorduri:    ['Mediere','Partaj bunuri','Exercitarea autorității părintești','Între soți — divorț'],
+  legalizari:  ['Semnătură','Copie','Traducere','Specimen de semnătură']
+};
+var ACT_LABELS = {procuri:'Procuri',declaratii:'Declarații',imputerniciri:'Împuterniciri',acorduri:'Acorduri',legalizari:'Legalizări'};
+var ACT_LABELS_SINGULAR = {procuri:'Procură',declaratii:'Declarație',imputerniciri:'Împuternicire',acorduri:'Acord',legalizari:'Legalizare'};
+// Coverage target: 1 template per act-type (5 total). Returns {covered, target}.
+var COVERAGE_TARGET=5;
+function coverageFor(oid){
+  var tpls=TEMPLATES.filter(function(t){return t.office_id===oid&&t.status==='active';});
+  var covered=0;
+  Object.keys(SUBTYPES).forEach(function(k){
+    if(tpls.some(function(t){return t.act_type===k;})) covered++;
+  });
+  return {covered:covered,target:COVERAGE_TARGET,total:tpls.length};
+}
+var ROLES_BY_ACT = {procuri:['Mandant','Mandatar'],declaratii:['Declarant'],imputerniciri:['Mandant','Împuternicit'],acorduri:['Parte I','Parte II'],legalizari:['Semnatar']};
+var FIELD_SUFFIXES = ['NAME','CNP','ID_SERIES','BIRTH_DATE','ADDRESS','PHONE','EMAIL'];
+var CASE_TOKENS = ['CASE_REF','ACT_TYPE','APPOINTMENT_DATE'];
+
+function roleToPrefix(r){return r.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,'_').replace(/[^A-Z0-9_]/g,'');}
+function validTokensFor(actType){
+  var roles=ROLES_BY_ACT[actType]||[],tokens=[];
+  roles.forEach(function(r){var pfx=roleToPrefix(r);FIELD_SUFFIXES.forEach(function(s){tokens.push(pfx+'_'+s);});});
+  CASE_TOKENS.forEach(function(t){tokens.push(t);});
+  return tokens;
+}
+function subtypeSlug(sub){return sub.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');}
+
+// ══ HELPERS ════════════════════════════════════════════════════════
+function h(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function pad(n){return n<10?'0'+n:String(n);}
+var _tt;
+function showToast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(function(){t.classList.remove('show');},2500);}
+
+// ══ AUDIO ═══════════════════════════════════════════════════════════
+var _ac=null;
+function _ctx(){if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();return _ac;}
+function playTone(freqs,dur,type,vol){
+  if(!type)type='sine';
+  if(vol===undefined)vol=0.12;
+  try{
+    var ctx=_ctx();
+    freqs.forEach(function(f,i){
+      var osc=ctx.createOscillator(),gain=ctx.createGain();
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.type=type;osc.frequency.value=f;
+      var t=ctx.currentTime+i*0.04;
+      gain.gain.setValueAtTime(0,t);
+      gain.gain.linearRampToValueAtTime(vol,t+0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001,t+dur);
+      osc.start(t);osc.stop(t+dur+0.05);
+    });
+  }catch(e){}
+}
+// error: low single tone (admin-specific; canonical has no error sound)
+function soundErr(){playTone([196],0.2,'sine',0.1);}
+// copy: single soft high note
+function soundCopy(){playTone([1047],0.12,'sine',0.1);}
+// confirm: two-note ascending
+function soundConfirm(){playTone([523,659],0.2,'sine',0.12);}
+// finalizat / save: three-note resolution chord
+function soundFinalizat(){playTone([392,494,659],0.35,'sine',0.1);}
+// view switch: very subtle click
+function soundSwitch(){playTone([880],0.06,'sine',0.06);}
+// case / row select: gentle low tap
+function soundSelect(){playTone([330],0.08,'sine',0.07);}
+// act-type tab: mid-range soft tick
+function soundTabSwitch(){playTone([660],0.07,'sine',0.07);}
+// slider: throttled whisper tone for slider drag
+var _sliderSoundTimer=null;
+function soundSlider(){
+  if(_sliderSoundTimer)return;
+  _sliderSoundTimer=setTimeout(function(){_sliderSoundTimer=null;},80);
+  playTone([440],0.04,'sine',0.05);
+}
+// scroll: short pick-ticks every ~56px of scroll delta (iOS-wheel feel)
+var _scrollLastY={};
+var _scrollTickStep=56;
+function soundScroll(e){
+  var el=e.currentTarget;
+  if(el.scrollHeight<=el.clientHeight+2) return;
+  var key=el.id||'_default';
+  var last=_scrollLastY[key];
+  if(last===undefined){_scrollLastY[key]=el.scrollTop;return;}
+  var delta=Math.abs(el.scrollTop-last);
+  if(delta>=_scrollTickStep){
+    _scrollLastY[key]=el.scrollTop;
+    playTone([880],0.035,'sine',0.045);
+  }
+}
+
+// ══ DB BANNER ════════════════════════════════════════════════════════
+function setDbBanner(live, msg){
+  var banner=document.getElementById('db-banner');
+  var dot=document.getElementById('db-dot');
+  var txt=document.getElementById('db-banner-text');
+  banner.classList.remove('hidden');
+  dot.className='db-dot '+(live?'live':'mock');
+  txt.textContent=msg;
+  DB_LIVE=live;
+}
+
+// ══ AUTH ════════════════════════════════════════════════════════════
+function showAuthScreen(){
+  document.getElementById('app-loading').classList.add('hidden');
+  document.getElementById('auth-screen').classList.remove('hidden');
+}
+function showMainApp(user){
+  CURRENT_USER=user;
+  document.getElementById('app-loading').classList.add('hidden');
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('main-page').style.display='';
+  var email=user?user.email:'—';
+  document.getElementById('hs-user').textContent=email;
+  document.getElementById('footer-user').textContent=email;
+}
+
+document.getElementById('auth-btn').addEventListener('click',function(){
+  var email=document.getElementById('auth-email').value.trim();
+  var pass=document.getElementById('auth-pass').value;
+  var errEl=document.getElementById('auth-err');
+  errEl.classList.remove('show');
+  if(!email||!pass){errEl.textContent='Completează email și parola.';errEl.classList.add('show');return;}
+  document.getElementById('auth-btn').disabled=true;
+  document.getElementById('auth-btn').textContent='Se autentifică...';
+  sb.auth.signInWithPassword({email:email,password:pass}).then(function(res){
+    document.getElementById('auth-btn').disabled=false;
+    document.getElementById('auth-btn').textContent='Intră în cont ⟶';
+    if(res.error){errEl.textContent=res.error.message;errEl.classList.add('show');return;}
+    bootApp(res.data.user);
+  });
+});
+document.getElementById('auth-demo-btn').addEventListener('click',function(){
+  document.getElementById('db-banner').classList.add('hidden');
+  showMainApp({email:'george@super.works (demo)'});
+  OFFICES=SEED_OFFICES;CASES=SEED_CASES;TEMPLATES=SEED_TEMPLATES;RAW_INTAKE=SEED_RAW_INTAKE.slice();
+  OFFICES.forEach(function(o){OM[o.id]=o;});
+  initUI();
+});
+document.getElementById('auth-pass').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('auth-btn').click();});
+
+document.querySelector('.logout-btn').addEventListener('click',function(){
+  sb.auth.signOut().then(function(){
+    OFFICES=[];CASES=[];TEMPLATES=[];OM={};CURRENT_USER=null;
+    document.getElementById('main-page').style.display='none';
+    document.getElementById('db-banner').classList.add('hidden');
+    showAuthScreen();
+  });
+});
+
+// ══ BOOT ════════════════════════════════════════════════════════════
+function bootApp(user){
+  showMainApp(user);
+  loadAll();
+}
+
+function loadAll(){
+  // Load offices + templates from Supabase; fall back to seeds if infra not yet live
+  Promise.all([
+    sb.from('notary_offices').select('id,name,city,notary_name,email,phone,status,created_at'),
+    sb.from('office_templates').select('*').eq('status','active')
+  ]).then(function(results){
+    var offRes=results[0], tplRes=results[1];
+    if(offRes.error||!offRes.data||offRes.data.length===0){
+      // Infra not yet live — use seeds
+      setDbBanner(false,'Mod validare — date demonstrative (Supabase: infrastructură în pregătire)');
+      OFFICES=SEED_OFFICES;
+      CASES=SEED_CASES;
+      TEMPLATES=SEED_TEMPLATES;
+    } else {
+      setDbBanner(true,'Conectat la Supabase · Date live');
+      OFFICES=offRes.data.map(function(o){
+        return {
+          id:o.id, name:o.name, city:o.city, notary:o.notary_name||'—',
+          email:o.email||'—', phone:o.phone||'—',
+          status:o.status||'activ',
+          since:o.created_at?new Date(o.created_at).toLocaleDateString('ro-RO',{month:'short',year:'numeric'}):'—',
+          address:o.address||'—'
+        };
+      });
+      // Cases: loaded per-office on demand (see loadCasesForOffice).
+      // For KPI + today list we do a lightweight fetch of all cases once:
+      CASES=SEED_CASES; // placeholder until cases table confirmed in schema
+      TEMPLATES=tplRes.error?[]:tplRes.data.map(function(t){
+        return {
+          id:t.id, office_id:t.office_id, act_type:t.act_type, subtype:t.subtype,
+          name:t.name, storage_path:t.storage_path, placeholders:t.placeholders||[],
+          status:t.status, uploaded_at:t.uploaded_at?new Date(t.uploaded_at).toLocaleDateString('ro-RO',{day:'numeric',month:'short',year:'numeric'}):'—',
+          notes:t.notes||''
+        };
+      });
+    }
+    // Build lookup map
+    OM={};
+    OFFICES.forEach(function(o){OM[o.id]=o;});
+    initUI();
+  }).catch(function(){
+    setDbBanner(false,'Mod validare — date demonstrative (Supabase: eroare conexiune)');
+    OFFICES=SEED_OFFICES;CASES=SEED_CASES;TEMPLATES=SEED_TEMPLATES;RAW_INTAKE=SEED_RAW_INTAKE.slice();
+    OFFICES.forEach(function(o){OM[o.id]=o;});
+    initUI();
+  });
+}
+
+function initUI(){
+  initDate();
+  initToday();
+  updateKPI();
+  setDosareHeight();
+  renderA();
+  // Scroll sound on all scrollable containers (matches canonical v48)
+  ['today-scroll','list-b-scroll'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.addEventListener('scroll',soundScroll,{passive:true});
+  });
+  var oms=document.querySelector('.om-body');if(oms) oms.addEventListener('scroll',soundScroll,{passive:true});
+  var cms=document.querySelector('.cm-body');if(cms) cms.addEventListener('scroll',soundScroll,{passive:true});
+}
+
+// ══ DATE ════════════════════════════════════════════════════════════
+function initDate(){
+  var now=new Date();
+  var M=['ianuarie','februarie','martie','aprilie','mai','iunie','iulie','august','septembrie','octombrie','noiembrie','decembrie'];
+  var D=['Duminică','Luni','Marți','Miercuri','Joi','Vineri','Sâmbătă'];
+  var s=D[now.getDay()]+', '+now.getDate()+' '+M[now.getMonth()]+' '+now.getFullYear();
+  document.getElementById('hero-date').textContent=s.toUpperCase();
+  document.getElementById('footer-date').textContent=s;
+}
+
+// ══ TODAY ════════════════════════════════════════════════════════════
+function initToday(){
+  var today=CASES.filter(function(c){return c.pref&&c.pref.indexOf('16 apr')>-1;});
+  today.sort(function(a,b){var ta=a.pref.match(/(\d{1,2}:\d{2})/),tb=b.pref.match(/(\d{1,2}:\d{2})/);return (ta?ta[1]:'').localeCompare(tb?tb[1]:'');});
+  var el=document.getElementById('today-scroll'),wrap=document.getElementById('today-wrap');
+  var countEl=document.getElementById('today-count');
+  if(countEl) countEl.textContent=today.length||'';
+  if(!today.length){el.innerHTML='<div style="font-family:var(--mono);font-size:11px;color:var(--grey2);padding:8px 0;">Nicio programare azi.</div>';return;}
+  var html='';
+  today.forEach(function(c,i){
+    var m=c.pref.match(/(\d{1,2}:\d{2})/),t=m?m[1]:'—';
+    var nameParts=c.client.split(' ');
+    var displayName=nameParts.length>1?nameParts[nameParts.length-1]+' '+nameParts[0]:c.client;
+    html+='<div class="today-row">';
+    html+='<span class="today-num">'+pad(i+1)+'</span>';
+    html+='<span class="today-act">'+h(c.act)+'</span>';
+    html+='<span class="today-name">'+h(displayName)+'</span>';
+    html+='<span class="today-time">'+h(t)+'</span>';
+    html+='</div>';
+  });
+  el.innerHTML=html;
+  function chk(){if(wrap)wrap.classList.toggle('has-more',el.scrollHeight>el.clientHeight+2&&el.scrollTop<el.scrollHeight-el.clientHeight-2);}
+  el.addEventListener('scroll',chk);setTimeout(chk,100);
+}
+
+// ══ KPI ═════════════════════════════════════════════════════════════
+function updateKPI(){
+  document.getElementById('kpi-total').textContent=CASES.length;
+  document.getElementById('kpi-urgente').textContent=CASES.filter(function(c){return c.urgent;}).length;
+  var active=OFFICES.filter(function(o){return o.status==='activ';}).length;
+  document.getElementById('kpi-birouri').textContent=active;
+  var sub=document.getElementById('kpi-birouri-sub');
+  if(sub) sub.textContent='din '+OFFICES.length+' înregistrate';
+  var l1=document.getElementById('hr-line1');
+  var l2=document.getElementById('hr-line2');
+  if(l1) l1.textContent=active+' birouri active';
+  if(l2) l2.textContent=CASES.filter(function(c){return c.status==='in-lucru'||c.status==='nou';}).length+' dosare în lucru';
+}
+
+// ══ STATUS TAGS ══════════════════════════════════════════════════════
+function statusTag(s){
+  if(s==='nou')      return '<span class="tag tag-nou">Nou</span>';
+  if(s==='in-lucru') return '<span class="tag tag-lucru">Activ</span>';
+  if(s==='programat')return '<span class="tag tag-programat">Programat</span>';
+  if(s==='urgent')   return '<span class="tag tag-urgent">! Urgent</span>';
+  return '<span class="tag">'+h(s)+'</span>';
+}
+function officeStatusTag(s){
+  if(s==='activ')       return '<span class="tag tag-activ">Activ</span>';
+  if(s==='avertisment') return '<span class="tag tag-avertisment">! Avertisment</span>';
+  return '<span class="tag">'+h(s)+'</span>';
+}
+
+// Romanian-month parser for seed dates like '28 apr 2026'. Returns Date or null.
+var RO_MONTH_TO_IDX={ian:0,feb:1,mar:2,apr:3,mai:4,iun:5,iul:6,aug:7,sep:8,oct:9,noi:10,dec:11};
+function parseRoDate(s){
+  if(!s||typeof s!=='string')return null;
+  var m=/^(\d{1,2})\s+([a-zăâî]+)\s+(\d{4})$/i.exec(s.trim());
+  if(!m)return null;
+  var mi=RO_MONTH_TO_IDX[m[2].toLowerCase().slice(0,3)];
+  if(mi===undefined)return null;
+  return new Date(parseInt(m[3],10),mi,parseInt(m[1],10));
+}
+// "Billing trouble" = past_due, canceled, or trial ending in ≤10 days.
+// Loose definition approved with user. Used by: the '! Abonament' filter tag.
+var TRIAL_EXPIRY_DAYS=10;
+function hasBillingIssue(o){
+  if(!o)return false;
+  if(o.subscription_status==='past_due'||o.subscription_status==='canceled')return true;
+  if(o.subscription_status==='trial'&&o.trial_ends_at){
+    var d=parseRoDate(o.trial_ends_at);
+    if(!d)return false;
+    var ms=d.getTime()-Date.now();
+    var days=ms/86400000;
+    return days<=TRIAL_EXPIRY_DAYS;
+  }
+  return false;
+}
+
+// ══ VIEW A — BIROURI ════════════════════════════════════════════════
+function renderA(){
+  var q=(function(){var el=document.getElementById('search-a');return el?(el.value||'').toLowerCase().trim():'';}());
+  var list=OFFICES.filter(function(o){
+    if(sortMode==='avertisment') return o.status==='avertisment';
+    if(sortMode==='abonament') return hasBillingIssue(o);
+    if(exploratorbOfficeId&&o.id!==exploratorbOfficeId) return false;
+    if(exploratorbCity&&o.city!==exploratorbCity) return false;
+    if(adminActFilter!=='toate'){
+      var hasMatch=CASES.some(function(c){return c.oid===o.id&&c.type===adminActFilter;});
+      if(!hasMatch) return false;
+    }
+    if(q&&o.name.toLowerCase().indexOf(q)<0&&o.city.toLowerCase().indexOf(q)<0) return false;
+    return true;
+  });
+  if(sortMode==='name') list.sort(function(a,b){return a.name.localeCompare(b.name);});
+  if(sortMode==='dosare') list.sort(function(a,b){
+    var ca=CASES.filter(function(c){return c.oid===a.id&&(adminActFilter==='toate'||c.type===adminActFilter);}).length;
+    var cb=CASES.filter(function(c){return c.oid===b.id&&(adminActFilter==='toate'||c.type===adminActFilter);}).length;
+    return cb-ca;
+  });
+  if(sortMode==='coverage') list.sort(function(a,b){
+    var ta=TEMPLATES.filter(function(t){return t.office_id===a.id&&t.status==='active';}).length;
+    var tb=TEMPLATES.filter(function(t){return t.office_id===b.id&&t.status==='active';}).length;
+    return ta-tb;
+  });
+  if(!list.length){document.getElementById('list-a').innerHTML='<div class="empty-state"><span class="empty-glyph">—</span><span class="empty-text">Niciun birou</span></div>';return;}
+  var html='';
+  list.forEach(function(o,i){
+    // item 7: filter cases by act type
+    var cs=CASES.filter(function(c){return c.oid===o.id&&(adminActFilter==='toate'||c.type===adminActFilter);});
+    var allCs=CASES.filter(function(c){return c.oid===o.id;});
+    var cov=coverageFor(o.id);
+    var pct=Math.round(cov.covered/cov.target*100);
+    html+='<div class="list-row-office" data-oid="'+h(o.id)+'">';
+    html+='<div class="l-num">'+pad(i+1)+'</div>';
+    // item 8: no o-sub (notary name removed)
+    html+='<div><div class="o-name">'+h(o.name)+'</div></div>';
+    html+='<div class="l-client">'+h(o.city)+'</div>';
+    html+='<div class="o-progress"><div class="o-prog-bar"><div class="o-prog-fill" style="width:'+pct+'%"></div></div><span class="o-prog-count">'+cov.covered+' / '+cov.target+'</span></div>';
+    html+='<div class="l-date"><span class="l-date-main">'+cs.length+'</span><span class="l-date-slot"> dosare</span></div>';
+    html+='<div class="l-status">'+officeStatusTag(o.status)+'</div>';
+    html+='</div>';
+  });
+  document.getElementById('list-a').innerHTML=html;
+}
+
+// ══ VIEW B — DOSARE ══════════════════════════════════════════════════
+var filterStatus='toate';
+function renderB(){
+  var q=(function(){var el=document.getElementById('search-b');return el?(el.value||'').toLowerCase().trim():'';}());
+  var list=CASES.filter(function(c){
+    // status/urgent filter
+    if(filterStatus==='urgent'&&!c.urgent) return false;
+    if(filterStatus!=='toate'&&filterStatus!=='urgent'&&c.status!==filterStatus) return false;
+    // act-type filter — uses c.type (canonical key)
+    if(adminActFilter!=='toate'&&c.type!==adminActFilter) return false;
+    // office filter from explorator
+    if(exploratorbOfficeId&&c.oid!==exploratorbOfficeId) return false;
+    if(exploratorbCity){var of=OM[c.oid];if(!of||of.city!==exploratorbCity) return false;}
+    // text search
+    if(q&&c.client.toLowerCase().indexOf(q)<0&&c.ref.toLowerCase().indexOf(q)<0&&c.act.toLowerCase().indexOf(q)<0) return false;
+    return true;
+  });
+  if(!list.length){document.getElementById('list-b').innerHTML='<div class="empty-state"><span class="empty-glyph">—</span><span class="empty-text">Niciun dosar</span></div>';return;}
+  var html='';
+  list.forEach(function(c,i){
+    var statusLabel=c.status==='nou'?'Nou':c.status==='in-lucru'?'activ':'programat';
+    var urg=c.urgent?'<span class="urgency-dot"></span>':'';
+    var flag=c.urgent?' <span class="l-flag">! Urgent</span>':'';
+    // item 11: no urgent-row red border — just normal list-row-shared
+    html+='<div class="list-row-shared" data-id="'+h(c.id)+'">';
+    html+='<div class="l-num">'+pad(i+1)+'</div>';
+    html+='<div><div class="l-act">'+h(c.act)+urg+flag+'</div></div>';
+    html+='<div class="l-client">'+h(c.client)+'</div>';
+    html+='<div></div>';
+    html+='<div class="l-date"><span class="l-date-main">'+h(c.pref||'flexibil')+'</span></div>';
+    html+='<div class="l-status'+(c.status==='nou'?' nou':'')+'">'+statusLabel+'</div>';
+    html+='</div>';
+  });
+  document.getElementById('list-b').innerHTML=html;
+  setDosareHeight();
+}
+
+var currentView='a';
+function renderCurrent(){
+  if(currentView==='a') renderA(); else renderB();
+}
+
+// ══ VIEW SWITCH ══════════════════════════════════════════════════════
+function switchView(v){
+  soundSwitch();
+  currentView=v;
+  ['a','b'].forEach(function(x){
+    document.getElementById('view-'+x).classList.toggle('active',x===v);
+    document.getElementById('vbtn-'+x).classList.toggle('active',x===v);
+    var fr=document.getElementById('filter-row-'+x);
+    if(fr) fr.style.display=(x===v?'flex':'none');
+  });
+  var addBtn=document.getElementById('btn-add-office');
+  if(addBtn) addBtn.style.display=(v==='a'?'inline-flex':'none');
+  if(v==='a') renderA(); else renderB();
+}
+
+// ══ OFFICE OVERLAY ═══════════════════════════════════════════════════
+var currentOfficeId=null;
+function openOffice(oid){
+  soundSwitch();
+  currentOfficeId=oid;
+  var o=OM[oid]; if(!o) return;
+  var cs=CASES.filter(function(c){return c.oid===oid;});
+  var urg=cs.filter(function(c){return c.urgent;}).length;
+  var tpls=TEMPLATES.filter(function(t){return t.office_id===oid&&t.status==='active';});
+  var cov=coverageFor(oid);
+  document.getElementById('om-title').textContent=o.name;
+  document.getElementById('om-meta').textContent=o.notary+' · '+o.city+' · '+o.email;
+  document.getElementById('om-status-tag').innerHTML=officeStatusTag(o.status);
+  document.getElementById('of-name').textContent=o.name;
+  document.getElementById('of-cui').textContent=o.cui||'—';
+  document.getElementById('of-website').textContent=o.website||'—';
+  document.getElementById('of-city').textContent=o.city;
+  document.getElementById('of-addr').textContent=o.address||'—';
+  document.getElementById('of-email').textContent=o.email;
+  document.getElementById('of-phone').textContent=o.phone;
+  document.getElementById('of-contact-name').textContent=o.contact_name||'—';
+  document.getElementById('of-contact-role').textContent=o.contact_role||'—';
+  document.getElementById('of-contact-email').textContent=o.contact_email||'—';
+  document.getElementById('of-contact-phone').textContent=o.contact_phone||'—';
+  // Subscription block
+  var subPill=document.getElementById('of-sub-status');
+  subPill.className='sub-pill '+(o.subscription_status||'active');
+  subPill.textContent=subStatusLabel(o.subscription_status);
+  document.getElementById('of-plan').textContent=planLabel(o.plan);
+  document.getElementById('of-cycle').textContent=o.billing_cycle==='yearly'?'Anual':(o.billing_cycle==='monthly'?'Lunar':'—');
+  document.getElementById('of-period-end').textContent=o.current_period_end||'—';
+  // Trial expiry row is visible only while on trial
+  var trialRow=document.getElementById('of-trial-row');
+  if(o.subscription_status==='trial'&&o.trial_ends_at){
+    trialRow.style.display='';
+    document.getElementById('of-trial-end').textContent=o.trial_ends_at;
+  } else {
+    trialRow.style.display='none';
+  }
+  document.getElementById('of-stat-dosare').textContent=cs.length;
+  document.getElementById('of-stat-urgente').textContent=urg;
+  document.getElementById('of-stat-tpl').textContent=cov.covered+' / '+cov.target;
+  document.getElementById('of-stat-since').textContent=o.since||'—';
+  renderOmDosare(oid);
+  // Reset library tab to Active when office opens (avoids landing on Istoric/Brute from a previous session)
+  tplView='active';
+  ['active','brute','istoric'].forEach(function(t){
+    var tab=document.getElementById('lib-tab-'+t);
+    var pane=document.getElementById('lib-pane-'+t);
+    if(tab) tab.classList.toggle('active',t==='active');
+    if(pane) pane.style.display=(t==='active'?'block':'none');
+  });
+  renderLibrary(oid);
+  renderOnboarding(oid);
+  document.getElementById('om-overlay').classList.add('open');
+  document.getElementById('om').classList.add('open');
+  activateTab('detalii');
+}
+function closeOffice(){
+  soundSwitch();
+  document.getElementById('om-overlay').classList.remove('open');
+  document.getElementById('om').classList.remove('open');
+  currentOfficeId=null;
+}
+function activateTab(name){
+  document.querySelectorAll('.om-tab').forEach(function(t){t.classList.toggle('active',t.dataset.tab===name);});
+  document.querySelectorAll('.om-panel').forEach(function(p){p.classList.toggle('active',p.id==='tab-'+name);});
+}
+function renderOmDosare(oid){
+  var cs=CASES.filter(function(c){return c.oid===oid;});
+  if(!cs.length){document.getElementById('om-dosare-list').innerHTML='<div class="empty-state"><span class="empty-glyph">—</span><span class="empty-text">Niciun dosar activ</span></div>';return;}
+  var html='';
+  cs.forEach(function(c,i){
+    var statusLabel=c.status==='nou'?'Nou':c.status==='in-lucru'?'activ':'programat';
+    var urg=c.urgent?'<span class="urgency-dot"></span>':'';
+    var flag=c.urgent?' <span class="l-flag">! Urgent</span>':'';
+    html+='<div class="list-row-shared" data-id="'+h(c.id)+'">';
+    html+='<div class="l-num">'+pad(i+1)+'</div>';
+    html+='<div><div class="l-act">'+h(c.act)+urg+flag+'</div></div>';
+    html+='<div class="l-client">'+h(c.client)+'</div>';
+    html+='<div></div>';
+    html+='<div class="l-date"><span class="l-date-main">'+h(c.pref||'flexibil')+'</span></div>';
+    html+='<div class="l-status'+(c.status==='nou'?' nou':'')+'">'+statusLabel+'</div>';
+    html+='</div>';
+  });
+  document.getElementById('om-dosare-list').innerHTML=html;
+}
+
+// ══ LIBRARY TABS (3-tab system: active | brute | istoric) ══════════════════
+var tplView='active'; // 'active' | 'brute' | 'istoric'
+
+function switchLibTab(v){
+  if(v===tplView)return;
+  soundTabSwitch();
+  tplView=v;
+  ['active','brute','istoric'].forEach(function(t){
+    document.getElementById('lib-tab-'+t).classList.toggle('active',t===v);
+    document.getElementById('lib-pane-'+t).style.display=(t===v?'block':'none');
+  });
+  // Re-render the pane we just switched to (counts already refreshed by renderLibrary)
+  renderLibrary(currentOfficeId);
+}
+
+// Single entry point: refreshes counts, progress, and the currently active pane.
+function renderLibrary(oid){
+  if(!oid)return;
+  var active=TEMPLATES.filter(function(t){return t.office_id===oid&&t.status==='active';});
+  var history=TEMPLATES.filter(function(t){return t.office_id===oid&&t.status!=='active';});
+  var brute=RAW_INTAKE.filter(function(r){return r.office_id===oid&&r.status==='pending';});
+  // Counts on tabs
+  document.getElementById('lib-count-active').textContent='· '+active.length;
+  document.getElementById('lib-count-brute').textContent='· '+brute.length;
+  document.getElementById('lib-count-istoric').textContent='· '+history.length;
+  document.getElementById('lib-dot-brute').style.display=brute.length>0?'inline-block':'none';
+  // Progress bar + summary
+  var TARGET=5;var covered=0;
+  Object.keys(SUBTYPES).forEach(function(k){if(active.some(function(t){return t.act_type===k;}))covered++;});
+  var pct=Math.round(covered/TARGET*100);
+  document.getElementById('tpl-prog-fill').style.width=pct+'%';
+  document.getElementById('tpl-prog-label').textContent=covered+' / '+TARGET+' tipuri de acte acoperite';
+  var parts=[];
+  if(active.length) parts.push(active.length+' șablon'+(active.length===1?'':'oane')+' activ'+(active.length===1?'':'e'));
+  if(brute.length) parts.push(brute.length+' intrări brute de clasificat');
+  document.getElementById('tpl-summary').textContent=parts.length?parts.join(' · '):'Nicio activitate — adaugă primul șablon';
+  // Render current pane
+  if(tplView==='active') renderLibActive(oid,active);
+  else if(tplView==='brute') renderLibBrute(oid,brute);
+  else renderLibIstoric(oid,history);
+}
+
+function renderLibActive(oid,tpls){
+  var el=document.getElementById('lib-pane-active');
+  if(!tpls.length){
+    el.innerHTML='<div class="lib-empty"><div class="lib-empty-line">Niciun șablon activ</div><div class="lib-empty-sub">Adaugă prin <span style="color:var(--ink);">+ Adaugă</span> sau trage fișiere .docx aici</div></div>';
+    return;
+  }
+  var html='';
+  Object.keys(SUBTYPES).forEach(function(actType){
+    var groupTpls=tpls.filter(function(t){return t.act_type===actType;});
+    if(!groupTpls.length) return; // skip empty act-types — flat list only shows what exists
+    var subsTotal=SUBTYPES[actType].length;
+    html+='<div class="act-group">';
+    html+='<div class="act-group-title"><span>'+h(ACT_LABELS[actType])+'</span><span class="count">'+groupTpls.length+' / '+subsTotal+'</span></div>';
+    groupTpls.forEach(function(tpl){
+      html+='<div class="lib-row-active">';
+      html+='<span class="row-sub">'+h(tpl.subtype)+'</span>';
+      html+='<span class="row-date">'+h(tpl.uploaded_at||'—')+'</span>';
+      html+='<span class="row-actions">';
+      html+='<button class="lib-act-link" onclick="showPlaceholders(\''+h(tpl.id)+'\',this)">Tokeni</button>';
+      html+='<button class="lib-act-link" onclick="openReplaceModal(\''+h(actType)+'\',\''+h(tpl.subtype)+'\')">Înlocuiește</button>';
+      html+='<button class="lib-act-link" onclick="armOrArchive(\''+h(tpl.id)+'\',this)">Arhivează</button>';
+      html+='</span>';
+      html+='</div>';
+    });
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
+
+function renderLibBrute(oid,items){
+  var el=document.getElementById('lib-pane-brute');
+  if(!items.length){
+    el.innerHTML='<div class="lib-empty"><div class="lib-empty-line">Niciun fișier în așteptare</div><div class="lib-empty-sub">Trage fișiere .docx aici sau apasă <span style="color:var(--ink);">+ Adaugă</span></div></div>';
+    return;
+  }
+  var html='';
+  items.forEach(function(r){
+    html+='<div class="lib-row-brute" data-rid="'+h(r.id)+'">';
+    html+='<div class="row-fname-wrap"><div class="row-fname">'+h(r.filename)+'</div><div class="row-fname-meta">Încărcat '+h(r.uploaded_at)+'</div></div>';
+    // Act-type cdd
+    var actOpts='';
+    Object.keys(SUBTYPES).forEach(function(k){actOpts+='<button class="cdd-opt" type="button" data-v="'+h(k)+'">'+h(ACT_LABELS[k])+'</button>';});
+    html+='<div class="cdd raw-intake-cdd" id="cdd-raw-act-'+h(r.id)+'" data-placeholder="— tip act —">';
+    html+='<button class="cdd-trigger'+(r.act_type?'':' empty')+'" type="button">'+h(r.act_type?ACT_LABELS[r.act_type]:'— tip act —')+'</button>';
+    html+='<div class="cdd-panel" role="listbox">'+actOpts+'</div>';
+    html+='<input type="hidden" data-raw-rid="'+h(r.id)+'" data-raw-role="act" value="'+h(r.act_type||'')+'">';
+    html+='</div>';
+    // Subtype cdd
+    var subOpts='';
+    if(r.act_type){(SUBTYPES[r.act_type]||[]).forEach(function(s){subOpts+='<button class="cdd-opt" type="button" data-v="'+h(s)+'">'+h(s)+'</button>';});}
+    var subPlaceholder=r.act_type?'— subtip —':'— selectează tip act mai întâi —';
+    html+='<div class="cdd raw-intake-cdd" id="cdd-raw-sub-'+h(r.id)+'" data-placeholder="'+h(subPlaceholder)+'">';
+    html+='<button class="cdd-trigger'+(r.subtype?'':' empty')+(r.act_type?'':' disabled')+'" type="button">'+h(r.subtype||subPlaceholder)+'</button>';
+    html+='<div class="cdd-panel" role="listbox">'+subOpts+'</div>';
+    html+='<input type="hidden" data-raw-rid="'+h(r.id)+'" data-raw-role="subtype" value="'+h(r.subtype||'')+'">';
+    html+='</div>';
+    // Spacer (absorbs horizontal slack so dropdowns stay pinned)
+    html+='<div></div>';
+    // Actions
+    html+='<span class="row-actions">';
+    var canTokenize=r.act_type&&r.subtype;
+    if(canTokenize) html+='<button class="doc-chip" onclick="openTokenizeFromRaw(\''+h(r.id)+'\')">Finalizează ⟶</button>';
+    else html+='<button class="lib-act-link inactive" onclick="openTokenizeFromRaw(\''+h(r.id)+'\')">Finalizează</button>';
+    html+='<button class="lib-act-link" onclick="discardRawIntake(\''+h(r.id)+'\')">Elimină</button>';
+    html+='</span>';
+    html+='</div>';
+  });
+  el.innerHTML=html;
+  // Wire change listeners on the raw-intake hidden inputs (cdd dispatches 'change' on them)
+  el.querySelectorAll('input[data-raw-rid]').forEach(function(hidden){
+    hidden.addEventListener('change',function(){
+      var rid=this.getAttribute('data-raw-rid');
+      var role=this.getAttribute('data-raw-role');
+      if(role==='act') assignRawIntakeActType(rid,this.value);
+      else assignRawIntakeSubtype(rid,this.value);
+    });
+  });
+}
+
+function renderLibIstoric(oid,tpls){
+  var el=document.getElementById('lib-pane-istoric');
+  if(!tpls.length){
+    el.innerHTML='<div class="lib-empty"><div class="lib-empty-line">Niciun șablon în istoric</div><div class="lib-empty-sub">Șabloanele înlocuite sau arhivate vor apărea aici</div></div>';
+    return;
+  }
+  // Compute version numbers per-slot: oldest → v1, newest → vN. Applies to all (active+inactive) in that slot;
+  // here we only render inactive ones but the numbering reflects upload order across the whole slot's history.
+  var versionMap={};
+  TEMPLATES.filter(function(t){return t.office_id===oid;}).forEach(function(t){
+    var key=t.act_type+'|'+t.subtype;
+    if(!versionMap[key]) versionMap[key]=[];
+    versionMap[key].push(t);
+  });
+  Object.keys(versionMap).forEach(function(k){
+    versionMap[k].sort(function(a,b){return (a.uploaded_at||'').localeCompare(b.uploaded_at||'');});
+    versionMap[k].forEach(function(t,i){t._ver=i+1;});
+  });
+  var html='';
+  Object.keys(SUBTYPES).forEach(function(actType){
+    var groupTpls=tpls.filter(function(t){return t.act_type===actType;})
+      .sort(function(a,b){return (b.uploaded_at||'').localeCompare(a.uploaded_at||'');});
+    if(!groupTpls.length) return;
+    html+='<div class="act-group">';
+    html+='<div class="act-group-title"><span>'+h(ACT_LABELS[actType])+'</span><span class="count">'+groupTpls.length+' inactive</span></div>';
+    groupTpls.forEach(function(tpl){
+      html+='<div class="lib-row-hist">';
+      html+='<span class="row-sub">'+h(tpl.subtype)+'</span>';
+      html+='<span class="row-version">v'+(tpl._ver||1)+'</span>';
+      html+='<span class="row-date">'+h(tpl.uploaded_at||'—')+'</span>';
+      html+='<span><span class="lib-status-pill '+h(tpl.status)+'">'+h(tpl.status)+'</span></span>';
+      html+='<span class="row-actions">';
+      html+='<button class="lib-act-link" onclick="showPlaceholders(\''+h(tpl.id)+'\',this)">Tokeni</button>';
+      html+='<button class="lib-act-link" onclick="restoreTemplate(\''+h(tpl.id)+'\')">Restabilește ⟶</button>';
+      html+='</span>';
+      html+='</div>';
+    });
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
+
+// Legacy call-sites: renderCoverage(oid) → renderLibrary(oid). renderRawIntake(oid) → renderLibrary(oid).
+function renderCoverage(oid){renderLibrary(oid);}
+
+function restoreTemplate(tplId){
+  var tpl=TEMPLATES.find(function(t){return t.id===tplId;});if(!tpl)return;
+  var oid=tpl.office_id;
+  // Find any currently-active template on same slot — demote it
+  var existing=TEMPLATES.find(function(t){
+    return t.office_id===oid&&t.act_type===tpl.act_type&&t.subtype===tpl.subtype&&t.status==='active'&&t.id!==tplId;
+  });
+  if(DB_LIVE){
+    var chain=existing
+      ?sb.from('office_templates').update({status:'superseded'}).eq('id',existing.id)
+      :Promise.resolve({error:null});
+    chain.then(function(){
+      sb.from('office_templates').update({status:'active'}).eq('id',tplId).then(function(res){
+        if(res.error){soundErr();showToast('Eroare: '+res.error.message);return;}
+        if(existing) existing.status='superseded';
+        tpl.status='active';
+        soundFinalizat();showToast('Șablon restabilit.');
+        renderCoverage(currentOfficeId);renderA();updateOmStats();
+      });
+    });
+  } else {
+    if(existing) existing.status='superseded';
+    tpl.status='active';
+    soundFinalizat();showToast('Șablon restabilit.');
+    renderCoverage(currentOfficeId);renderA();updateOmStats();
+  }
+}
+
+function renderOnboarding(oid){
+  var o=OM[oid];
+  var cov=coverageFor(oid);
+  var items=[
+    {label:'Date birou completate',done:!!(o.email&&o.phone&&o.email!=='—')},
+    {label:'Notar principal confirmat',done:!!(o.notary&&o.notary!=='—')},
+    {label:'Email acces dashboard trimis',done:o.status==='activ'},
+    {label:'Acoperire minimă (1 șablon per tip de act)',done:cov.covered>=cov.target}
+  ];
+  var html='';
+  items.forEach(function(item){
+    html+='<div class="field-stacked"><div class="field-stacked-inner" style="flex-direction:row;align-items:center;justify-content:space-between;">';
+    html+='<span class="fs-val">'+h(item.label)+'</span>';
+    html+=(item.done?'<span class="tag tag-acoperit">✓ Gata</span>':'<span class="tag tag-lipsa">Lipsă</span>');
+    html+='</div></div>';
+  });
+  document.getElementById('onboarding-list').innerHTML=html;
+}
+
+// ══ RAW INTAKE ═══════════════════════════════════════════════════════
+// UI-only mock pending backend provisioning by doc-generator chat — see doc_generator_raw_intake_coordination.md
+// Legacy call-site alias: raw-intake rendering is now owned by renderLibrary's brute pane.
+function renderRawIntake(oid){renderLibrary(oid);}
+
+function assignRawIntakeActType(rid,val){
+  var r=RAW_INTAKE.find(function(x){return x.id===rid;});if(!r)return;
+  r.act_type=val;
+  r.subtype='';  // reset subtype when act-type changes
+  soundTabSwitch();
+  renderRawIntake(currentOfficeId);
+}
+
+function assignRawIntakeSubtype(rid,val){
+  var r=RAW_INTAKE.find(function(x){return x.id===rid;});if(!r)return;
+  r.subtype=val;
+  soundTabSwitch();
+  renderRawIntake(currentOfficeId);
+}
+
+function openTokenizeFromRaw(rid){
+  var r=RAW_INTAKE.find(function(x){return x.id===rid;});if(!r)return;
+  if(!r.act_type||!r.subtype){soundErr();showToast('Selectează tip act și subtip înainte de tokenizare.');return;}
+  // Bridge to the normal upload modal, pre-filled; raw id stashed for post-upload cleanup
+  uploadContext={actType:r.act_type,subtype:r.subtype,replacing:false,rawId:rid};
+  selectedFile=null;validationResult=null;
+  document.getElementById('upload-modal-title').textContent='Finalizează: '+r.filename;
+  resetUploadForm(r.act_type,r.subtype);
+  showReplaceNote(r.act_type,r.subtype);
+  soundSwitch();
+  document.getElementById('upload-overlay').classList.add('open');
+  document.getElementById('upload-modal').classList.add('open');
+}
+
+function discardRawIntake(rid){
+  var r=RAW_INTAKE.find(function(x){return x.id===rid;});if(!r)return;
+  r.status='discarded';
+  soundFinalizat();
+  showToast('Fișier brut eliminat.');
+  renderRawIntake(currentOfficeId);
+}
+
+// Simple client-side UUIDv4 generator for mock state (real ids come from Supabase once provisioned)
+function rawUuid(){
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){
+    var r=Math.random()*16|0,v=c==='x'?r:(r&0x3|0x8);
+    return v.toString(16);
+  });
+}
+function rawExt(filename){
+  var m=/\.([a-z0-9]+)$/i.exec(filename||'');
+  return m?m[1].toLowerCase():'bin';
+}
+function rawContentType(ext){
+  if(ext==='docx') return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  if(ext==='doc')  return 'application/msword';
+  if(ext==='odt')  return 'application/vnd.oasis.opendocument.text';
+  if(ext==='rtf')  return 'application/rtf';
+  if(ext==='pdf')  return 'application/pdf';
+  return 'application/octet-stream';
+}
+
+// Drag-drop + file input for adding new raw intake rows
+function addRawIntakeFiles(files){
+  if(!files||!files.length)return;
+  if(!currentOfficeId)return;
+  var now=new Date();
+  var M=['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','noi','dec'];
+  var stamp=now.getDate()+' '+M[now.getMonth()];
+  var added=0;
+  Array.prototype.forEach.call(files,function(f){
+    var id=rawUuid();
+    var ext=rawExt(f.name);
+    RAW_INTAKE.push({
+      id:id,
+      office_id:currentOfficeId,
+      filename:f.name,
+      storage_path:currentOfficeId+'/'+id+'.'+ext,
+      content_type:rawContentType(ext),
+      file_size_bytes:f.size||null,
+      uploaded_at:stamp,
+      uploaded_by:CURRENT_USER?CURRENT_USER.id:null,
+      act_type:'',
+      subtype:'',
+      status:'pending',
+      linked_template_id:null,
+      notes:null
+    });
+    added++;
+  });
+  soundFinalizat();
+  showToast(added===1?'1 fișier adăugat la intrări brute.':added+' fișiere adăugate la intrări brute.');
+  renderRawIntake(currentOfficeId);
+}
+
+// ══ CUSTOM DROPDOWN (cdd) — replaces native <select> in upload modal ══════════
+// Trigger: click or Enter/Space/ArrowDown opens panel. Keyboard: ArrowUp/Down
+// navigates, Enter selects, Escape closes. Click outside closes. Panel flips
+// upward if it would overflow viewport bottom.
+(function(){
+  var openCdd=null;
+  function closeAll(){
+    if(openCdd){openCdd.classList.remove('open');openCdd=null;}
+    document.querySelectorAll('.cdd-opt.kb-focus').forEach(function(el){el.classList.remove('kb-focus');});
+  }
+  function openCddEl(el){
+    if(el.querySelector('.cdd-trigger').classList.contains('disabled'))return;
+    closeAll();
+    el.classList.add('open');
+    openCdd=el;
+    soundSelect();
+    var panel=el.querySelector('.cdd-panel');
+    var rect=el.getBoundingClientRect();
+    var panelH=Math.min(240,panel.scrollHeight);
+    if(rect.bottom+panelH+16>window.innerHeight){
+      panel.style.top='auto';panel.style.bottom='calc(100% + 2px)';
+    } else {
+      panel.style.top='calc(100% + 2px)';panel.style.bottom='auto';
+    }
+  }
+  function focusOpt(cdd,idx){
+    var opts=cdd.querySelectorAll('.cdd-opt');
+    if(!opts.length)return;
+    opts.forEach(function(o){o.classList.remove('kb-focus');});
+    var i=((idx%opts.length)+opts.length)%opts.length;
+    opts[i].classList.add('kb-focus');
+    opts[i].scrollIntoView({block:'nearest'});
+  }
+  function currentFocusIdx(cdd){
+    var opts=cdd.querySelectorAll('.cdd-opt');
+    for(var i=0;i<opts.length;i++){if(opts[i].classList.contains('kb-focus'))return i;}
+    return -1;
+  }
+  // Delegated handlers — panel contents may be rebuilt (populateSubtypes)
+  document.addEventListener('click',function(e){
+    var trig=e.target.closest?e.target.closest('.cdd-trigger'):null;
+    if(trig){
+      e.stopPropagation();
+      var cdd=trig.parentNode;while(cdd&&!cdd.classList.contains('cdd'))cdd=cdd.parentNode;
+      if(!cdd)return;
+      if(cdd.classList.contains('open')){closeAll();return;}
+      openCddEl(cdd);
+      focusOpt(cdd,0);
+      return;
+    }
+    var opt=e.target.closest?e.target.closest('.cdd-opt'):null;
+    if(opt){
+      e.stopPropagation();
+      var cdd2=opt.parentNode;while(cdd2&&!cdd2.classList.contains('cdd'))cdd2=cdd2.parentNode;
+      if(!cdd2)return;
+      cddSetValue(cdd2.id,opt.getAttribute('data-v'),true);
+      closeAll();
+      return;
+    }
+    // click outside — close any open dropdown
+    closeAll();
+  });
+  document.addEventListener('keydown',function(e){
+    // Trigger has focus — open with Enter/Space/ArrowDown
+    var active=document.activeElement;
+    if(active&&active.classList&&active.classList.contains('cdd-trigger')&&!openCdd){
+      if(e.key==='ArrowDown'||e.key==='Enter'||e.key===' '){
+        e.preventDefault();
+        var cdd=active.parentNode;while(cdd&&!cdd.classList.contains('cdd'))cdd=cdd.parentNode;
+        if(cdd){openCddEl(cdd);focusOpt(cdd,0);}
+        return;
+      }
+    }
+    if(!openCdd)return;
+    if(e.key==='Escape'){e.preventDefault();closeAll();return;}
+    if(e.key==='ArrowDown'){e.preventDefault();focusOpt(openCdd,currentFocusIdx(openCdd)+1);return;}
+    if(e.key==='ArrowUp'){e.preventDefault();focusOpt(openCdd,currentFocusIdx(openCdd)-1);return;}
+    if(e.key==='Enter'){
+      e.preventDefault();
+      var idx=currentFocusIdx(openCdd);
+      if(idx<0)return;
+      var opts=openCdd.querySelectorAll('.cdd-opt');
+      opts[idx].click();
+    }
+  });
+})();
+
+// ══ UPLOAD MODAL ══════════════════════════════════════════════════════
+var uploadContext={actType:'',subtype:'',replacing:false};
+var selectedFile=null;
+var validationResult=null;
+
+function openUploadModal(actType,subtype){
+  soundSwitch();
+  uploadContext={actType:actType,subtype:subtype,replacing:false};
+  selectedFile=null;validationResult=null;
+  document.getElementById('upload-modal-title').textContent='Adaugă șablon';
+  resetUploadForm(actType,subtype);
+  showReplaceNote(actType,subtype);
+  document.getElementById('upload-overlay').classList.add('open');
+  document.getElementById('upload-modal').classList.add('open');
+}
+function openReplaceModal(actType,subtype){
+  soundSwitch();
+  uploadContext={actType:actType,subtype:subtype,replacing:true};
+  selectedFile=null;validationResult=null;
+  document.getElementById('upload-modal-title').textContent='Înlocuiește șablon';
+  resetUploadForm(actType,subtype);
+  showReplaceNote(actType,subtype);
+  document.getElementById('upload-overlay').classList.add('open');
+  document.getElementById('upload-modal').classList.add('open');
+}
+
+function showReplaceNote(actType,subtype){
+  var note=document.getElementById('upload-replace-note');
+  if(!actType||!subtype||!currentOfficeId){note.style.display='none';note.innerHTML='';return;}
+  var existing=TEMPLATES.find(function(t){
+    return t.office_id===currentOfficeId&&t.act_type===actType&&t.subtype===subtype&&t.status==='active';
+  });
+  if(!existing){note.style.display='none';note.innerHTML='';return;}
+  var html='<div class="upload-replace-label">Înlocuiește versiunea activă</div>';
+  html+='<div class="upload-replace-body"><strong>'+h(existing.name)+'</strong></div>';
+  html+='<div class="upload-replace-meta">Încărcat '+h(existing.uploaded_at||'—')+' · '+existing.placeholders.length+' tokeni · va fi marcată ca superseded</div>';
+  note.innerHTML=html;
+  note.style.display='block';
+}
+function closeUploadModal(){
+  soundSwitch();
+  document.getElementById('upload-overlay').classList.remove('open');
+  document.getElementById('upload-modal').classList.remove('open');
+  var note=document.getElementById('upload-replace-note');
+  if(note){note.style.display='none';note.innerHTML='';}
+  resetUploadForm('','');
+}
+
+function resetUploadForm(actType,subtype){
+  cddSetValue('cdd-up-act-type',actType||'',false);
+  populateSubtypes(actType);
+  if(subtype){cddSetValue('cdd-up-subtype',subtype,false);}
+  document.getElementById('up-name').value=(actType&&subtype)?(ACT_LABELS_SINGULAR[actType]||actType)+' — '+subtype:'';
+  document.getElementById('up-notes').value='';
+  document.getElementById('file-drop-name').textContent='';
+  document.getElementById('val-area').style.display='none';
+  document.getElementById('val-area').innerHTML='';
+  document.getElementById('upload-submit').disabled=true;
+  document.getElementById('upload-submit').textContent='Validează ⟶';
+  selectedFile=null;validationResult=null;
+  document.getElementById('up-file').value='';
+}
+
+// Custom-dropdown helper. Writes value to hidden input, updates trigger label,
+// fires a synthetic 'change' event so existing handlers (bound to the hidden
+// input by id) continue working as if it were a native <select>.
+// label defaults to value if not provided explicitly.
+function cddSetValue(cddId,value,fireChange,label){
+  var cdd=document.getElementById(cddId);if(!cdd)return;
+  var hidden=cdd.querySelector('input[type=hidden]');
+  var trig=cdd.querySelector('.cdd-trigger');
+  var placeholder=cdd.getAttribute('data-placeholder')||'— selectează —';
+  if(!value){
+    hidden.value='';
+    trig.textContent=placeholder;
+    trig.classList.add('empty');
+    cdd.querySelectorAll('.cdd-opt').forEach(function(o){o.classList.remove('selected');});
+  } else {
+    hidden.value=value;
+    var opt=cdd.querySelector('.cdd-opt[data-v="'+value+'"]');
+    var txt=label||(opt?opt.textContent:value);
+    trig.textContent=txt;
+    trig.classList.remove('empty');
+    cdd.querySelectorAll('.cdd-opt').forEach(function(o){o.classList.toggle('selected',o.getAttribute('data-v')===value);});
+  }
+  if(fireChange){
+    var ev;
+    try{ev=new Event('change',{bubbles:true});}
+    catch(e){ev=document.createEvent('Event');ev.initEvent('change',true,true);}
+    hidden.dispatchEvent(ev);
+  }
+}
+
+function populateSubtypes(actType){
+  var cdd=document.getElementById('cdd-up-subtype');
+  var panel=cdd.querySelector('.cdd-panel');
+  var trig=cdd.querySelector('.cdd-trigger');
+  if(!actType){
+    panel.innerHTML='';
+    cdd.setAttribute('data-placeholder','— selectează tip act mai întâi —');
+    cddSetValue('cdd-up-subtype','',false);
+    trig.classList.add('disabled');
+    return;
+  }
+  var subs=SUBTYPES[actType]||[];
+  var html='';
+  subs.forEach(function(s){html+='<button class="cdd-opt" type="button" data-v="'+h(s)+'">'+h(s)+'</button>';});
+  panel.innerHTML=html;
+  cdd.setAttribute('data-placeholder','— selectează subtip —');
+  cddSetValue('cdd-up-subtype','',false);
+  trig.classList.remove('disabled');
+}
+// Returns true if name matches {ACT_LABELS_SINGULAR[X]} — {Y} for any (X, Y in SUBTYPES[X]).
+// Used to decide whether the name field is auto-generated (safe to clear/rebuild) vs. user-typed (preserve).
+function isAutoGeneratedName(name){
+  if(!name)return false;
+  for(var at in ACT_LABELS_SINGULAR){
+    if(!ACT_LABELS_SINGULAR.hasOwnProperty(at))continue;
+    var subs=SUBTYPES[at]||[];
+    for(var i=0;i<subs.length;i++){
+      if(name===(ACT_LABELS_SINGULAR[at]+' — '+subs[i]))return true;
+    }
+  }
+  return false;
+}
+
+document.getElementById('up-act-type').addEventListener('change',function(){
+  var nameEl=document.getElementById('up-name');
+  var wasAuto=isAutoGeneratedName(nameEl.value);
+  populateSubtypes(this.value);
+  var sub=document.getElementById('up-subtype').value;
+  if(this.value&&sub){nameEl.value=(ACT_LABELS_SINGULAR[this.value]||this.value)+' — '+sub;}
+  else if(wasAuto){nameEl.value='';}
+  showReplaceNote(this.value,sub);
+  // Invalidate any prior validation — different act-type = different valid token set
+  validationResult=null;
+  document.getElementById('val-area').style.display='none';
+  document.getElementById('upload-submit').textContent='Validează ⟶';
+  checkUploadReady();
+});
+document.getElementById('up-subtype').addEventListener('change',function(){
+  var at=document.getElementById('up-act-type').value;
+  var nameEl=document.getElementById('up-name');
+  if(at&&this.value&&(!nameEl.value||isAutoGeneratedName(nameEl.value))){nameEl.value=(ACT_LABELS_SINGULAR[at]||at)+' — '+this.value;}
+  showReplaceNote(at,this.value);
+  validationResult=null;
+  document.getElementById('val-area').style.display='none';
+  document.getElementById('upload-submit').textContent='Validează ⟶';
+  checkUploadReady();
+});
+document.getElementById('up-file').addEventListener('change',function(e){
+  var f=e.target.files[0];if(!f)return;
+  selectedFile=f;
+  document.getElementById('file-drop-name').textContent=f.name+' ('+Math.round(f.size/1024)+' KB)';
+  document.getElementById('val-area').style.display='none';
+  validationResult=null;
+  document.getElementById('upload-submit').textContent='Validează ⟶';
+  checkUploadReady();
+});
+
+// Library file-picker (+ Adaugă) + drag-drop anywhere over the library body.
+// Both paths route to addRawIntakeFiles → files appear in Intrări brute pane.
+(function(){
+  var fileInp=document.getElementById('raw-intake-file');
+  var body=document.getElementById('lib-body');
+  if(!fileInp||!body)return;
+  fileInp.addEventListener('change',function(e){
+    // If admin uses + Adaugă while on another tab, route them to Brute so they see where files landed
+    if(e.target.files&&e.target.files.length){
+      addRawIntakeFiles(e.target.files);
+      if(tplView!=='brute') switchLibTab('brute');
+    }
+    e.target.value='';
+  });
+  // Drag-drop covers the entire library body. Use an enter/leave counter for robust
+  // transitions across child elements (raw dragleave fires on every child boundary crossing).
+  var dragDepth=0;
+  body.addEventListener('dragenter',function(e){
+    e.preventDefault();
+    dragDepth++;
+    body.classList.add('dragover');
+  });
+  body.addEventListener('dragover',function(e){
+    // Must preventDefault to allow drop
+    e.preventDefault();
+  });
+  body.addEventListener('dragleave',function(e){
+    dragDepth--;
+    if(dragDepth<=0){dragDepth=0;body.classList.remove('dragover');}
+  });
+  body.addEventListener('drop',function(e){
+    e.preventDefault();e.stopPropagation();
+    dragDepth=0;
+    body.classList.remove('dragover');
+    var dt=e.dataTransfer;
+    if(dt&&dt.files&&dt.files.length){
+      addRawIntakeFiles(dt.files);
+      if(tplView!=='brute') switchLibTab('brute');
+    }
+  });
+})();
+function checkUploadReady(){
+  var at=document.getElementById('up-act-type').value;
+  var sub=document.getElementById('up-subtype').value;
+  document.getElementById('upload-submit').disabled=!(at&&sub&&selectedFile);
+}
+
+function validateDocx(file,actType,callback){
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var zip=new PizZip(e.target.result);
+      var xml=zip.files['word/document.xml'].asText();
+      var found=xml.match(/\{[A-Z_][A-Z0-9_]*\}/g)||[];
+      var unique=[];
+      found.forEach(function(t){var tk=t.slice(1,-1);if(unique.indexOf(tk)<0)unique.push(tk);});
+      var valid=validTokensFor(actType);
+      var unknown=unique.filter(function(t){return valid.indexOf(t)<0;});
+      callback(null,{tokens:unique,unknown:unknown});
+    }catch(ex){callback('Fișierul nu poate fi citit: '+ex.message,null);}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+document.getElementById('upload-submit').addEventListener('click',function(){
+  var at=document.getElementById('up-act-type').value;
+  var sub=document.getElementById('up-subtype').value;
+  var name=document.getElementById('up-name').value||((ACT_LABELS_SINGULAR[at]||at)+' — '+sub);
+  var notes=document.getElementById('up-notes').value;
+  if(!selectedFile||!at||!sub){soundErr();showToast('Completează toate câmpurile.');return;}
+  var btn=this;
+  // Step 2: validation already passed on a prior click — this click commits
+  if(validationResult&&validationResult.tokens&&validationResult.unknown&&validationResult.unknown.length===0){
+    btn.textContent='Se încarcă...';btn.disabled=true;
+    commitUpload(at,sub,name,notes,validationResult.tokens,function(){
+      btn.disabled=false;btn.textContent='Validează ⟶';
+      validationResult=null;
+    });
+    return;
+  }
+  // Step 1: validate
+  this.disabled=true;this.textContent='Se validează...';
+  validateDocx(selectedFile,at,function(err,result){
+    btn.disabled=false;
+    if(err){soundErr();showValResult(false,[],[],err);btn.textContent='Validează ⟶';return;}
+    if(result.unknown.length>0){
+      soundErr();showValResult(false,result.tokens,result.unknown,'Tokeni necunoscuți. Verifică și reîncarcă.');
+      btn.textContent='Validează ⟶';
+      validationResult=null;
+      return;
+    }
+    validationResult=result;
+    showValResult(true,result.tokens,[],'');
+    soundSelect();
+    btn.textContent='Confirmă și încarcă ⟶';
+  });
+});
+
+function showValResult(ok,tokens,unknown,msg){
+  var area=document.getElementById('val-area');
+  area.style.display='block';
+  var html='<div class="val-result '+(ok?'val-ok':'val-err')+'">';
+  html+='<div class="val-title '+(ok?'ok':'err')+'">'+(ok?'✓ Validare reușită — se încarcă':'✗ '+h(msg))+'</div>';
+  if(!ok&&unknown.length){
+    html+='<div style="font-family:var(--mono);font-size:11px;color:var(--grey2);margin:8px 0 4px;">Tokeni necunoscuți:</div>';
+    html+='<div class="val-tokens">';
+    unknown.forEach(function(t){html+='<span class="val-token bad">{'+h(t)+'}</span>';});
+    html+='</div>';
+  }
+  if(tokens.length){
+    html+='<div style="font-family:var(--mono);font-size:11px;color:var(--grey2);margin:8px 0 4px;">Tokeni detectați ('+tokens.length+'):</div>';
+    html+='<div class="val-tokens">';
+    tokens.forEach(function(t){html+='<span class="val-token'+(unknown.indexOf(t)>-1?' bad':'')+'">'+h(t)+'</span>';});
+    html+='</div>';
+  }
+  html+='</div>';
+  area.innerHTML=html;
+}
+
+function commitUpload(actType,subtype,name,notes,tokens,done){
+  var oid=currentOfficeId;
+  var slug=subtypeSlug(subtype);
+  var storagePath=oid+'/'+actType+'/'+slug+'.docx';
+
+  if(DB_LIVE){
+    // 1. Upload file to storage (upsert)
+    sb.storage.from('office-templates').upload(storagePath,selectedFile,{upsert:true}).then(function(res){
+      if(res.error&&res.error.message!=='The resource already exists'){
+        soundErr();showToast('Eroare stocare: '+res.error.message);if(done)done();return;
+      }
+      // 2. Mark existing active template as superseded if replacing
+      var existing=TEMPLATES.find(function(t){return t.office_id===oid&&t.act_type===actType&&t.subtype===subtype&&t.status==='active';});
+      var chain=existing
+        ?sb.from('office_templates').update({status:'superseded'}).eq('id',existing.id)
+        :Promise.resolve({error:null});
+      chain.then(function(){
+        // 3. Insert new row
+        sb.from('office_templates').insert({
+          office_id:oid,act_type:actType,subtype:subtype,name:name,
+          storage_path:storagePath,placeholders:tokens,
+          status:'active',notes:notes,uploaded_by:CURRENT_USER?CURRENT_USER.id:null
+        }).select().single().then(function(ins){
+          if(ins.error){soundErr();showToast('Eroare înregistrare: '+ins.error.message);if(done)done();return;}
+          soundFinalizat();
+          // update local cache
+          if(existing) existing.status='superseded';
+          TEMPLATES.push({
+            id:ins.data.id,office_id:oid,act_type:actType,subtype:subtype,
+            name:name,storage_path:storagePath,placeholders:tokens,
+            status:'active',uploaded_at:'azi',notes:notes
+          });
+          finishUpload(name,ins.data.id);if(done)done();
+        });
+      });
+    });
+  } else {
+    // In-memory (validation phase)
+    var existing=TEMPLATES.find(function(t){return t.office_id===oid&&t.act_type===actType&&t.subtype===subtype&&t.status==='active';});
+    if(existing) existing.status='superseded';
+    var newId='t'+Date.now();
+    TEMPLATES.push({
+      id:newId,office_id:oid,act_type:actType,subtype:subtype,
+      name:name,storage_path:storagePath,placeholders:tokens,
+      status:'active',uploaded_at:'azi',notes:notes
+    });
+    soundFinalizat();
+    finishUpload(name,newId);if(done)done();
+  }
+}
+
+function finishUpload(name,newTemplateId){
+  // If this upload came from a raw intake row, mark it processed + link
+  if(uploadContext&&uploadContext.rawId){
+    var raw=RAW_INTAKE.find(function(r){return r.id===uploadContext.rawId;});
+    if(raw){
+      raw.status='processed';
+      if(newTemplateId) raw.linked_template_id=newTemplateId;
+    }
+  }
+  showToast('Șablon salvat: '+name);
+  closeUploadModal();
+  renderCoverage(currentOfficeId);
+  renderRawIntake(currentOfficeId);
+  renderA();
+  updateOmStats();
+}
+
+var _archiveArmed=null;    // tpl id currently armed
+var _archiveTimer=null;
+
+function armOrArchive(tplId,btn){
+  // If this button is already armed → execute
+  if(_archiveArmed===tplId){
+    clearTimeout(_archiveTimer);
+    _archiveArmed=null;_archiveTimer=null;
+    archiveTemplate(tplId);
+    return;
+  }
+  // Revert any previously armed button on another row
+  if(_archiveArmed){
+    var prev=document.querySelector('[data-armed="1"]');
+    if(prev){prev.textContent='Arhivează';prev.classList.remove('tpl-btn-armed');prev.removeAttribute('data-armed');}
+    clearTimeout(_archiveTimer);
+  }
+  // Arm this one
+  _archiveArmed=tplId;
+  btn.textContent='Confirmă arhivarea ⟶';
+  btn.classList.add('tpl-btn-armed');
+  btn.setAttribute('data-armed','1');
+  soundSelect();
+  _archiveTimer=setTimeout(function(){
+    if(_archiveArmed===tplId){
+      btn.textContent='Arhivează';
+      btn.classList.remove('tpl-btn-armed');
+      btn.removeAttribute('data-armed');
+      _archiveArmed=null;_archiveTimer=null;
+    }
+  },3000);
+}
+
+function archiveTemplate(tplId){
+  var tpl=TEMPLATES.find(function(t){return t.id===tplId;});if(!tpl)return;
+  if(DB_LIVE){
+    sb.from('office_templates').update({status:'archived'}).eq('id',tplId).then(function(res){
+      if(res.error){soundErr();showToast('Eroare: '+res.error.message);return;}
+      tpl.status='archived';
+      soundFinalizat();showToast('Șablon arhivat.');
+      renderCoverage(currentOfficeId);renderA();updateOmStats();
+    });
+  } else {
+    tpl.status='archived';
+    soundFinalizat();showToast('Șablon arhivat.');
+    renderCoverage(currentOfficeId);renderA();updateOmStats();
+  }
+}
+
+function showPlaceholders(tplId,btn){
+  var tpl=TEMPLATES.find(function(t){return t.id===tplId;});if(!tpl)return;
+  var row=btn.closest('.lib-row-active')||btn.closest('.lib-row-hist');if(!row)return;
+  // Already expanded under this row → collapse
+  var existing=row.nextElementSibling;
+  if(existing&&existing.classList.contains('tpl-tokens-panel')&&existing.dataset.tid===tplId){
+    existing.remove();
+    soundSwitch();
+    return;
+  }
+  // Collapse any other open panel elsewhere in the library
+  var other=document.querySelector('.tpl-tokens-panel');
+  if(other)other.remove();
+  // Build role-grouped token view
+  var roles=ROLES_BY_ACT[tpl.act_type]||[];
+  var caseTokens=CASE_TOKENS;
+  function tokenRole(t){
+    for(var i=0;i<roles.length;i++){
+      var pfx=roleToPrefix(roles[i]);
+      if(t.indexOf(pfx+'_')===0) return roles[i];
+    }
+    if(caseTokens.indexOf(t)>-1) return '__case__';
+    return '__other__';
+  }
+  var groups={};
+  tpl.placeholders.forEach(function(t){
+    var r=tokenRole(t);
+    if(!groups[r])groups[r]=[];
+    groups[r].push(t);
+  });
+  // Build ordered list of groups to render: roles in ROLES_BY_ACT order, then Dosar, then unknown
+  var ordered=[];
+  roles.forEach(function(r){if(groups[r])ordered.push({label:r,tokens:groups[r],kind:'role'});});
+  if(groups.__case__)ordered.push({label:'Dosar',tokens:groups.__case__,kind:'case'});
+  if(groups.__other__)ordered.push({label:'Tokeni nerecunoscuți',tokens:groups.__other__,kind:'other'});
+  var html='<div class="tpl-tokens-inner">';
+  ordered.forEach(function(g,i){
+    // Default: first group expanded, the rest collapsed — gives an immediate preview
+    var collapsedCls=(i===0?'':' collapsed');
+    var headerStyle=(g.kind==='other'?' style="color:var(--red);"':'');
+    html+='<div class="tpl-token-group'+collapsedCls+'" onclick="toggleTokenGroup(this,event)">';
+    html+='<div class="detail-category"'+headerStyle+'><span>'+h(g.label)+'</span><span class="tg-count">'+g.tokens.length+'</span></div>';
+    html+='<div class="tpl-token-chips">';
+    g.tokens.forEach(function(t){
+      var cls=(g.kind==='other'?'tag tag-avertisment':'tag');
+      html+='<span class="'+cls+'">{'+h(t)+'}</span>';
+    });
+    html+='</div></div>';
+  });
+  html+='<div class="tpl-tokens-meta">Total: '+tpl.placeholders.length+' tokeni · Încărcat: '+h(tpl.uploaded_at||'—')+'</div>';
+  html+='</div>';
+  var panel=document.createElement('div');
+  panel.className='tpl-tokens-panel';
+  panel.dataset.tid=tplId;
+  panel.innerHTML=html;
+  row.parentNode.insertBefore(panel,row.nextSibling);
+  soundSelect();
+}
+
+// Accordion toggle for a single role group inside a tokens panel.
+// Clicks on the chip area are ignored (chips themselves are content, not controls).
+function toggleTokenGroup(groupEl,ev){
+  if(ev&&ev.target&&ev.target.closest&&ev.target.closest('.tpl-token-chips'))return;
+  groupEl.classList.toggle('collapsed');
+  soundSwitch();
+}
+
+// Dismiss open token panels on any click outside them (or outside a Tokeni button).
+document.addEventListener('click',function(e){
+  var panel=document.querySelector('.tpl-tokens-panel');
+  if(!panel)return;
+  var t=e.target;
+  if(t.closest&&(t.closest('.tpl-tokens-panel')||t.closest('[onclick*="showPlaceholders"]')))return;
+  panel.remove();
+});
+
+function updateOmStats(){
+  if(!currentOfficeId)return;
+  var cov=coverageFor(currentOfficeId);
+  var el=document.getElementById('of-stat-tpl');
+  if(el)el.textContent=cov.covered+' / '+cov.target;
+}
+
+// ══ OFFICE DETAILS — actionable field handlers + subscription/plan labels ══
+var SUB_STATUS_LABELS={trial:'Trial',active:'Activ',past_due:'Restanță',canceled:'Anulat',paused:'Suspendat'};
+var PLAN_LABELS={starter:'Starter',standard:'Standard',pro:'Pro'};
+function subStatusLabel(s){return SUB_STATUS_LABELS[s]||'—';}
+function planLabel(p){return PLAN_LABELS[p]||'—';}
+
+function copyOfficeField(key){
+  var o=OM[currentOfficeId];if(!o||!o[key])return;
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(o[key]);
+    } else {
+      var ta=document.createElement('textarea');ta.value=o[key];document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');}catch(e){}
+      document.body.removeChild(ta);
+    }
+    soundCopy();showToast('Copiat: '+o[key]);
+  }catch(e){soundErr();}
+}
+
+function openOfficeMaps(){
+  var o=OM[currentOfficeId];if(!o||!o.address)return;
+  var q=encodeURIComponent(o.address+', '+o.city);
+  soundSelect();
+  window.open('https://www.google.com/maps/search/?api=1&query='+q,'_blank','noopener');
+}
+
+function openOfficeMail(which){
+  var o=OM[currentOfficeId];if(!o)return;
+  var addr=which==='contact'?o.contact_email:o.email;
+  if(!addr)return;
+  soundSelect();
+  window.location.href='mailto:'+addr;
+}
+
+function openOfficeTel(which){
+  var o=OM[currentOfficeId];if(!o)return;
+  var num=which==='contact'?o.contact_phone:o.phone;
+  if(!num)return;
+  soundSelect();
+  window.location.href='tel:'+num.replace(/\s+/g,'');
+}
+
+function openOfficeWebsite(){
+  var o=OM[currentOfficeId];if(!o||!o.website)return;
+  soundSelect();
+  window.open(o.website,'_blank','noopener');
+}
+
+// ══ LIVE CLOCK — copied verbatim from v48 ═══════════════════════
+(function(){
+  var M_SHORT=['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','noi','dec'];
+  var D_SHORT=['Duminică','Luni','Marți','Miercuri','Joi','Vineri','Sâmbătă'];
+  function tick(){
+    var now=new Date();
+    var hh=now.getHours()<10?'0'+now.getHours():''+now.getHours();
+    var mm=now.getMinutes()<10?'0'+now.getMinutes():''+now.getMinutes();
+    var line=(hh+':'+mm+' · '+D_SHORT[now.getDay()]+', '+now.getDate()+' '+M_SHORT[now.getMonth()]+' '+now.getFullYear()).toUpperCase();
+    var hdr=document.getElementById('live-clock');
+    if(hdr) hdr.textContent=line;
+    var hero=document.getElementById('live-clock-hero');
+    if(hero) hero.textContent=line;
+  }
+  tick();
+  setInterval(tick,30000);
+})();
+
+// ══ VOL EXPLORER ════════════════════════════════════════════════
+var volChart=null;
+var adminActFilter='toate';
+var MONTHS_H=['Nov','Dec','Ian','Feb','Mar','Apr'];
+// base data per act type (platform-level, 6 months)
+var CHART_BASE={
+  toate:  {v:[18,22,20,25,24,28],f:[14,17,16,20,19,23]},
+  procuri:{v:[8,10,9,11,10,13],f:[6,8,7,9,8,11]},
+  declaratii:{v:[5,6,5,7,7,8],f:[4,5,4,6,5,7]},
+  acorduri:{v:[2,3,3,4,3,4],f:[2,2,2,3,3,3]},
+  legalizari:{v:[2,2,2,2,3,2],f:[1,1,2,2,2,2]},
+  imputerniciri:{v:[1,1,1,1,1,1],f:[1,1,1,1,1,1]}
+};
+function toggleVolExplorer(){
+  var el=document.getElementById('vol-explorer');
+  var btn=document.getElementById('vol-toggle');
+  var open=el.style.display==='none'||el.style.display==='';
+  el.style.display=open?'block':'none';
+  btn.textContent=open?'−':'+';
+  btn.setAttribute('aria-expanded',open?'true':'false');
+  if(open&&!volChart) initVolChart();
+  else if(open&&volChart) updateVolChart();
+}
+// ══ EXPLORATOR OFFICE SEARCH ═════════════════════════════════════════
+var exploratorbOfficeId=null;
+var exploratorbCity=null;  // city-level filter (mutually exclusive with exploratorbOfficeId)
+
+function onExplSearch(q){
+  q=(q||'').trim().toLowerCase();
+  var panel=document.getElementById('expl-results-panel');
+  var border=document.getElementById('expl-search-border');
+  // If an office or city was selected and user types again, deselect
+  if(exploratorbOfficeId||exploratorbCity){
+    exploratorbOfficeId=null;
+    exploratorbCity=null;
+    border.classList.remove('has-value');
+    renderCurrent();
+    if(volChart) updateVolChart();
+  }
+  if(!q){panel.style.display='none';panel.innerHTML='';return;}
+  var matches=OFFICES.filter(function(o){
+    return o.name.toLowerCase().indexOf(q)>-1||o.city.toLowerCase().indexOf(q)>-1;
+  });
+  if(!matches.length){panel.style.display='none';panel.innerHTML='';return;}
+  // Group matches by city; emit a city-aggregation row only when a city has 2+ matches.
+  var byCity={};
+  matches.forEach(function(o){
+    if(!byCity[o.city]) byCity[o.city]=[];
+    byCity[o.city].push(o);
+  });
+  var html='';
+  Object.keys(byCity).sort().forEach(function(city){
+    var offices=byCity[city];
+    if(offices.length>=2){
+      html+='<button class="expl-result-btn expl-result-city-agg" onclick="selectExplCity(\''+h(city)+'\')">'
+        +'Toate birourile din '+h(city)
+        +'<span class="expl-result-city">'+offices.length+' birouri</span>'
+        +'</button>';
+    }
+    offices.forEach(function(o){
+      html+='<button class="expl-result-btn" onclick="selectExplOffice(\''+h(o.id)+'\',\''+h(o.name)+'\',\''+h(o.city)+'\')">'
+        +h(o.name)+'<span class="expl-result-city">'+h(o.city)+'</span>'
+        +'</button>';
+    });
+  });
+  panel.innerHTML=html;
+  panel.style.display='block';
+}
+
+function selectExplOffice(oid,name,city){
+  if(oid) soundSelect();
+  exploratorbOfficeId=oid||null;
+  exploratorbCity=null;
+  var inp=document.getElementById('expl-office-search');
+  var border=document.getElementById('expl-search-border');
+  var panel=document.getElementById('expl-results-panel');
+  if(oid){
+    inp.value=name+(city?' · '+city:'');
+    border.classList.add('has-value');
+  } else {
+    inp.value='';
+    border.classList.remove('has-value');
+  }
+  if(panel){panel.style.display='none';panel.innerHTML='';}
+  if(volChart) updateVolChart();
+  renderCurrent();
+}
+
+function selectExplCity(city){
+  soundSelect();
+  exploratorbOfficeId=null;
+  exploratorbCity=city||null;
+  var inp=document.getElementById('expl-office-search');
+  var border=document.getElementById('expl-search-border');
+  var panel=document.getElementById('expl-results-panel');
+  var count=OFFICES.filter(function(o){return o.city===city;}).length;
+  inp.value='Toate birourile din '+city+' · '+count+' birouri';
+  border.classList.add('has-value');
+  if(panel){panel.style.display='none';panel.innerHTML='';}
+  if(volChart) updateVolChart();
+  renderCurrent();
+}
+
+function clearExplSearch(){
+  soundSwitch();
+  exploratorbOfficeId=null;
+  exploratorbCity=null;
+  var inp=document.getElementById('expl-office-search');
+  var border=document.getElementById('expl-search-border');
+  var panel=document.getElementById('expl-results-panel');
+  inp.value='';
+  border.classList.remove('has-value');
+  if(panel){panel.style.display='none';panel.innerHTML='';}
+  if(volChart) updateVolChart();
+  renderCurrent();
+  inp.focus();
+}
+
+// Close results panel on outside click
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#expl-search-border')){
+    var p=document.getElementById('expl-results-panel');
+    if(p) p.style.display='none';
+  }
+});
+
+function setAdminActFilter(val,btn){
+  soundTabSwitch();
+  adminActFilter=val;
+  document.querySelectorAll('#expl-act-tabs .vol-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  if(volChart) updateVolChart();
+  renderCurrent();
+}
+function getChartData(){
+  var base=CHART_BASE[adminActFilter]||CHART_BASE['toate'];
+  var mult=1;
+  if(exploratorbOfficeId) mult=0.35;
+  else if(exploratorbCity){
+    var cityCount=OFFICES.filter(function(o){return o.city===exploratorbCity;}).length;
+    var totalCount=OFFICES.length||1;
+    mult=cityCount/totalCount;
+  }
+  return {v:base.v.map(function(x){return Math.round(x*mult);}),f:base.f.map(function(x){return Math.round(x*mult);})};
+}
+function buildTrend(vData,waitV,rateV){
+  var avg=vData.reduce(function(a,b){return a+b;},0)/vData.length;
+  var eff=Math.max(0.6,1-(waitV-1)*0.04)*(rateV/100);
+  return vData.map(function(v){return Math.round(v*(avg?v/avg:1)*eff);});
+}
+function initVolChart(){
+  var ctx=document.getElementById('volChart');
+  if(!ctx)return;
+  var d=getChartData();
+  var sv=parseInt(document.getElementById('s-vol').value)||20;
+  var sw=parseInt(document.getElementById('s-wait').value)||4;
+  var sr=parseInt(document.getElementById('s-rate').value)||85;
+  volChart=new Chart(ctx,{
+    data:{
+      labels:MONTHS_H,
+      datasets:[
+        {type:'bar',label:'Înregistrate',data:d.v.slice(),backgroundColor:'#000000',barPercentage:0.7,categoryPercentage:0.65,order:2},
+        {type:'bar',label:'Finalizate',data:d.f.slice(),backgroundColor:'#dddbd5',barPercentage:0.7,categoryPercentage:0.65,order:2},
+        {type:'line',label:'Tendință',data:buildTrend(d.v,sw,sr),borderColor:'#d42b2b',borderWidth:2,borderDash:[4,4],tension:0.3,pointRadius:0,fill:false,order:1}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.raw;}}}},
+      scales:{
+        x:{grid:{display:false},ticks:{font:{family:'IBM Plex Mono',size:11},color:'#999'}},
+        y:{grid:{color:'#dddbd5'},ticks:{font:{family:'IBM Plex Mono',size:11},color:'#999'},beginAtZero:true}
+      }
+    }
+  });
+  refreshChartNote(sv,sw,sr);
+}
+function updateVolChart(){
+  if(!volChart)return;
+  var sv=parseInt(document.getElementById('s-vol').value)||20;
+  var sw=parseInt(document.getElementById('s-wait').value)||4;
+  var sr=parseInt(document.getElementById('s-rate').value)||85;
+  document.getElementById('v-vol').textContent=sv;
+  document.getElementById('v-wait').textContent=sw;
+  document.getElementById('v-rate').textContent=sr;
+  var d=getChartData();
+  volChart.data.datasets[0].data=d.v.slice();
+  volChart.data.datasets[1].data=d.f.slice();
+  volChart.data.datasets[2].data=buildTrend(d.v,sw,sr);
+  volChart.update('none');
+  refreshChartNote(sv,sw,sr);
+}
+function refreshChartNote(sv,sw,sr){
+  var el=document.getElementById('chart-note');
+  if(!el)return;
+  el.innerHTML='La <strong>'+sv+' dosare/lună</strong>, timp confirmare <strong>'+sw+' zile</strong>, rată finalizare <strong>'+sr+'%</strong>.';
+}
+
+// ══ SORT FILTER FOR BIROURI (item 5) ════════════════════════════
+var sortMode='name';
+document.querySelectorAll('.filter-tag[data-sort]').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    soundTabSwitch();
+    sortMode=this.dataset.sort;
+    document.querySelectorAll('.filter-tag[data-sort]').forEach(function(b){b.classList.remove('active');});
+    this.classList.add('active');
+    renderA();
+  });
+});
+
+// ══ DOSARE ADAPTIVE HEIGHT (item 6) ═════════════════════════════
+function setDosareHeight(){
+  var scroll=document.getElementById('list-b-scroll');
+  if(!scroll)return;
+  var rows=CASES.length;
+  var ROW_H=47;
+  var HDR_H=41;
+  var MIN_ROWS=4;
+  var MAX_ROWS=11;
+  var visible=Math.min(Math.max(rows,MIN_ROWS),MAX_ROWS);
+  scroll.style.maxHeight=(visible*ROW_H)+'px';
+  scroll.style.overflowY=rows>MAX_ROWS?'auto':'visible';
+}
+
+// ══ CASE MODAL (items 7+8) ═══════════════════════════════════════
+var cmCaseId=null;
+var cmUrgent=false;
+var cmStatus='nou';
+
+function openCaseModal(cid){
+  soundSwitch();
+  var c=CASES.find(function(x){return x.id===cid;});
+  if(!c)return;
+  cmCaseId=cid;
+  cmUrgent=c.urgent;
+  cmStatus=c.status;
+  var o=OM[c.oid]||{};
+  document.getElementById('cm-title').textContent=c.client;
+  document.getElementById('cm-meta').textContent=c.ref+' · '+h(o.name||'');
+  document.getElementById('cm-status-tag').innerHTML=statusTag(c.urgent?'urgent':c.status);
+  document.getElementById('cm-ref').textContent=c.ref;
+  document.getElementById('cm-act').value=c.act;
+  document.getElementById('cm-subtype').value=c.subtype||'—';
+  document.getElementById('cm-client').value=c.client;
+  document.getElementById('cm-pref').value=c.pref||'—';
+  document.getElementById('cm-notes').value=c.admin_notes||'';
+  document.getElementById('cm-created').textContent=c.created||'—';
+  document.getElementById('cm-updated').textContent=c.updated_at||'—';
+  document.getElementById('cm-id').textContent=typeof c.id==='string'?c.id:'(demo)';
+  // office selector — populate cdd panel from OFFICES, preselect current
+  var panel=document.getElementById('cdd-cm-office').querySelector('.cdd-panel');
+  var oHtml='';
+  OFFICES.forEach(function(of){oHtml+='<button class="cdd-opt" type="button" data-v="'+h(of.id)+'">'+h(of.name)+'</button>';});
+  panel.innerHTML=oHtml;
+  cddSetValue('cdd-cm-office',c.oid||'',false);
+  // urgent button
+  document.getElementById('cm-urgent-dot').style.display=cmUrgent?'inline-block':'none';
+  document.getElementById('cm-urgent-btn').textContent=cmUrgent?'! Urgent — Dezactivează':'Marchează urgent';
+  document.getElementById('cm-urgent-btn').className=cmUrgent?'doc-chip doc-chip-alert':'doc-chip';
+  // status selector
+  cmRefreshStatusSel();
+  document.getElementById('cm-overlay').classList.add('open');
+  document.getElementById('cm').classList.add('open');
+}
+function closeCaseModal(){
+  soundSwitch();
+  document.getElementById('cm-overlay').classList.remove('open');
+  document.getElementById('cm').classList.remove('open');
+  cmCaseId=null;
+}
+function cmSetStatus(s,btn){
+  cmStatus=s;
+  cmRefreshStatusSel();
+}
+function cmRefreshStatusSel(){
+  document.querySelectorAll('#cm-status-sel .status-sel-btn').forEach(function(b){
+    b.classList.toggle('sel-active',b.dataset.s===cmStatus);
+  });
+}
+function cmToggleUrgent(){
+  cmUrgent=!cmUrgent;
+  document.getElementById('cm-urgent-dot').style.display=cmUrgent?'inline-block':'none';
+  document.getElementById('cm-urgent-btn').textContent=cmUrgent?'! Urgent — Dezactivează':'Marchează urgent';
+  document.getElementById('cm-urgent-btn').className=cmUrgent?'doc-chip doc-chip-alert':'doc-chip';
+}
+function cmAction(type){
+  if(type==='nudge'){soundSelect();showToast('Nudge trimis clientului ⟶');}
+  if(type==='notary'){soundSelect();showToast('Notar contactat ⟶');}
+}
+function cmSave(){
+  var c=CASES.find(function(x){return x.id===cmCaseId;});
+  if(!c)return;
+  c.act=document.getElementById('cm-act').value;
+  c.subtype=document.getElementById('cm-subtype').value;
+  c.client=document.getElementById('cm-client').value;
+  c.pref=document.getElementById('cm-pref').value;
+  c.admin_notes=document.getElementById('cm-notes').value;
+  c.status=cmStatus;
+  c.urgent=cmUrgent;
+  var newOid=document.getElementById('cm-office').value;
+  c.oid=newOid;
+  if(DB_LIVE){
+    sb.from('cases').update({
+      status:cmStatus,urgent:cmUrgent,
+      client_name:c.client,preferred_date:c.pref,
+      subtype:c.subtype,admin_notes:c.admin_notes
+    }).eq('id',cmCaseId).then(function(res){
+      if(res.error){soundErr();showToast('Eroare: '+res.error.message);return;}
+      soundFinalizat();showToast('Dosar salvat ✓');
+      closeCaseModal();renderCurrent();updateKPI();
+      if(currentOfficeId) renderOmDosare(currentOfficeId);
+    });
+  } else {
+    soundFinalizat();showToast('Dosar salvat (demo) ✓');
+    closeCaseModal();renderCurrent();updateKPI();
+    if(currentOfficeId) renderOmDosare(currentOfficeId);
+  }
+}
+
+document.getElementById('cm-close').addEventListener('click',closeCaseModal);
+document.getElementById('cm-cancel').addEventListener('click',closeCaseModal);
+document.getElementById('cm-overlay').addEventListener('click',closeCaseModal);
+document.getElementById('cm-save').addEventListener('click',cmSave);
+// currentCaseId handled by cmCaseId in case modal
+
+// ══ CREATE OFFICE (onboarding) ══════════════════════════════════════
+var _coSubmitting=false;
+function openCreateOffice(){
+  soundSelect();
+  // reset form
+  var ids=['co-name','co-cui','co-website','co-city','co-address','co-email','co-phone','co-contact-name','co-contact-role','co-contact-email','co-contact-phone'];
+  ids.forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  cddSetValue('cdd-co-plan','',false);
+  var err=document.getElementById('co-error');err.style.display='none';err.textContent='';
+  var submit=document.getElementById('co-submit');
+  submit.disabled=true;
+  submit.textContent='Creează birou ⟶';
+  _coSubmitting=false;
+  document.getElementById('om-create-overlay').classList.add('open');
+  document.getElementById('om-create').classList.add('open');
+  setTimeout(function(){var n=document.getElementById('co-name');if(n)n.focus();},160);
+}
+function closeCreateOffice(){
+  if(_coSubmitting)return; // don't close mid-submit
+  soundSwitch();
+  document.getElementById('om-create-overlay').classList.remove('open');
+  document.getElementById('om-create').classList.remove('open');
+}
+function validateOfficeForm(){
+  var name=document.getElementById('co-name').value.trim();
+  var cui=document.getElementById('co-cui').value.trim();
+  var cemail=document.getElementById('co-contact-email').value.trim();
+  var plan=document.getElementById('co-plan').value;
+  var emailOk=cemail.length>0&&cemail.indexOf('@')>0&&cemail.indexOf('.')>0;
+  var ok=!!(name&&cui&&emailOk&&plan);
+  document.getElementById('co-submit').disabled=!ok||_coSubmitting;
+  return ok;
+}
+function collectOfficePayload(){
+  return {
+    name:document.getElementById('co-name').value.trim(),
+    cui:document.getElementById('co-cui').value.trim(),
+    website:document.getElementById('co-website').value.trim()||null,
+    city:document.getElementById('co-city').value.trim(),
+    address:document.getElementById('co-address').value.trim(),
+    email:document.getElementById('co-email').value.trim(),
+    phone:document.getElementById('co-phone').value.trim(),
+    contact_name:document.getElementById('co-contact-name').value.trim(),
+    contact_role:document.getElementById('co-contact-role').value.trim()||null,
+    contact_email:document.getElementById('co-contact-email').value.trim(),
+    contact_phone:document.getElementById('co-contact-phone').value.trim(),
+    plan:document.getElementById('co-plan').value
+  };
+}
+// Phase A: seed-fallback simulates a 500ms Zapier happy-path round-trip.
+// Phase B swaps this for a real POST with typed errors + 15s timeout-polling.
+function simulateZapier(payload,cb){
+  setTimeout(function(){
+    var id='new-'+Date.now().toString(36);
+    var now=new Date();
+    var trial=payload.plan==='trial_30d';
+    var trialEnd=null,periodEnd=null;
+    if(trial){
+      var t=new Date(now.getTime()+30*24*3600*1000);
+      trialEnd=t.getDate()+' '+['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','noi','dec'][t.getMonth()]+' '+t.getFullYear();
+    }
+    var p=new Date(now.getTime()+30*24*3600*1000);
+    periodEnd=p.getDate()+' '+['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','noi','dec'][p.getMonth()]+' '+p.getFullYear();
+    cb({
+      ok:true,
+      office_id:id,
+      stripe_customer_id:'cus_mock_'+id,
+      stripe_subscription_id:'sub_mock_'+id,
+      subscription_status:trial?'trial':'active',
+      trial_ends_at:trialEnd,
+      current_period_end:periodEnd
+    });
+  },500);
+}
+function submitOfficeCreation(){
+  if(_coSubmitting)return;
+  if(!validateOfficeForm())return;
+  _coSubmitting=true;
+  var submit=document.getElementById('co-submit');
+  submit.disabled=true;
+  submit.textContent='Se creează...';
+  var err=document.getElementById('co-error');err.style.display='none';err.textContent='';
+  var payload=collectOfficePayload();
+  simulateZapier(payload,function(res){
+    if(!res||!res.ok){
+      _coSubmitting=false;
+      submit.textContent='Creează birou ⟶';
+      submit.disabled=false;
+      var msg=(res&&res.message)||'Eroare necunoscută — încearcă din nou.';
+      err.textContent=msg;
+      err.style.display='block';
+      soundErr();
+      return;
+    }
+    // Build the in-memory office row matching SEED_OFFICES shape.
+    var nowMonth=['Ian','Feb','Mar','Apr','Mai','Iun','Iul','Aug','Sep','Oct','Noi','Dec'][new Date().getMonth()];
+    var since=nowMonth+' '+new Date().getFullYear();
+    var row={
+      id:res.office_id,
+      name:payload.name,
+      city:payload.city||'—',
+      notary:payload.contact_name||payload.name,
+      email:payload.email||payload.contact_email,
+      phone:payload.phone||'',
+      status:res.subscription_status==='past_due'?'avertisment':'activ',
+      since:since,
+      address:payload.address||'',
+      cui:payload.cui,
+      website:payload.website||'',
+      contact_name:payload.contact_name||'',
+      contact_role:payload.contact_role||'',
+      contact_email:payload.contact_email,
+      contact_phone:payload.contact_phone||'',
+      subscription_status:res.subscription_status,
+      plan:payload.plan,
+      billing_cycle:'monthly',
+      current_period_end:res.current_period_end||'—',
+      trial_ends_at:res.trial_ends_at,
+      stripe_customer_id:res.stripe_customer_id,
+      stripe_subscription_id:res.stripe_subscription_id
+    };
+    OFFICES.push(row);
+    OM[row.id]=row;
+    _coSubmitting=false;
+    validateOfficeForm();
+    soundFinalizat();
+    var toastMsg=payload.plan==='complimentary'?'Birou creat.':'Birou creat. Link de plată trimis la '+payload.contact_email+'.';
+    showToast(toastMsg);
+    // Close + refresh
+    document.getElementById('om-create-overlay').classList.remove('open');
+    document.getElementById('om-create').classList.remove('open');
+    renderA();
+  });
+}
+
+document.getElementById('om-create-close').addEventListener('click',closeCreateOffice);
+document.getElementById('co-cancel').addEventListener('click',closeCreateOffice);
+document.getElementById('om-create-overlay').addEventListener('click',closeCreateOffice);
+document.getElementById('co-submit').addEventListener('click',submitOfficeCreation);
+document.getElementById('co-plan').addEventListener('change',validateOfficeForm);
+Array.prototype.forEach.call(document.querySelectorAll('#om-create .co-inp'),function(inp){
+  inp.addEventListener('input',validateOfficeForm);
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&document.getElementById('om-create').classList.contains('open')){
+    e.preventDefault();
+    closeCreateOffice();
+  }
+});
+
+// ══ EVENT DELEGATION ════════════════════════════════════════════════
+document.getElementById('om-close').addEventListener('click',closeOffice);
+document.getElementById('om-overlay').addEventListener('click',closeOffice);
+document.getElementById('upload-cancel').addEventListener('click',closeUploadModal);
+document.getElementById('upload-close').addEventListener('click',closeUploadModal);
+document.getElementById('upload-overlay').addEventListener('click',closeUploadModal);
+
+document.querySelectorAll('.om-tab').forEach(function(tab){
+  tab.addEventListener('click',function(){activateTab(this.dataset.tab);soundSelect();});
+});
+document.querySelectorAll('.filter-tag[data-status]').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    soundTabSwitch();
+    filterStatus=this.dataset.status;
+    document.querySelectorAll('.filter-tag[data-status]').forEach(function(b){b.classList.remove('active');});
+    this.classList.add('active');renderB();
+  });
+});
+document.querySelectorAll('.filter-tag[data-city]').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    soundTabSwitch();
+    filterCity=this.dataset.city;
+    document.querySelectorAll('.filter-tag[data-city]').forEach(function(b){b.classList.remove('active');});
+    this.classList.add('active');renderA();
+  });
+});
+var _sa=document.getElementById('search-a');if(_sa)_sa.addEventListener('input',renderA);
+var _sb=document.getElementById('search-b');if(_sb)_sb.addEventListener('input',renderB);
+document.addEventListener('click',function(e){
+  var or=e.target.closest('.list-row-office');
+  if(or&&or.dataset.oid){soundSelect();openOffice(or.dataset.oid);}
+  var cr=e.target.closest('.list-row-shared[data-id]');
+  if(cr&&cr.dataset.id){soundSelect();openCaseModal(cr.dataset.id);}
+});
+
+// ══ BOOT ════════════════════════════════════════════════════════════
+sb.auth.getSession().then(function(res){
+  if(res.data&&res.data.session&&res.data.session.user){
+    bootApp(res.data.session.user);
+  } else {
+    showAuthScreen();
+  }
+}).catch(function(){
+  document.getElementById('db-banner').classList.add('hidden');
+  showMainApp({email:'george@super.works (demo)'});
+  OFFICES=SEED_OFFICES;CASES=SEED_CASES;TEMPLATES=SEED_TEMPLATES;RAW_INTAKE=SEED_RAW_INTAKE.slice();
+  OFFICES.forEach(function(o){OM[o.id]=o;});
+  initUI();
+});
+</script>
+</body>
+</html>
