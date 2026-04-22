@@ -117,7 +117,7 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .doc-chip-row{display:flex;gap:8px;flex-wrap:wrap;}
 
 /* ── VIEW SWITCHER ── */
-.view-switcher-wrap{display:flex;align-items:center;gap:32px;margin-bottom:24px;}
+.view-switcher-wrap{display:flex;align-items:flex-end;gap:32px;margin-bottom:24px;}
 .view-switcher{display:flex;border:none;border-bottom:1px solid var(--rule);overflow:visible;margin-left:auto;}
 .view-btn{padding:0 18px 10px;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;background:none;color:var(--grey2);border:none;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:7px;}
 .view-btn svg{width:13px;height:13px;flex-shrink:0;}
@@ -375,7 +375,19 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .co-inp::placeholder{color:var(--grey2);font-weight:300;}
 /* Create-office form: scoped spacing overrides for single-column creation flow */
 #om-create .field-stacked{padding:18px 0;}
-#om-create .detail-category-spaced{margin-top:48px;}
+#om-create .detail-category-spaced{margin-top:32px;}
+/* Required-field indicator: larger pulsing red dot next to label */
+.co-req-dot{width:8px;height:8px;margin-left:8px;}
+/* Details disclosure — styled to match cdd-trigger visual, behaves like native details */
+#om-create details{border-top:1px solid var(--rule);margin-top:0;}
+#om-create details summary{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--grey2);padding:14px 20px 14px 0;cursor:pointer;list-style:none;position:relative;transition:color .15s;outline:none;}
+#om-create details summary::-webkit-details-marker{display:none;}
+#om-create details summary:hover{color:var(--ink);}
+#om-create details summary:focus-visible{color:var(--ink);}
+#om-create details summary::after{content:'';position:absolute;right:6px;top:50%;width:7px;height:7px;border-right:1.5px solid var(--grey2);border-bottom:1.5px solid var(--grey2);transform:translateY(-70%) rotate(45deg);pointer-events:none;transition:border-color .15s,transform .2s;}
+#om-create details[open] summary::after{border-right-color:var(--ink);border-bottom-color:var(--ink);transform:translateY(-30%) rotate(225deg);}
+#om-create details[open] summary{color:var(--ink);}
+#om-create details > .field-stacked:first-of-type{border-top:1px solid var(--rule);}
 .file-drop{border:1px solid var(--rule);padding:32px 24px;text-align:center;cursor:pointer;transition:background .15s;position:relative;}
 .file-drop:hover{background:var(--bg);}
 .file-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
@@ -936,24 +948,30 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
       <div style="max-width:720px;">
 
         <div class="detail-category">Date birou</div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Denumire</span><input class="form-inp co-inp" id="co-name" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Cabinet Notarial — obligatoriu"></div></div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">CUI</span><input class="form-inp co-inp mono" id="co-cui" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="RO12345678 — obligatoriu"></div></div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Website</span><input class="form-inp co-inp mono" id="co-website" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="https://..."></div></div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Oraș</span><input class="form-inp co-inp" id="co-city" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="București"></div></div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Adresă</span><input class="form-inp co-inp" id="co-address" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Str. ..."></div></div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Email</span><input class="form-inp co-inp mono" id="co-email" type="email" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="birou@..."></div></div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><input class="form-inp co-inp mono" id="co-phone" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="0700 000 000"></div></div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Denumire<span class="urgency-dot co-req-dot" id="co-dot-name"></span></span><input class="form-inp co-inp" id="co-name" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Cabinet Notarial ..."></div></div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">CUI<span class="urgency-dot co-req-dot" id="co-dot-cui"></span></span><input class="form-inp co-inp mono" id="co-cui" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="RO12345678"></div></div>
+        <details>
+          <summary>Detalii birou — 5 câmpuri</summary>
+          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Website</span><input class="form-inp co-inp mono" id="co-website" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="https://..."></div></div>
+          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Oraș</span><input class="form-inp co-inp" id="co-city" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="București"></div></div>
+          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Adresă</span><input class="form-inp co-inp" id="co-address" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Str. ..."></div></div>
+          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Email</span><input class="form-inp co-inp mono" id="co-email" type="email" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="birou@..."></div></div>
+          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><input class="form-inp co-inp mono" id="co-phone" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="0700 000 000"></div></div>
+        </details>
 
         <div class="detail-category detail-category-spaced">Persoană de contact</div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Nume</span><input class="form-inp co-inp" id="co-contact-name" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Prenume Nume"></div></div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Rol</span><input class="form-inp co-inp" id="co-contact-role" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="notar titular"></div></div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Email</span><input class="form-inp co-inp mono" id="co-contact-email" data-req="1" type="email" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="contact@... — obligatoriu"></div></div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><input class="form-inp co-inp mono" id="co-contact-phone" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="0700 000 000"></div></div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Nume<span class="urgency-dot co-req-dot" id="co-dot-contact-name"></span></span><input class="form-inp co-inp" id="co-contact-name" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Prenume Nume"></div></div>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Email<span class="urgency-dot co-req-dot" id="co-dot-contact-email"></span></span><input class="form-inp co-inp mono" id="co-contact-email" data-req="1" type="email" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="contact@..."></div></div>
+        <details>
+          <summary>Detalii contact — 2 câmpuri</summary>
+          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Rol</span><input class="form-inp co-inp" id="co-contact-role" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="notar titular"></div></div>
+          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><input class="form-inp co-inp mono" id="co-contact-phone" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="0700 000 000"></div></div>
+        </details>
 
         <div class="detail-category detail-category-spaced">Plan</div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Plan abonament</span>
+        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Plan abonament<span class="urgency-dot co-req-dot" id="co-dot-plan"></span></span>
           <div class="cdd" id="cdd-co-plan" data-placeholder="— selectează plan —" style="margin-top:4px;">
-            <button class="cdd-trigger empty" type="button" style="border-bottom:none;padding:0;font-family:var(--sans);font-size:14px;font-weight:300;text-transform:none;letter-spacing:0;">— selectează plan — obligatoriu</button>
+            <button class="cdd-trigger empty" type="button" style="border-bottom:none;padding:0;">— selectează plan —</button>
             <div class="cdd-panel" role="listbox">
               <button class="cdd-opt" type="button" data-v="trial_30d">Trial 30 zile</button>
               <button class="cdd-opt" type="button" data-v="starter">Starter</button>
@@ -965,16 +983,17 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
           </div>
         </div></div>
 
-        <div style="font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--grey2);margin-top:24px;line-height:1.6;">
-          La creare, Stripe generează clientul, abonamentul pe planul ales și trimite link-ul de checkout pe email-ul de contact.
-        </div>
-
       </div>
     </div>
   </div>
-  <div style="padding:16px 44px;border-top:1px solid var(--rule);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;background:var(--bg);">
-    <button class="btn-ghost" id="co-cancel" type="button">Anulează</button>
-    <button class="btn-primary" id="co-submit" type="button" disabled>Creează birou ⟶</button>
+  <div style="padding:16px 44px;border-top:1px solid var(--rule);display:flex;gap:24px;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--bg);">
+    <div style="font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--grey2);line-height:1.6;max-width:520px;">
+      La creare, Stripe generează clientul, abonamentul pe planul ales și trimite link-ul de checkout pe email-ul de contact.
+    </div>
+    <div style="display:flex;gap:8px;flex-shrink:0;">
+      <button class="btn-ghost" id="co-cancel" type="button">Anulează</button>
+      <button class="btn-primary" id="co-submit" type="button" disabled>Creează birou ⟶</button>
+    </div>
   </div>
 </div>
 
@@ -1524,8 +1543,6 @@ function switchView(v){
     var fr=document.getElementById('filter-row-'+x);
     if(fr) fr.style.display=(x===v?'flex':'none');
   });
-  var addBtn=document.getElementById('btn-add-office');
-  if(addBtn) addBtn.style.display=(v==='a'?'inline-flex':'none');
   if(v==='a') renderA(); else renderB();
 }
 
@@ -2887,15 +2904,21 @@ document.getElementById('cm-save').addEventListener('click',cmSave);
 var _coSubmitting=false;
 function openCreateOffice(){
   soundSelect();
+  // Defense against activateTab() side-effect: the existing-office modal's
+  // tab switcher queries all .om-panel globally and deactivates ours.
+  // Re-force active every time we open.
+  document.getElementById('create-panel').classList.add('active');
   // reset form
   var ids=['co-name','co-cui','co-website','co-city','co-address','co-email','co-phone','co-contact-name','co-contact-role','co-contact-email','co-contact-phone'];
   ids.forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   cddSetValue('cdd-co-plan','',false);
+  Array.prototype.forEach.call(document.querySelectorAll('#om-create details'),function(d){d.open=false;});
   var err=document.getElementById('co-error');err.style.display='none';err.textContent='';
   var submit=document.getElementById('co-submit');
   submit.disabled=true;
   submit.textContent='Creează birou ⟶';
   _coSubmitting=false;
+  validateOfficeForm(); // show all 4 required-field dots on fresh open
   document.getElementById('om-create-overlay').classList.add('open');
   document.getElementById('om-create').classList.add('open');
   setTimeout(function(){var n=document.getElementById('co-name');if(n)n.focus();},160);
@@ -2909,10 +2932,17 @@ function closeCreateOffice(){
 function validateOfficeForm(){
   var name=document.getElementById('co-name').value.trim();
   var cui=document.getElementById('co-cui').value.trim();
+  var cname=document.getElementById('co-contact-name').value.trim();
   var cemail=document.getElementById('co-contact-email').value.trim();
   var plan=document.getElementById('co-plan').value;
   var emailOk=cemail.length>0&&cemail.indexOf('@')>0&&cemail.indexOf('.')>0;
-  var ok=!!(name&&cui&&emailOk&&plan);
+  // Per-field dot visibility — hide when field is valid
+  document.getElementById('co-dot-name').style.display=name?'none':'inline-block';
+  document.getElementById('co-dot-cui').style.display=cui?'none':'inline-block';
+  document.getElementById('co-dot-contact-name').style.display=cname?'none':'inline-block';
+  document.getElementById('co-dot-contact-email').style.display=emailOk?'none':'inline-block';
+  document.getElementById('co-dot-plan').style.display=plan?'none':'inline-block';
+  var ok=!!(name&&cui&&cname&&emailOk&&plan);
   document.getElementById('co-submit').disabled=!ok||_coSubmitting;
   return ok;
 }
