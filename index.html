@@ -73,9 +73,9 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .today-label{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey2);}
 .today-count{font-family:var(--mono);font-size:11px;color:var(--grey2);}
 .today-scroll-wrap{position:relative;}
-.today-scroll{max-height:112px;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;}
+.today-scroll{max-height:127px;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;}
 .today-scroll::-webkit-scrollbar{display:none;}
-.today-row{display:grid;grid-template-columns:30px 1fr 1fr 80px;gap:12px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--rule);}
+.today-row{display:grid;grid-template-columns:30px 1fr 1fr 80px;gap:12px;align-items:center;padding:20px 0;border-bottom:1px solid var(--rule);min-height:64px;}
 .today-row:last-child{border-bottom:none;}
 .today-num{font-family:var(--mono);font-size:14px;color:var(--grey2);}
 .today-act{font-size:14px;font-weight:400;color:var(--ink);}
@@ -119,12 +119,12 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 /* ── VIEW SWITCHER ── */
 .view-switcher-wrap{display:flex;align-items:flex-end;gap:32px;margin-bottom:24px;}
 .view-switcher{display:flex;border:none;border-bottom:1px solid var(--rule);overflow:visible;margin-left:auto;}
-.view-btn{padding:0 18px 10px;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;background:none;color:var(--grey2);border:none;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:7px;}
+.view-btn{padding:0 18px 12px;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;background:none;color:var(--grey2);border:none;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:7px;}
 .view-btn svg{width:13px;height:13px;flex-shrink:0;}
 .view-btn.active{color:var(--ink);border-bottom-color:var(--ink);}
 .view-btn:hover:not(.active){color:var(--grey);}
 .filter-group{display:flex;align-items:baseline;gap:0;flex:1;}
-.filter-tag{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:0 18px 10px;background:none;color:var(--grey2);border:none;border-bottom:1px solid var(--rule);margin-bottom:0;cursor:pointer;transition:all .15s;}
+.filter-tag{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:0 18px 12px;background:none;color:var(--grey2);border:none;border-bottom:1px solid var(--rule);margin-bottom:0;cursor:pointer;transition:all .15s;}
 .filter-tag.active{color:var(--ink);border-bottom:2px solid var(--ink);margin-bottom:-1px;padding-bottom:9px;}
 .filter-tag:hover:not(.active){color:var(--grey);}
 .search-inp{font-family:var(--mono);font-size:11px;color:var(--grey2);background:none;border:none;padding:0 0 10px;margin-bottom:0;outline:none;width:180px;transition:color .15s;letter-spacing:.5px;}
@@ -134,17 +134,21 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 
 /* ── LIST ROWS (v48 pattern: 6-col grid) ── */
 /* ── LIST ROWS — exact v48 list-hdr-shared / list-row-shared ── */
-.list-hdr-shared{display:grid;grid-template-columns:50px 240px 220px 1fr 240px 160px;padding:12px 20px;background:var(--bg);border-bottom:1px solid var(--rule);gap:24px;}
+.list-hdr-shared{display:grid;grid-template-columns:50px 240px 220px 1fr 240px 160px;padding:12px 20px 14px;background:transparent;border-bottom:2px solid var(--ink);gap:24px;}
 .list-hdr-shared span{font-family:var(--mono);font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--grey2);}
 .list-hdr-shared span:nth-child(6){padding-left:40px;}
-.list-row-shared{display:grid;grid-template-columns:50px 240px 220px 1fr 240px 160px;padding:12px 20px;border-bottom:1px solid var(--rule);cursor:pointer;transition:background 0.15s;align-items:center;border-left:3px solid transparent;gap:24px;}
+/* Count badge next to column header label (e.g., 'Birou · 4', 'Act · 11') */
+.hdr-count{color:inherit;opacity:.65;margin-left:6px;}
+.hdr-count:empty{display:none;}
+.list-row-shared{display:grid;grid-template-columns:50px 240px 220px 1fr 240px 160px;padding:20px 20px;border-bottom:1px solid var(--rule);cursor:pointer;transition:background 0.15s;align-items:center;border-left:3px solid transparent;gap:24px;min-height:64px;}
 .list-row-shared:hover{background:var(--bg);}
 .list-row-shared.active{background:var(--bg);border-left-color:var(--red);}
+
 .l-num{font-family:var(--mono);font-size:14px;color:var(--grey2);}
 .l-act{font-size:14px;font-weight:400;color:var(--ink);line-height:1.3;}
 .l-ref{font-family:var(--mono);font-size:14px;color:var(--grey2);}
 .l-flag{font-family:var(--mono);font-size:11px;color:var(--white);background:var(--red);margin-left:8px;text-transform:none;border:1px solid var(--red);padding:2px 6px;display:inline-flex;align-items:center;line-height:1.2;letter-spacing:.3px;}
-.l-client{font-size:14px;color:var(--ink);}
+.l-client{font-size:14px;color:var(--ink);line-height:1.3;}
 .l-date{font-family:var(--mono);font-size:14px;color:var(--grey2);line-height:1.4;white-space:nowrap;}
 .l-date-main{color:var(--ink);}
 .l-date-slot{color:var(--grey2);}
@@ -152,17 +156,53 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .l-status.nou{color:var(--ink);font-weight:400;}
 .list-row-office .l-status{padding-left:0;}
 /* office coverage bar inside list-row-shared */
-.o-name{font-size:14px;font-weight:400;color:var(--ink);}
+.o-name{font-size:14px;font-weight:400;color:var(--ink);line-height:1.3;}
 .o-progress{display:flex;align-items:center;gap:8px;}
 .o-prog-bar{flex:1;height:2px;background:var(--rule);}
 .o-prog-fill{height:100%;background:var(--ink);transition:width .3s;}
 .o-prog-count{font-family:var(--mono);font-size:14px;color:var(--grey2);white-space:nowrap;}
 
+/* Onboarding checklist — state indicator (dot + mono label), matches DETALII visual language */
+.ob-state{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;}
+.ob-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.ob-state.done .ob-dot{background:var(--ink);}
+.ob-state.done{color:var(--ink);}
+.ob-state.pending .ob-dot{background:transparent;border:1px solid var(--grey2);}
+.ob-state.pending{color:var(--grey2);}
+.ob-state.na .ob-dot{background:transparent;border:1px solid var(--grey2);opacity:.5;}
+.ob-state.na{color:var(--grey2);opacity:.7;}
+.ob-meta{font-family:var(--mono);font-size:11px;color:var(--grey2);margin-left:8px;}
+/* ONBOARDING row height matches DOSARE (two-line dos-row) */
+/* ONBOARDING rows inherit .field-stacked defaults (12px padding) — two-line parity with DETALII */
+/* Onboarding header — label + count inline, matches SABLOANE top-row spacing */
+.ob-header{margin-bottom:16px;}
+.ob-header-labelrow{display:flex;align-items:baseline;justify-content:space-between;gap:16px;}
+.ob-header-count{font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--grey2);white-space:nowrap;}
+
+/* DOSARE tab — two-column mirror of ONBOARDING. Rows use field-stacked rhythm. */
+.dos-cat-row{display:flex;align-items:baseline;justify-content:space-between;}
+.dos-cat-row > span:last-child{color:inherit;}
+.dos-row{padding:12px 0;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.dos-row:hover{background:var(--bg);}
+.dos-inner{display:flex;flex-direction:column;gap:4px;min-width:0;}
+.dos-lbl{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--grey2);}
+.dos-val{font-size:14px;color:var(--ink);}
+.dos-state{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;flex-shrink:0;}
+.dos-state-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dos-state.urgent .dos-state-dot{background:var(--red);}
+.dos-state.urgent{color:var(--red);}
+.dos-state.nou .dos-state-dot{background:var(--ink);}
+.dos-state.nou{color:var(--ink);}
+.dos-state.activ .dos-state-dot{background:transparent;border:1px solid var(--grey2);}
+.dos-state.activ{color:var(--grey2);}
+.dos-state.programat .dos-state-dot{background:transparent;border:1px solid var(--grey2);}
+.dos-state.programat{color:var(--grey2);}
+
 /* Office list rows */
-.list-hdr-offices{display:grid;grid-template-columns:50px 1fr 140px 140px 120px 160px;gap:24px;padding:12px 20px;background:var(--bg);border-bottom:1px solid var(--rule);}
+.list-hdr-offices{display:grid;grid-template-columns:50px 1fr 140px 140px 120px 160px;gap:24px;padding:12px 20px 14px;background:transparent;border-bottom:2px solid var(--ink);}
 .list-hdr-offices span{font-family:var(--mono);font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--grey2);}
 .list-hdr-offices span:nth-child(5),.list-hdr-offices span:nth-child(6){padding-left:32px;}
-.list-row-office{display:grid;grid-template-columns:50px 1fr 140px 140px 120px 160px;gap:24px;padding:12px 20px;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s;align-items:center;border-left:3px solid transparent;}
+.list-row-office{display:grid;grid-template-columns:50px 1fr 140px 140px 120px 160px;gap:24px;padding:20px 20px;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s;align-items:center;border-left:3px solid transparent;min-height:64px;}
 .list-row-office>*:nth-child(5),.list-row-office>*:nth-child(6){padding-left:32px;}
 .list-row-office:hover{background:var(--bg);}
 .list-row-office.active{background:var(--bg);border-left-color:var(--ink);}
@@ -181,21 +221,21 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .close-btn{font-size:22px;font-weight:300;color:var(--grey2);background:none;border:none;cursor:pointer;line-height:1;padding:0 4px;transition:color .15s;}
 .close-btn:hover{color:var(--ink);}
 .om-tabs{display:flex;gap:0;border-bottom:1px solid var(--rule);padding:0 44px;flex-shrink:0;}
-.om-tab{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:12px 18px 10px;background:none;color:var(--grey2);border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;margin-bottom:-1px;}
+.om-tab{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:20px 18px 16px;background:none;color:var(--grey2);border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;margin-bottom:-1px;}
 .om-tab.active{color:var(--ink);border-bottom-color:var(--ink);}
 .om-tab:hover:not(.active){color:var(--grey);}
 .om-body{flex:1;overflow-y:auto;scrollbar-width:none;}
 .om-body::-webkit-scrollbar{display:none;}
-.om-panel{display:none;padding:32px 44px;}
+.om-panel{display:none;padding:64px 44px 32px;}
 .om-panel.active{display:block;animation:fadeIn .15s ease both;}
 /* Uniform 48px top gap across all tabs (32px panel padding + 16px via first-child rule) */
 .om-panel > .section-lbl:first-child,
 .om-panel > div:first-child > .section-lbl:first-child{margin-top:16px;}
-.om-panel > .list-hdr-shared:first-child,
-.om-panel > div:first-child > .list-hdr-shared:first-child{margin-top:16px;}
+.om-panel .section-lbl{display:inline-block;padding-bottom:10px;border-bottom:2px solid var(--ink);}
+#tab-dosare > .list-hdr-shared:first-child{margin-top:0;}
 
 /* ── FIELD STACKED (identical to v48) ── */
-.detail-category{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--grey2);padding:16px 0 8px;border-bottom:1px solid var(--rule);margin-bottom:0;}
+.detail-category{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--grey2);padding:16px 0 10px;border-bottom:2px solid var(--ink);margin-bottom:0;}
 .detail-category-spaced{margin-top:24px;}
 .field-stacked{padding:12px 0;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s;animation:fieldIn .18s ease both;}
 .field-stacked:hover{background:var(--bg);}
@@ -217,7 +257,7 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 /* ── COVERAGE GRID ── */
 .coverage-wrap{margin-bottom:32px;}
 .coverage-group{margin-bottom:24px;}
-.coverage-group-title{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--grey2);padding:12px 0 8px;border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between;}
+.coverage-group-title{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--grey2);padding:12px 0 10px;border-bottom:2px solid var(--ink);display:flex;align-items:center;justify-content:space-between;}
 .coverage-group-count{font-family:var(--mono);font-size:11px;color:var(--grey);}
 .coverage-row{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid var(--rule);gap:16px;}
 .coverage-row:last-child{border-bottom:none;}
@@ -253,9 +293,9 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 
 /* ═══ LIBRARY TAB SYSTEM (replaces old .tpl-view-toggle) ═══════════════════════ */
 /* Tab row: view tabs on left (filter-tag), + Adaugă action button on right */
-.lib-tabs-row{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--rule);margin-bottom:32px;}
+.lib-tabs-row{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--rule);margin-bottom:32px;min-height:25px;}
 .lib-tabs{display:flex;}
-.lib-tab{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:0 18px 10px;background:none;color:var(--grey2);border:none;cursor:pointer;transition:color .15s;position:relative;display:inline-flex;align-items:center;gap:6px;}
+.lib-tab{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:0 18px 12px;background:none;color:var(--grey2);border:none;cursor:pointer;transition:color .15s;position:relative;display:inline-flex;align-items:center;gap:6px;}
 .lib-tab:first-child{padding-left:0;}
 .lib-tab:hover:not(.active){color:var(--grey);}
 .lib-tab.active{color:var(--ink);}
@@ -264,10 +304,23 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .lib-urgent-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--red);animation:libPulse 1.8s infinite;}
 @keyframes libPulse{0%,100%{opacity:1;}50%{opacity:.4;}}
 /* + Adaugă button — filled-black doc-chip pattern */
-.lib-add-btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase;padding:6px 12px;background:var(--ink);color:var(--white);border:1px solid var(--ink);cursor:pointer;transition:opacity .15s;line-height:1.2;margin-bottom:8px;position:relative;}
+.lib-add-btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase;padding:6px 12px;background:var(--ink);color:var(--white);border:1px solid var(--ink);cursor:pointer;transition:opacity .15s;line-height:1.2;position:relative;}
 .lib-add-btn:hover{opacity:.85;}
+.lib-add-btn:disabled{opacity:.35;cursor:not-allowed;}
+.lib-add-btn:disabled:hover{opacity:.35;}
+/* Create-office submit buttons (Creează birou / Confirmă) render solid black
+   even in disabled state — the field-level required dots signal what's missing,
+   so the CTA itself stays visually anchored as the next step. */
+#co-submit:disabled,
+#co-submit-rev:disabled{opacity:1;cursor:not-allowed;}
+#co-submit:disabled:hover,
+#co-submit-rev:disabled:hover{opacity:1;}
 .lib-add-btn .plus{font-family:var(--mono);font-weight:300;font-size:14px;line-height:1;display:inline-block;}
 .lib-add-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+/* Danger variant: solid red background, used only for destructive admin actions
+   (Dezactivează birou). Inherits all sizing/padding from .lib-add-btn. */
+.lib-add-btn-danger{background:var(--red)!important;border-color:var(--red)!important;}
+.lib-add-btn-danger:hover{opacity:.85;}
 /* Primary action — "Adaugă birou" — sits after view-switcher on view-switcher-wrap */
 .add-office-btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:10px 20px;background:var(--ink);color:var(--white);border:1px solid var(--ink);cursor:pointer;transition:opacity .15s;line-height:1.2;white-space:nowrap;margin-left:8px;}
 .add-office-btn:hover{opacity:.85;}
@@ -283,31 +336,49 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 /* ═══ FLAT ACT-GROUP (Active + Istoric share) ═══ */
 .act-group{margin-bottom:32px;}
 .act-group:last-child{margin-bottom:0;}
-.act-group-title{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey2);padding-bottom:10px;border-bottom:1px solid var(--rule);}
+.act-group-title{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey2);padding:12px 0;border-bottom:1px solid var(--rule);}
 .act-group-title .count{color:inherit;}
 
+/* ACTIVE + ISTORIC (ȘABLOANE) and NECESITĂ ATENȚIE + PROGRAMATE (DOSARE) cap
+   at 400px with internal scroll when content exceeds it. Keeps the office
+   modal's footer from being pushed off-screen on offices with long libraries
+   or heavy caseloads. Hidden scrollbar matches today-scroll idiom.
+   Rollback: remove both rules (snapshot: notariat_admin_v27_pre_active_scroll.html).
+   NOTE: INTRĂRI BRUTE intentionally NOT capped — its rows contain inline
+   .cdd-panel dropdowns (absolute-positioned) that would be clipped by
+   overflow:auto on an ancestor. Brute lists are typically short (<20 items),
+   so the lack of cap is acceptable. */
+#lib-pane-active,
+#lib-pane-istoric,
+#om-dos-pane-attn,
+#om-dos-pane-prog{max-height:400px;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;}
+#lib-pane-active::-webkit-scrollbar,
+#lib-pane-istoric::-webkit-scrollbar,
+#om-dos-pane-attn::-webkit-scrollbar,
+#om-dos-pane-prog::-webkit-scrollbar{display:none;}
+
 /* ═══ ROW TYPOGRAPHY (14/14 rule: sans/ink primary, mono/grey2 secondary) ═══ */
-.lib-row-active{display:grid;grid-template-columns:1fr 120px auto;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--rule);font-size:14px;transition:background .15s;}
+.lib-row-active{display:grid;grid-template-columns:1fr 120px auto;gap:16px;align-items:center;padding:12px 0;border-bottom:1px solid var(--rule);font-size:14px;transition:background .15s;}
 .lib-row-active:last-child{border-bottom:none;}
 .lib-row-active:hover{background:var(--bg);}
-.lib-row-active .row-sub{font-family:var(--sans);font-size:14px;font-weight:300;color:var(--ink);}
+.lib-row-active .row-sub{font-family:var(--mono);font-size:14px;color:var(--ink);}
 .lib-row-active .row-date{font-family:var(--mono);font-size:14px;color:var(--grey2);}
 
-.lib-row-hist{display:grid;grid-template-columns:1fr 60px 120px 140px auto;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--rule);font-size:14px;transition:background .15s;}
+.lib-row-hist{display:grid;grid-template-columns:1fr 60px 120px 140px auto;gap:16px;align-items:center;padding:12px 0;border-bottom:1px solid var(--rule);font-size:14px;transition:background .15s;}
 .lib-row-hist:last-child{border-bottom:none;}
 .lib-row-hist:hover{background:var(--bg);}
-.lib-row-hist .row-sub{font-family:var(--sans);font-size:14px;font-weight:300;color:var(--ink);}
+.lib-row-hist .row-sub{font-family:var(--mono);font-size:14px;color:var(--ink);}
 .lib-row-hist .row-version{font-family:var(--mono);font-size:14px;color:var(--grey2);}
 .lib-row-hist .row-date{font-family:var(--mono);font-size:14px;color:var(--grey2);}
 
-.lib-row-brute{display:grid;grid-template-columns:280px 180px 220px 1fr auto;gap:16px;align-items:baseline;padding:16px 0;border-bottom:1px solid var(--rule);}
+.lib-row-brute{display:grid;grid-template-columns:280px 180px 220px 1fr auto;gap:32px;align-items:end;padding:12px 0;border-bottom:1px solid var(--rule);}
 .lib-row-brute:last-child{border-bottom:none;}
 .lib-row-brute .row-fname-wrap{display:flex;flex-direction:column;gap:4px;min-width:0;}
-.lib-row-brute .row-fname{font-family:var(--sans);font-size:14px;font-weight:300;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2;}
-.lib-row-brute .row-fname-meta{font-family:var(--mono);font-size:11px;color:var(--grey2);letter-spacing:.5px;line-height:1.2;}
+.lib-row-brute .row-fname{font-family:var(--mono);font-size:14px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lib-row-brute .row-fname-meta{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--grey2);}
 
 /* Action clusters */
-.row-actions{display:flex;gap:18px;align-items:center;justify-content:flex-end;}
+.row-actions{display:flex;gap:18px;align-items:center;justify-content:flex-end;min-height:23px;}
 /* Primary chip = .doc-chip (v48 idiom — already defined elsewhere as filled black) */
 /* Secondary action = inline mono link */
 .lib-act-link{font-family:var(--mono);font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--grey2);background:none;border:none;padding:0;cursor:pointer;transition:color .15s;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--rule);text-decoration-thickness:1px;}
@@ -351,7 +422,11 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .form-sel option{background:var(--white);}
 /* Custom dropdown (cdd) — explorator-parity, replaces native select in upload modal */
 .cdd{position:relative;width:100%;}
-.cdd-trigger{font-family:var(--sans);font-size:14px;font-weight:300;color:var(--ink);background:transparent;border:none;border-bottom:1px solid var(--rule);padding:8px 20px 8px 0;width:100%;text-align:left;cursor:pointer;outline:none;transition:border-color .15s;position:relative;display:block;}
+.cdd-trigger{font-family:var(--mono);font-size:13px;color:var(--ink);background:transparent;border:none;border-bottom:1px solid var(--rule);padding:8px 20px 8px 0;width:100%;text-align:left;cursor:pointer;outline:none;transition:border-color .15s;position:relative;display:block;}
+/* Inside brute rows, the cdd-trigger lives on the filename line (align-items:end).
+   Its default 8px bottom padding pushes text up off that line — drop it so the
+   dropdown text baseline aligns with the filename text and the action buttons. */
+.lib-row-brute .cdd-trigger{padding-bottom:0;}
 .cdd.open .cdd-trigger,.cdd-trigger:hover,.cdd-trigger:focus{border-bottom-color:var(--ink);}
 .cdd-trigger.empty{color:var(--grey2);}
 .cdd-trigger.disabled{color:var(--grey2);cursor:not-allowed;}
@@ -361,6 +436,9 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .cdd-panel{position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--white);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);z-index:300;max-height:240px;overflow-y:auto;scrollbar-width:none;display:none;}
 .cdd-panel::-webkit-scrollbar{display:none;}
 .cdd.open .cdd-panel{display:block;animation:cddIn .15s ease;}
+/* Upward-opening variant — triggered when insufficient space below the trigger.
+   Panel anchors to trigger bottom with offset above it. */
+.cdd.open-up .cdd-panel{top:auto;bottom:calc(100% + 2px);}
 @keyframes cddIn{from{opacity:0;transform:translateY(-2px);}to{opacity:1;transform:translateY(0);}}
 .cdd-opt{display:block;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:10px 16px;background:none;border:none;border-bottom:1px solid var(--rule);cursor:pointer;color:var(--grey2);width:100%;text-align:left;transition:all .15s;white-space:nowrap;}
 .cdd-opt:last-child{border-bottom:none;}
@@ -372,14 +450,24 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 /* Create-office form: field-stacked hosts an inline input; row lights up when focused */
 .field-stacked:has(.co-inp:focus){background:var(--bg);border-bottom-color:var(--ink);}
 .co-inp{background:transparent !important;}
+/* Revizuire's disabled inputs should look identical to a filled value, not
+   the browser's default greyed-out disabled state. Inherit ink color + opacity 1. */
+.co-inp:disabled{color:var(--ink);-webkit-text-fill-color:var(--ink);opacity:1;cursor:default;}
 .co-inp::placeholder{color:var(--grey2);font-weight:300;}
 /* Create-office form: scoped spacing overrides for single-column creation flow */
-#om-create .field-stacked{padding:18px 0;}
-#om-create .detail-category-spaced{margin-top:32px;}
+#om-create .field-stacked{padding:12px 0;}
+/* Plan-pane explanatory note — mono 11px grey, placed below the plan picker */
+.co-plan-note{font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--grey2);line-height:1.6;margin-top:24px;max-width:520px;}
+/* Create-office form: two-column pair wrapper for required fields (DENUMIRE|CUI, NUME|EMAIL).
+   Cells sit side-by-side sharing only the horizontal underline; no vertical divider. */
+#om-create .field-pair{display:grid;grid-template-columns:1fr 1fr;gap:32px;}
 /* Required-field indicator: larger pulsing red dot next to label */
 .co-req-dot{width:8px;height:8px;margin-left:8px;}
+/* Inline field-level error message (CUI invalid / duplicate, email duplicate) */
+.co-inline-err{font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--red);padding:8px 0 0;display:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.co-inline-err.visible{display:block;}
 /* Details disclosure — styled to match cdd-trigger visual, behaves like native details */
-#om-create details{border-top:1px solid var(--rule);margin-top:0;}
+#om-create details{margin-top:0;}
 #om-create details summary{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--grey2);padding:14px 20px 14px 0;cursor:pointer;list-style:none;position:relative;transition:color .15s;outline:none;}
 #om-create details summary::-webkit-details-marker{display:none;}
 #om-create details summary:hover{color:var(--ink);}
@@ -418,10 +506,10 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .vol-tabs-row{display:flex;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap;}
 .vol-tabs-label{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey2);white-space:nowrap;}
 .vol-tabs{display:flex;border:none;border-bottom:1px solid var(--rule);overflow:visible;}
-.vol-tab{padding:0 18px 10px;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;background:none;color:var(--grey2);border:none;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;transition:all 0.15s;border-radius:0;}
+.vol-tab{padding:0 18px 12px;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;background:none;color:var(--grey2);border:none;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;transition:all 0.15s;border-radius:0;}
 .vol-tab.active{background:none;color:var(--ink);border-bottom-color:var(--ink);}
 .vol-tab:hover:not(.active){background:none;color:var(--grey);}
-.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:20px 52px;margin-bottom:32px;padding:24px;background:var(--bg);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:20px 52px;margin-bottom:32px;padding:24px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);}
 .ctrl-group{display:flex;flex-direction:column;gap:24px;}
 .ctrl-header{display:flex;justify-content:space-between;align-items:baseline;}
 .ctrl-label{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--grey);}
@@ -458,7 +546,7 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .expl-result-btn:hover{color:var(--ink);background:var(--bg);}
 .expl-result-btn.expl-result-city-agg{color:var(--ink);}
 .expl-result-city{font-family:var(--mono);font-size:11px;color:var(--grey2);letter-spacing:.5px;margin-left:auto;}
-.dosare-wrap{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);}
+.dosare-wrap{}
 .dosare-scroll{overflow-y:auto;scrollbar-width:none;}
 .dosare-scroll::-webkit-scrollbar{display:none;}
 
@@ -469,17 +557,83 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .case-modal.open{transform:translateY(0);}
 .cm-header{display:grid;grid-template-columns:1fr auto;align-items:center;padding:16px 44px;border-bottom:1px solid var(--rule);flex-shrink:0;background:var(--bg);}
 .cm-title{font-family:var(--serif);font-size:24px;color:var(--ink);}
-.cm-meta{font-family:var(--mono);font-size:11px;color:var(--grey2);margin-top:4px;letter-spacing:.5px;}
 .cm-header-right{display:flex;align-items:center;gap:12px;}
-.cm-body{flex:1;overflow-y:auto;scrollbar-width:none;padding:32px 44px;}
+/* cm-tabs mirror om-tabs exactly */
+.cm-tabs{display:flex;gap:0;border-bottom:1px solid var(--rule);padding:0 44px;flex-shrink:0;}
+.cm-tab{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:20px 18px 16px;background:none;color:var(--grey2);border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;margin-bottom:-1px;}
+.cm-tab.active{color:var(--ink);border-bottom-color:var(--ink);}
+.cm-tab:hover:not(.active){color:var(--grey);}
+.cm-body{flex:1;overflow-y:auto;scrollbar-width:none;}
 .cm-body::-webkit-scrollbar{display:none;}
-.cm-cols{display:grid;grid-template-columns:1fr 1fr;gap:48px;}
+.cm-panel{display:none;padding:64px 44px 32px;}
+.cm-panel.active{display:block;animation:fadeIn .15s ease both;}
+.cm-panel > .section-lbl:first-child,
+.cm-panel > div:first-child > .section-lbl:first-child{margin-top:16px;}
+.cm-panel .section-lbl{display:inline-block;padding-bottom:10px;border-bottom:2px solid var(--ink);}
+/* intervenție — override rows */
+/* ── INTERVENȚIE — sub-tab pane idiom (mirrors BIBLIOTECĂ ȘABLOANE) ── */
+.iv-pane{display:none;max-width:560px;padding-top:12px;}
+/* Case-modal panes whose first visible content is a ctx-line (Acțiuni rapide) or a
+   log list (Istoric, Audit). Padding-top of 12 matches .field-stacked's padding-top
+   in DETALII, so first text baseline is consistent across all case-modal sub-tabs.
+   The DETALII panes (cm-det-pane-*) already contain .field-stacked rows which bring
+   their own padding — don't add padding-top here or they'd get doubled spacing. */
+#cm-com-pane-actiuni,
+#cm-com-pane-istoric,
+#cm-audit-pane{padding-top:12px;}
+.iv-pane.active{display:block;animation:fadeIn .15s ease both;}
+.iv-ctx-line{font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--grey2);display:flex;align-items:baseline;gap:10px;margin-bottom:20px;min-height:24px;}
+/* Make the 'Curent' tag inside iv-ctx-line visually prominent — ink border + ink text.
+   Scoped to tag-activ (the neutral/muted variant) so filled tags (tag-nou, tag-urgent) keep their fill. */
+.iv-ctx-line .tag.tag-activ{color:var(--ink);border-color:var(--ink);}
+.iv-warn{font-family:var(--mono);font-size:11px;color:var(--grey2);letter-spacing:.5px;line-height:1.6;}
+.iv-form-inner{display:flex;flex-direction:column;gap:12px;}
+.iv-form-lbl{font-family:var(--mono);font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--grey2);}
+.iv-form-input{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--white);border:1px solid var(--rule);padding:8px 12px;outline:none;width:100%;}
+.iv-form-input:focus{border-color:var(--ink);}
+/* Date/time inputs — ported from v49 notary dashboard (.inp-field / .inp-lbl) for cross-dashboard consistency */
+.inp-lbl{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--grey2);margin-bottom:4px;display:block;}
+.inp-field{font-family:var(--sans);font-size:14px;font-weight:300;color:var(--ink);border:none;border-bottom:1px solid var(--rule);background:transparent;padding:4px 0;outline:none;width:100%;transition:border-color .15s;}
+.inp-field:focus{border-bottom-color:var(--ink);}
+.inp-field::placeholder{color:var(--grey2);}
+.iv-form-textarea{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--white);border:1px solid var(--rule);padding:8px 12px;outline:none;width:100%;resize:vertical;min-height:64px;}
+.iv-form-textarea:focus{border-color:var(--ink);}
+.iv-form-err{font-family:var(--mono);font-size:11px;color:var(--red);letter-spacing:.5px;display:none;}
+.iv-form-err.show{display:inline;}
+.cm-placeholder{padding:48px 0;text-align:center;}
+.cm-placeholder-line{font-family:var(--mono);font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--grey2);}
+.cm-placeholder-sub{font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--grey2);opacity:.6;margin-top:8px;}
+/* ── COMUNICARE / AUDIT log rows ─────────────────────────────────────
+   Shared layout: mono timestamp (120px) · tag (150px) · summary text (1fr).
+   Tag slot holds channel+direction for COMUNICARE, event_type for AUDIT. */
+.cm-log-row{display:grid;grid-template-columns:140px 160px 1fr;gap:16px;align-items:baseline;padding:16px 0;border-bottom:1px solid var(--rule);}
+.cm-log-row:first-child{padding-top:0;}
+.cm-log-row:last-child{border-bottom:none;}
+.cm-log-time{font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--grey2);white-space:nowrap;}
+.cm-log-tag{font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--grey2);}
+.cm-log-tag .cm-log-channel{color:var(--ink);}
+.cm-log-tag .cm-log-dir{opacity:.7;}
+.cm-log-summary{font-family:var(--sans);font-size:14px;line-height:1.5;color:var(--ink);}
+.cm-log-summary .cm-log-actor{font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--grey2);display:block;margin-bottom:4px;}
+
+/* ── AUDIT + COMUNICARE/Istoric shared 2-col × 2-line layout ──────────
+   Mirrors .field-stacked-inner idiom: mono uppercase label on top, sans value
+   below. Left cell = when + what. Right cell = who + details.
+   Rollback: revert renderCmAudit() + renderCmComIstoric() markup + drop these
+   rules. Snapshots: notariat_admin_v27_pre_audit_2col.html (AUDIT) +
+   notariat_admin_v27_pre_istoric_2col.html (COMUNICARE/Istoric). */
+.cm-2col-row{display:grid;grid-template-columns:220px 1fr;gap:36px;align-items:start;padding:16px 0;border-bottom:1px solid var(--rule);}
+.cm-2col-row:first-child{padding-top:0;}
+.cm-2col-row:last-child{border-bottom:none;}
+.cm-2col-cell{display:flex;flex-direction:column;gap:4px;min-width:0;}
+.cm-2col-lbl{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--grey2);}
+.cm-2col-val{font-family:var(--sans);font-size:14px;color:var(--ink);line-height:1.5;}
 .cm-footer{padding:16px 44px;border-top:1px solid var(--rule);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;}
 /* status selector inside case modal — copied from v48 */
 .status-sel-wrap{margin-top:24px;}
 .status-sel-lbl{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey2);margin-bottom:12px;padding-bottom:7px;border-bottom:1px solid var(--rule);display:block;}
 .status-sel{display:flex;gap:0;border-bottom:1px solid var(--rule);}
-.status-sel-btn{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:0 18px 10px;background:none;color:var(--grey2);border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all 0.15s;margin-bottom:-1px;border-radius:0;}
+.status-sel-btn{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:0 18px 12px;background:none;color:var(--grey2);border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all 0.15s;margin-bottom:-1px;border-radius:0;}
 .status-sel-btn.sel-active{color:var(--ink);border-bottom-color:var(--ink);}
 .status-sel-btn:hover:not(.sel-active){color:var(--grey);}
 /* urgency dot */
@@ -498,7 +652,7 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
 /* ── FOOTER ── */
-.footer{border-top:1px solid var(--rule);padding-top:16px;margin-top:48px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--grey2);letter-spacing:.5px;}
+.footer{border-top:1px solid var(--rule);padding-top:16px;margin-top:64px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--grey2);letter-spacing:.5px;}
 
 /* ── LOADING / AUTH ── */
 .app-loading{position:fixed;inset:0;background:var(--white);display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:16px;}
@@ -529,10 +683,10 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .empty-text{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey2);}
 
 /* ── PROGRESS BAR ── */
-.prog-wrap{margin:16px 0 32px;}
-.prog-bar-bg{height:2px;background:var(--rule);width:100%;}
+.prog-wrap{margin:16px 0 48px;}
+.prog-bar-bg{height:1px;background:var(--rule);width:100%;}
 .prog-bar-fill{height:100%;background:var(--ink);transition:width .4s;}
-.prog-label{font-family:var(--mono);font-size:11px;color:var(--grey2);margin-top:16px;letter-spacing:.5px;}
+.prog-label{font-family:var(--mono);font-size:11px;color:var(--grey2);margin-top:20px;letter-spacing:.5px;}
 </style>
 </head>
 <body>
@@ -715,19 +869,23 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
   <button class="add-office-btn" type="button" id="btn-add-office" onclick="openCreateOffice()" title="Adaugă birou nou"><span class="plus">+</span><span>Adaugă birou</span></button>
 </div>
 
-<!-- VIEW A — BIROURI -->
+<!-- VIEW A — BIROURI: adaptive height, scrollable -->
 <div class="view-container active" id="view-a">
-  <div class="list-hdr-offices">
-    <span>#</span><span>Birou</span><span>Oraș</span><span>Șabloane</span><span>Dosare</span><span>Status</span>
+  <div class="dosare-wrap">
+    <div class="list-hdr-offices">
+      <span>#</span><span>Birou<span class="hdr-count" id="hdr-count-a"></span></span><span>Oraș</span><span>Șabloane</span><span>Dosare</span><span>Status</span>
+    </div>
+    <div class="dosare-scroll" id="list-a-scroll">
+      <div id="list-a"></div>
+    </div>
   </div>
-  <div id="list-a"></div>
 </div>
 
 <!-- VIEW B — DOSARE: adaptive height, scrollable -->
 <div class="view-container" id="view-b">
   <div class="dosare-wrap">
     <div class="list-hdr-shared">
-      <span>#</span><span>Act · Dosar</span><span>Client</span><span></span><span>Data preferată</span><span>Status</span>
+      <span>#</span><span>Act<span class="hdr-count" id="hdr-count-b"></span></span><span>Client</span><span></span><span>Data preferată</span><span>Status</span>
     </div>
     <div class="dosare-scroll" id="list-b-scroll">
       <div id="list-b"></div>
@@ -735,84 +893,185 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
   </div>
 </div>
 
-<!-- CASE MODAL — full-screen (item 7: same shell as BIROURI overlay) -->
+<!-- CASE MODAL — full-screen, 4 tabs mirroring office modal -->
 <div class="case-modal-overlay" id="cm-overlay"></div>
 <div class="case-modal" id="cm">
   <div class="cm-header">
     <div>
       <div class="cm-title" id="cm-title">—</div>
-      <div class="cm-meta" id="cm-meta">—</div>
     </div>
     <div class="cm-header-right">
+      <button class="lib-act-link" id="cm-back" type="button" onclick="cmGoBackToOffice()" style="display:none;">&#x2190; Înapoi la birou</button>
       <span id="cm-status-tag"></span>
       <button class="close-btn" id="cm-close">&#x2212;</button>
     </div>
   </div>
+  <div class="cm-tabs">
+    <button class="cm-tab active" data-cmtab="detalii">Detalii</button>
+    <button class="cm-tab" data-cmtab="interventie">Intervenție</button>
+    <button class="cm-tab" data-cmtab="comunicare">Comunicare</button>
+    <button class="cm-tab" data-cmtab="audit">Audit</button>
+  </div>
   <div class="cm-body">
-    <div class="cm-cols">
-      <!-- LEFT: Date dosar + Date client -->
-      <div id="cm-left">
-        <div class="detail-category">Date dosar</div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Referință</span><span class="fs-val mono" id="cm-ref">—</span></div></div>
-        <div class="field-stacked"><div class="field-stacked-inner">
-          <span class="fs-lbl">Tip act</span>
-          <input class="cd-edit-val" id="cm-act" value="—">
-        </div></div>
-        <div class="field-stacked"><div class="field-stacked-inner">
-          <span class="fs-lbl">Subtip</span>
-          <input class="cd-edit-val" id="cm-subtype" value="—">
-        </div></div>
-        <div class="field-stacked"><div class="field-stacked-inner">
-          <span class="fs-lbl">Client</span>
-          <input class="cd-edit-val" id="cm-client" value="—">
-        </div></div>
-        <div class="field-stacked"><div class="field-stacked-inner">
-          <span class="fs-lbl">Data preferată</span>
-          <input class="cd-edit-val" id="cm-pref" value="—">
-        </div></div>
-        <div class="field-stacked"><div class="field-stacked-inner">
-          <span class="fs-lbl">Birou</span>
-          <div class="cdd" id="cdd-cm-office">
-            <button class="cdd-trigger empty" type="button">— selectează birou —</button>
-            <div class="cdd-panel" role="listbox"></div>
-            <input type="hidden" id="cm-office" value="">
-          </div>
-        </div></div>
-        <div class="detail-category detail-category-spaced">Notă internă admin</div>
-        <div style="padding:12px 0;">
-          <textarea class="form-textarea" id="cm-notes" placeholder="Observații, corecții, motive override..."></textarea>
+    <!-- DETALII panel: lib-tabs-row pattern with 2 subtabs -->
+    <div class="cm-panel active" id="cm-tab-detalii">
+      <div class="lib-tabs-row">
+        <div class="lib-tabs">
+          <button class="lib-tab active" id="cm-det-tab-date" type="button" onclick="switchCmDetTab('date')">Date dosar</button>
+          <button class="lib-tab" id="cm-det-tab-audit" type="button" onclick="switchCmDetTab('audit')">Audit</button>
         </div>
       </div>
-      <!-- RIGHT: Admin controls + audit trail + actions -->
-      <div id="cm-right">
-        <div class="detail-category">Control admin</div>
-        <div class="status-sel-wrap">
-          <span class="status-sel-lbl">Status dosar</span>
-          <div class="status-sel" id="cm-status-sel">
-            <button class="status-sel-btn" data-s="nou" onclick="cmSetStatus('nou',this)">Nou</button>
-            <button class="status-sel-btn" data-s="in-lucru" onclick="cmSetStatus('in-lucru',this)">Activ</button>
-            <button class="status-sel-btn" data-s="programat" onclick="cmSetStatus('programat',this)">Programat</button>
+      <div class="lib-body">
+        <!-- Pane: Date dosar -->
+        <div id="cm-det-pane-date" class="lib-pane">
+          <div class="field-stacked" onclick="copyFieldText('cm-ref')"><div class="field-stacked-inner"><span class="fs-lbl">Referință</span><span class="fs-val mono" id="cm-ref">—</span></div></div>
+          <div class="field-stacked" onclick="copyFieldText('cm-act')"><div class="field-stacked-inner"><span class="fs-lbl">Tip act</span><span class="fs-val" id="cm-act">—</span></div></div>
+          <div class="field-stacked" onclick="copyFieldText('cm-subtype')"><div class="field-stacked-inner"><span class="fs-lbl">Subtip</span><span class="fs-val" id="cm-subtype">—</span></div></div>
+          <div class="field-stacked" onclick="copyFieldText('cm-client')"><div class="field-stacked-inner"><span class="fs-lbl">Client</span><span class="fs-val" id="cm-client">—</span></div></div>
+          <div class="field-stacked" onclick="copyFieldText('cm-pref')"><div class="field-stacked-inner"><span class="fs-lbl">Data preferată</span><span class="fs-val mono" id="cm-pref">—</span></div></div>
+          <div class="field-stacked" onclick="copyFieldText('cm-office-name')"><div class="field-stacked-inner"><span class="fs-lbl">Birou curent</span><span class="fs-val" id="cm-office-name">—</span></div></div>
+          <div class="field-stacked" onclick="copyFieldText('cm-urgent-lbl')"><div class="field-stacked-inner"><span class="fs-lbl">Urgență</span><span class="fs-val" id="cm-urgent-lbl">—</span></div></div>
+        </div>
+        <!-- Pane: Audit -->
+        <div id="cm-det-pane-audit" class="lib-pane" style="display:none;">
+          <div class="field-stacked" onclick="copyFieldText('cm-created')"><div class="field-stacked-inner"><span class="fs-lbl">Creat</span><span class="fs-val mono" id="cm-created">—</span></div></div>
+          <div class="field-stacked" onclick="copyFieldText('cm-updated')"><div class="field-stacked-inner"><span class="fs-lbl">Ultima modificare</span><span class="fs-val mono" id="cm-updated">—</span></div></div>
+          <div class="field-stacked" onclick="copyFieldText('cm-id')"><div class="field-stacked-inner"><span class="fs-lbl">ID Supabase</span><span class="fs-val mono" id="cm-id" style="font-size:11px;color:var(--grey2);">—</span></div></div>
+        </div>
+      </div>
+    </div>
+    <!-- INTERVENȚIE panel: admin override surface, sub-tabs mirror BIBLIOTECĂ ȘABLOANE idiom -->
+    <div class="cm-panel" id="cm-tab-interventie">
+      <div class="lib-tabs-row">
+        <div class="lib-tabs">
+          <button class="lib-tab active" type="button" data-ivtab="status" onclick="switchIvTab('status')">Status</button>
+          <button class="lib-tab" type="button" data-ivtab="office" onclick="switchIvTab('office')">Birou</button>
+          <button class="lib-tab" type="button" data-ivtab="reschedule" onclick="switchIvTab('reschedule')">Reprogramează</button>
+          <button class="lib-tab" type="button" data-ivtab="urgent" onclick="switchIvTab('urgent')">Urgență</button>
+          <button class="lib-tab" type="button" data-ivtab="cancel" onclick="switchIvTab('cancel')">Anulează dosar</button>
+        </div>
+        <button class="lib-add-btn" type="button" id="iv-confirm-btn" onclick="ivCommitCurrent()"><span>Confirmă</span><span>⟶</span></button>
+      </div>
+      <!-- Pane: status -->
+      <div class="iv-pane active" id="iv-pane-status">
+        <div class="iv-form-inner">
+          <div class="iv-ctx-line">Curent: <span id="iv-status-cur-tag" class="tag tag-activ">—</span></div>
+          <div class="status-sel" id="iv-status-sel">
+            <button class="status-sel-btn" data-s="nou" onclick="ivStatusPick('nou',this)">Nou</button>
+            <button class="status-sel-btn" data-s="in-lucru" onclick="ivStatusPick('in-lucru',this)">Activ</button>
+            <button class="status-sel-btn" data-s="programat" onclick="ivStatusPick('programat',this)">Programat</button>
+          </div>
+          <span class="iv-form-lbl" style="margin-top:16px;">Motiv</span>
+          <textarea class="iv-form-textarea" id="iv-status-reason" placeholder="Ex: client a confirmat prezența, trec la programat fără așteptarea notarului."></textarea>
+          <span class="iv-form-err" id="iv-status-err">Motivul este obligatoriu</span>
+        </div>
+      </div>
+      <!-- Pane: birou -->
+      <div class="iv-pane" id="iv-pane-office">
+        <div class="iv-form-inner">
+          <div class="iv-ctx-line">Curent: <span id="iv-office-cur-tag" class="tag tag-activ">—</span></div>
+          <div class="cdd" id="cdd-iv-office">
+            <button class="cdd-trigger empty" type="button">— selectează birou —</button>
+            <div class="cdd-panel" role="listbox"></div>
+            <input type="hidden" id="iv-office-val" value="">
+          </div>
+          <span class="iv-form-lbl" style="margin-top:16px;">Motiv</span>
+          <textarea class="iv-form-textarea" id="iv-office-reason" placeholder="Ex: biroul curent nu răspunde de 48h, transfer către birou disponibil."></textarea>
+          <span class="iv-form-err" id="iv-office-err">Birou nou și motivul sunt obligatorii</span>
+        </div>
+      </div>
+      <!-- Pane: reprogramează -->
+      <div class="iv-pane" id="iv-pane-reschedule">
+        <div class="iv-form-inner">
+          <div class="iv-ctx-line">Curent: <span id="iv-pref-cur-tag" class="tag tag-activ">—</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div><span class="inp-lbl">Data nouă</span><input type="date" class="inp-field" id="iv-pref-date"></div>
+            <div><span class="inp-lbl">Ora nouă</span><input type="time" class="inp-field" id="iv-pref-time"></div>
+          </div>
+          <span class="iv-form-lbl" style="margin-top:16px;">Motiv</span>
+          <textarea class="iv-form-textarea" id="iv-pref-reason" placeholder="Ex: client a solicitat reprogramare, notarul nu a actualizat încă."></textarea>
+          <span class="iv-form-err" id="iv-pref-err">Data, ora și motivul sunt obligatorii</span>
+        </div>
+      </div>
+      <!-- Pane: urgență -->
+      <div class="iv-pane" id="iv-pane-urgent">
+        <div class="iv-form-inner">
+          <div class="iv-ctx-line">Curent: <span id="iv-urgent-cur-tag" class="tag tag-activ">—</span></div>
+          <div class="status-sel" id="iv-urgent-sel">
+            <button class="status-sel-btn" data-u="1" onclick="ivUrgentPick('1',this)">! Urgent</button>
+            <button class="status-sel-btn" data-u="0" onclick="ivUrgentPick('0',this)">Normal</button>
+          </div>
+          <span class="iv-form-lbl" style="margin-top:16px;">Motiv</span>
+          <textarea class="iv-form-textarea" id="iv-urgent-reason" placeholder="Ex: termen legal de 72h, escaladare către birou cu prioritate."></textarea>
+          <span class="iv-form-err" id="iv-urgent-err">Motivul este obligatoriu</span>
+        </div>
+      </div>
+      <!-- Pane: anulează dosar -->
+      <div class="iv-pane" id="iv-pane-cancel">
+        <div class="iv-form-inner">
+          <div class="iv-ctx-line">Status curent: <span id="iv-cancel-cur-tag" class="tag tag-activ">—</span></div>
+          <div class="status-sel" id="iv-cancel-sel">
+            <button class="status-sel-btn" data-c="anulat" onclick="ivCancelPick('anulat',this)">Anulează</button>
+            <button class="status-sel-btn" data-c="nou" onclick="ivCancelPick('nou',this)">Restabilește</button>
+          </div>
+          <span class="iv-form-lbl" style="margin-top:16px;">Motiv</span>
+          <textarea class="iv-form-textarea" id="iv-cancel-reason" placeholder="Ex: client a renunțat, dublet cu NOT-2026-XXXX."></textarea>
+          <span class="iv-form-err" id="iv-cancel-err">Motivul este obligatoriu</span>
+        </div>
+      </div>
+    </div>
+    <!-- COMUNICARE panel: lib-tabs-row pattern with 2 subtabs (Istoric / Acțiuni rapide) -->
+    <div class="cm-panel" id="cm-tab-comunicare">
+      <div class="lib-tabs-row">
+        <div class="lib-tabs">
+          <button class="lib-tab active" id="cm-com-tab-actiuni" type="button" onclick="switchCmComTab('actiuni')">Acțiuni rapide</button>
+          <button class="lib-tab" id="cm-com-tab-istoric" type="button" onclick="switchCmComTab('istoric')">Istoric</button>
+        </div>
+        <button class="lib-add-btn" type="button" id="cm-ar-confirm-btn" onclick="cmArCommit()"><span>Confirmă</span><span>⟶</span></button>
+      </div>
+      <div class="lib-body">
+        <!-- Pane: Acțiuni rapide — .status-sel picker + form (mirrors INTERVENȚIE STATUS pane) -->
+        <div id="cm-com-pane-actiuni" class="lib-pane">
+          <div class="iv-form-inner">
+            <div class="iv-ctx-line">Alege destinatarul:</div>
+            <div class="status-sel" id="cm-ar-sel">
+              <button class="status-sel-btn" data-ar="nudge" onclick="cmArPick('nudge',this)">Nudge client</button>
+              <button class="status-sel-btn" data-ar="notary" onclick="cmArPick('notary',this)">Contactează notar</button>
+            </div>
+            <div class="iv-ctx-line" style="margin-top:20px;">Alege canalul:</div>
+            <div class="status-sel" id="cm-ar-ch-sel">
+              <button class="status-sel-btn" data-ch="email" onclick="cmArPickChannel('email',this)">Email</button>
+              <button class="status-sel-btn" data-ch="phone" onclick="cmArPickChannel('phone',this)">SMS</button>
+            </div>
+            <span class="iv-form-lbl" style="margin-top:16px;">Mesaj</span>
+            <textarea class="iv-form-textarea" id="cm-ar-msg" placeholder="Ex: „Te rugăm să confirmi prezența pe 24 apr, ora 10:00."></textarea>
+            <span class="iv-form-err" id="cm-ar-err">Selectează destinatar + canal și completează mesajul</span>
           </div>
         </div>
-        <div class="field-stacked" style="margin-top:24px;"><div class="field-stacked-inner" style="flex-direction:row;align-items:center;justify-content:space-between;">
-          <span class="fs-lbl">Urgent<span class="urgency-dot" id="cm-urgent-dot" style="display:none;"></span></span>
-          <button class="doc-chip" id="cm-urgent-btn" onclick="cmToggleUrgent()">—</button>
-        </div></div>
-        <div class="detail-category detail-category-spaced">Acțiuni rapide</div>
-        <div style="display:flex;flex-direction:column;gap:8px;padding-top:16px;">
-          <button class="btn-action" onclick="cmAction('nudge')">Trimite nudge client ⟶</button>
-          <button class="btn-action" onclick="cmAction('notary')">Contactează notarul ⟶</button>
+        <!-- Pane: Istoric — scrollable log populated from renderCmComIstoric() -->
+        <div id="cm-com-pane-istoric" class="lib-pane" style="display:none;">
+          <div id="cm-com-istoric-list"></div>
         </div>
-        <div class="detail-category detail-category-spaced">Audit</div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Creat</span><span class="fs-val mono" id="cm-created">—</span></div></div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Ultima modificare</span><span class="fs-val mono" id="cm-updated">—</span></div></div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">ID Supabase</span><span class="fs-val mono" id="cm-id" style="font-size:11px;color:var(--grey2);">—</span></div></div>
+      </div>
+    </div>
+    <!-- AUDIT panel: mirrors DETALII/COMUNICARE structure (lib-tabs-row + lib-body + lib-pane).
+         Single sub-tab 'Istoric' for structural congruence — no behavioral branches, the tab
+         is purely a visual anchor. Log rows rendered by renderCmAudit() into #cm-audit-list. -->
+    <div class="cm-panel" id="cm-tab-audit">
+      <div class="lib-tabs-row">
+        <div class="lib-tabs">
+          <button class="lib-tab active" type="button">Istoric</button>
+        </div>
+      </div>
+      <div class="lib-body">
+        <div id="cm-audit-pane" class="lib-pane">
+          <div id="cm-audit-list"></div>
+        </div>
       </div>
     </div>
   </div>
   <div class="cm-footer">
-    <button class="btn-ghost-sm" id="cm-cancel">Anulează</button>
-    <button class="btn-action" id="cm-save">Salvează modificările ⟶</button>
+    <button class="btn-ghost-sm" id="cm-close-footer">Închide</button>
   </div>
 </div>
 
@@ -822,7 +1081,6 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
   <div class="om-header">
     <div>
       <div class="om-title" id="om-title">—</div>
-      <div class="om-meta" id="om-meta">—</div>
     </div>
     <div class="om-header-right">
       <span class="tag" id="om-status-tag">—</span>
@@ -834,39 +1092,49 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
     <button class="om-tab" data-tab="sabloane">Șabloane</button>
     <button class="om-tab" data-tab="dosare">Dosare</button>
     <button class="om-tab" data-tab="onboarding">Onboarding</button>
+    <button class="om-tab" data-tab="dezactivare">Dezactivare</button>
   </div>
   <div class="om-body">
 
-    <!-- Tab: Detalii -->
+    <!-- Tab: Detalii — lib-tabs-row pattern with 4 subtabs -->
     <div class="om-panel active" id="tab-detalii">
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:48px;">
-        <div>
-          <div class="detail-category">Date birou</div>
-          <div class="field-stacked" id="of-name-row"><div class="field-stacked-inner"><span class="fs-lbl">Denumire</span><span class="fs-val" id="of-name">—</span></div></div>
+      <div class="lib-tabs-row">
+        <div class="lib-tabs">
+          <button class="lib-tab active" id="om-det-tab-date" type="button" onclick="switchDetTab('date')">Date birou</button>
+          <button class="lib-tab" id="om-det-tab-contact" type="button" onclick="switchDetTab('contact')">Persoană de contact</button>
+          <button class="lib-tab" id="om-det-tab-abon" type="button" onclick="switchDetTab('abon')">Abonament</button>
+          <button class="lib-tab" id="om-det-tab-stat" type="button" onclick="switchDetTab('stat')">Statistici</button>
+        </div>
+      </div>
+
+      <div class="lib-body">
+        <!-- Pane: Date birou -->
+        <div id="om-det-pane-date" class="lib-pane">
+          <div class="field-stacked" id="of-name-row" onclick="copyOfficeField('name')"><div class="field-stacked-inner"><span class="fs-lbl">Denumire</span><span class="fs-val" id="of-name">—</span></div></div>
           <div class="field-stacked" id="of-cui-row" onclick="copyOfficeField('cui')"><div class="field-stacked-inner"><span class="fs-lbl">CUI</span><span class="fs-val mono" id="of-cui">—</span></div></div>
           <div class="field-stacked" id="of-website-row" onclick="openOfficeWebsite()"><div class="field-stacked-inner"><span class="fs-lbl">Website</span><span class="fs-val mono" id="of-website">—</span></div></div>
-          <div class="field-stacked" id="of-city-row"><div class="field-stacked-inner"><span class="fs-lbl">Oraș</span><span class="fs-val" id="of-city">—</span></div></div>
+          <div class="field-stacked" id="of-city-row" onclick="copyOfficeField('city')"><div class="field-stacked-inner"><span class="fs-lbl">Oraș</span><span class="fs-val" id="of-city">—</span></div></div>
           <div class="field-stacked" id="of-addr-row" onclick="openOfficeMaps()"><div class="field-stacked-inner"><span class="fs-lbl">Adresă</span><span class="fs-val" id="of-addr">—</span></div></div>
           <div class="field-stacked" id="of-email-row" onclick="openOfficeMail('office')"><div class="field-stacked-inner"><span class="fs-lbl">Email</span><span class="fs-val mono" id="of-email">—</span></div></div>
           <div class="field-stacked" id="of-phone-row" onclick="openOfficeTel('office')"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><span class="fs-val mono" id="of-phone">—</span></div></div>
         </div>
-        <div>
-          <div class="detail-category">Persoană de contact</div>
-          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Nume</span><span class="fs-val" id="of-contact-name">—</span></div></div>
-          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Rol</span><span class="fs-val" id="of-contact-role">—</span></div></div>
+        <!-- Pane: Persoană de contact -->
+        <div id="om-det-pane-contact" class="lib-pane" style="display:none;">
+          <div class="field-stacked" onclick="copyOfficeField('contact_name')"><div class="field-stacked-inner"><span class="fs-lbl">Nume</span><span class="fs-val" id="of-contact-name">—</span></div></div>
+          <div class="field-stacked" onclick="copyOfficeField('contact_role')"><div class="field-stacked-inner"><span class="fs-lbl">Rol</span><span class="fs-val" id="of-contact-role">—</span></div></div>
           <div class="field-stacked" id="of-contact-email-row" onclick="openOfficeMail('contact')"><div class="field-stacked-inner"><span class="fs-lbl">Email</span><span class="fs-val mono" id="of-contact-email">—</span></div></div>
           <div class="field-stacked" id="of-contact-phone-row" onclick="openOfficeTel('contact')"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><span class="fs-val mono" id="of-contact-phone">—</span></div></div>
         </div>
-        <div>
-          <div class="detail-category">Abonament</div>
+        <!-- Pane: Abonament -->
+        <div id="om-det-pane-abon" class="lib-pane" style="display:none;">
           <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Status</span><span class="fs-val"><span class="sub-pill" id="of-sub-status">—</span></span></div></div>
           <div class="field-stacked field-stacked-plain" id="of-plan-row"><div class="field-stacked-inner"><span class="fs-lbl">Plan</span><span class="fs-val" id="of-plan">—</span></div></div>
           <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Ciclu</span><span class="fs-val mono" id="of-cycle">—</span></div></div>
           <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Expiră la</span><span class="fs-val mono" id="of-period-end">—</span></div></div>
           <div class="field-stacked field-stacked-plain" id="of-trial-row" style="display:none;"><div class="field-stacked-inner"><span class="fs-lbl">Expiră trial</span><span class="fs-val mono" id="of-trial-end">—</span></div></div>
         </div>
-        <div>
-          <div class="detail-category">Statistici</div>
+        <!-- Pane: Statistici -->
+        <div id="om-det-pane-stat" class="lib-pane" style="display:none;">
           <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Dosare active</span><span class="fs-val mono" id="of-stat-dosare">—</span></div></div>
           <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Urgențe</span><span class="fs-val mono" id="of-stat-urgente">—</span></div></div>
           <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Tipuri de acte acoperite</span><span class="fs-val mono" id="of-stat-tpl">—</span></div></div>
@@ -877,9 +1145,6 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 
     <!-- Tab: Șabloane -->
     <div class="om-panel" id="tab-sabloane">
-      <!-- Library header -->
-      <div class="section-lbl" style="margin-bottom:32px;">Bibliotecă șabloane</div>
-
       <!-- Tab row: view tabs left, + Adaugă right -->
       <div class="lib-tabs-row">
         <div class="lib-tabs">
@@ -894,13 +1159,6 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
         </label>
       </div>
 
-      <!-- Summary + progress -->
-      <div id="tpl-summary" style="font-family:var(--sans);font-size:14px;font-weight:300;color:var(--grey);margin-bottom:16px;"></div>
-      <div class="prog-wrap">
-        <div class="prog-bar-bg"><div class="prog-bar-fill" id="tpl-prog-fill" style="width:0%"></div></div>
-        <div class="prog-label" id="tpl-prog-label">0 / 5 tipuri de acte acoperite</div>
-      </div>
-
       <!-- Library body — drop target for drag-drop; hosts all three panes -->
       <div class="lib-body" id="lib-body">
         <div class="lib-drop-overlay"><div class="line">Eliberează fișierele aici</div><div class="sub">vor apărea în Intrări brute</div></div>
@@ -910,20 +1168,82 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
       </div>
     </div>
 
-    <!-- Tab: Dosare -->
+    <!-- Tab: Dosare — lib-tabs-row pattern with 2 subtabs -->
     <div class="om-panel" id="tab-dosare">
-      <div class="list-hdr-shared">
-        <span>#</span><span>Act · Dosar</span><span>Client</span><span></span><span>Data preferată</span><span>Status</span>
+      <div class="lib-tabs-row">
+        <div class="lib-tabs">
+          <button class="lib-tab active" id="om-dos-tab-attn" type="button" onclick="switchDosTab('attn')">Necesită atenție <span class="tag-count" id="dos-count-attn">· 0</span></button>
+          <button class="lib-tab" id="om-dos-tab-prog" type="button" onclick="switchDosTab('prog')">Programate <span class="tag-count" id="dos-count-prog">· 0</span></button>
+        </div>
       </div>
-      <div id="om-dosare-list"></div>
+
+      <div class="lib-body">
+        <div id="om-dos-pane-attn" class="lib-pane"><div id="dos-list-attn"></div></div>
+        <div id="om-dos-pane-prog" class="lib-pane" style="display:none;"><div id="dos-list-prog"></div></div>
+      </div>
     </div>
 
-    <!-- Tab: Onboarding -->
+    <!-- Tab: Onboarding — lib-tabs-row pattern with 2 subtabs -->
     <div class="om-panel" id="tab-onboarding">
-      <div style="max-width:600px;">
-        <div class="section-lbl" style="margin-bottom:16px;">Onboarding birou notarial</div>
-        <div class="detail-category">Checklist onboarding</div>
-        <div id="onboarding-list"></div>
+      <div class="lib-tabs-row">
+        <div class="lib-tabs">
+          <button class="lib-tab active" id="om-ob-tab-config" type="button" onclick="switchObTab('config')">Configurare <span class="tag-count" id="ob-count-config">· 0 / 0</span></button>
+          <button class="lib-tab" id="om-ob-tab-operare" type="button" onclick="switchObTab('operare')">Operare <span class="tag-count" id="ob-count-operare">· 0 / 0</span></button>
+        </div>
+      </div>
+
+      <div class="lib-body">
+        <div id="om-ob-pane-config" class="lib-pane"><div id="ob-list-config"></div></div>
+        <div id="om-ob-pane-operare" class="lib-pane" style="display:none;"><div id="ob-list-operare"></div></div>
+      </div>
+    </div>
+
+    <!-- Tab: Dezactivare — two graduated off-boarding actions.
+         SUSPENDARE (reversible, admin-toggleable, Stripe pause_collection).
+         DEZACTIVARE (soft-delete + Stripe cancel_at_period_end, support to reverse).
+         See amendment: SENT_amendment_office_deactivation.md for schema + Stripe wiring. -->
+    <div class="om-panel" id="tab-dezactivare">
+      <!-- Suspendare sub-pane header -->
+      <div class="lib-tabs-row" id="om-deact-tabs-suspend">
+        <div class="lib-tabs">
+          <button class="lib-tab active" id="om-deact-tab-suspend" type="button" onclick="switchDeactTab('suspend')">Suspendare</button>
+          <button class="lib-tab" id="om-deact-tab-deact" type="button" onclick="switchDeactTab('deact')">Dezactivare</button>
+        </div>
+        <button class="lib-add-btn" type="button" id="om-suspend-btn" onclick="suspendOffice()"><span>⏸</span><span>Suspendă</span></button>
+      </div>
+      <!-- Dezactivare sub-pane header (mirrors suspend header; toggled by switchDeactTab) -->
+      <div class="lib-tabs-row" id="om-deact-tabs-deact" style="display:none;">
+        <div class="lib-tabs">
+          <button class="lib-tab" type="button" onclick="switchDeactTab('suspend')">Suspendare</button>
+          <button class="lib-tab active" type="button" onclick="switchDeactTab('deact')">Dezactivare</button>
+        </div>
+        <button class="lib-add-btn lib-add-btn-danger" type="button" id="om-deactivate-btn" onclick="deactivateOffice()"><span>—</span><span>Dezactivează</span></button>
+      </div>
+      <div class="lib-body">
+        <!-- Pane: Suspendare — reversible pause, 18 words -->
+        <div id="om-deact-pane-suspend" class="lib-pane">
+          <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner">
+            <span class="fs-lbl">Ce se întâmplă</span>
+            <span class="fs-val mono">Abonament pus pe pauză. Dosarele rămân read-only. Poți reactiva oricând din acest tab.</span>
+          </div></div>
+          <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner">
+            <span class="fs-lbl">Status abonament după suspendare</span>
+            <span class="fs-val mono" id="om-suspend-status-preview">—</span>
+          </div></div>
+        </div>
+        <!-- Pane: Dezactivare — archive + cancel, 19 words -->
+        <div id="om-deact-pane-deact" class="lib-pane" style="display:none;">
+          <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner">
+            <span class="fs-lbl">Ce se întâmplă</span>
+            <span class="fs-val mono">Birou arhivat. Abonament anulat la final de perioadă. Dosarele rămân read-only. Reactivare prin Anthropic.</span>
+          </div></div>
+          <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner">
+            <span class="fs-lbl">Status abonament după dezactivare</span>
+            <span class="fs-val mono" id="om-deact-status-preview">—</span>
+          </div></div>
+        </div>
+      </div>
+    </div>
       </div>
     </div>
 
@@ -936,63 +1256,134 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
   <div class="om-header">
     <div>
       <div class="om-title">Birou nou</div>
-      <div class="om-meta">Configurare birou nou</div>
     </div>
     <div class="om-header-right">
       <button class="close-btn" id="om-create-close" type="button">&#x2212;</button>
     </div>
   </div>
+  <!-- Main tabs: Configurare · Revizuire (sibling of om-body, matches BIROURI modal structure) -->
+  <div class="om-tabs">
+    <button class="om-tab active" type="button" data-comain="config" onclick="switchCoMainTab('config')">Configurare</button>
+    <button class="om-tab" type="button" data-comain="review" onclick="switchCoMainTab('review')">Revizuire</button>
+  </div>
   <div class="om-body">
     <div class="om-panel active" id="create-panel">
       <div id="co-error" style="display:none;background:var(--red-lt);color:var(--ink);font-family:var(--sans);font-size:14px;font-weight:300;padding:12px 16px;margin-bottom:24px;border-left:2px solid var(--red);"></div>
-      <div style="max-width:720px;">
 
-        <div class="detail-category">Date birou</div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Denumire<span class="urgency-dot co-req-dot" id="co-dot-name"></span></span><input class="form-inp co-inp" id="co-name" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Cabinet Notarial ..."></div></div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">CUI<span class="urgency-dot co-req-dot" id="co-dot-cui"></span></span><input class="form-inp co-inp mono" id="co-cui" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="RO12345678"></div></div>
-        <details>
-          <summary>Detalii birou — 5 câmpuri</summary>
-          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Website</span><input class="form-inp co-inp mono" id="co-website" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="https://..."></div></div>
-          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Oraș</span><input class="form-inp co-inp" id="co-city" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="București"></div></div>
-          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Adresă</span><input class="form-inp co-inp" id="co-address" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Str. ..."></div></div>
-          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Email</span><input class="form-inp co-inp mono" id="co-email" type="email" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="birou@..."></div></div>
-          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><input class="form-inp co-inp mono" id="co-phone" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="0700 000 000"></div></div>
-        </details>
+      <!-- Configurare main pane — holds the 3 sub-tabs -->
+      <div id="co-main-config" class="co-main-pane">
 
-        <div class="detail-category detail-category-spaced">Persoană de contact</div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Nume<span class="urgency-dot co-req-dot" id="co-dot-contact-name"></span></span><input class="form-inp co-inp" id="co-contact-name" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Prenume Nume"></div></div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Email<span class="urgency-dot co-req-dot" id="co-dot-contact-email"></span></span><input class="form-inp co-inp mono" id="co-contact-email" data-req="1" type="email" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="contact@..."></div></div>
-        <details>
-          <summary>Detalii contact — 2 câmpuri</summary>
-          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Rol</span><input class="form-inp co-inp" id="co-contact-role" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="notar titular"></div></div>
-          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><input class="form-inp co-inp mono" id="co-contact-phone" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="0700 000 000"></div></div>
-        </details>
-
-        <div class="detail-category detail-category-spaced">Plan</div>
-        <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Plan abonament<span class="urgency-dot co-req-dot" id="co-dot-plan"></span></span>
-          <div class="cdd" id="cdd-co-plan" data-placeholder="— selectează plan —" style="margin-top:4px;">
-            <button class="cdd-trigger empty" type="button" style="border-bottom:none;padding:0;">— selectează plan —</button>
-            <div class="cdd-panel" role="listbox">
-              <button class="cdd-opt" type="button" data-v="trial_30d">Trial 30 zile</button>
-              <button class="cdd-opt" type="button" data-v="starter">Starter</button>
-              <button class="cdd-opt" type="button" data-v="standard">Standard</button>
-              <button class="cdd-opt" type="button" data-v="pro">Pro</button>
-              <button class="cdd-opt" type="button" data-v="complimentary">Complimentary</button>
-            </div>
-            <input type="hidden" id="co-plan" value="">
-          </div>
-        </div></div>
-
+      <!-- Sub-tab row with Creează birou pinned top-right -->
+      <div class="lib-tabs-row">
+        <div class="lib-tabs">
+          <button class="lib-tab active" id="co-tab-date" type="button" onclick="switchCoTab('date')">Date birou<span class="lib-urgent-dot" id="co-tab-dot-date" style="display:none;"></span></button>
+          <button class="lib-tab" id="co-tab-contact" type="button" onclick="switchCoTab('contact')">Persoană de contact<span class="lib-urgent-dot" id="co-tab-dot-contact" style="display:none;"></span></button>
+          <button class="lib-tab" id="co-tab-plan" type="button" onclick="switchCoTab('plan')">Plan<span class="lib-urgent-dot" id="co-tab-dot-plan" style="display:none;"></span></button>
+        </div>
+        <button class="lib-add-btn" id="co-submit" type="button" disabled><span>Creează birou</span><span>⟶</span></button>
       </div>
-    </div>
-  </div>
-  <div style="padding:16px 44px;border-top:1px solid var(--rule);display:flex;gap:24px;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--bg);">
-    <div style="font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--grey2);line-height:1.6;max-width:520px;">
-      La creare, Stripe generează clientul, abonamentul pe planul ales și trimite link-ul de checkout pe email-ul de contact.
-    </div>
-    <div style="display:flex;gap:8px;flex-shrink:0;">
-      <button class="btn-ghost" id="co-cancel" type="button">Anulează</button>
-      <button class="btn-primary" id="co-submit" type="button" disabled>Creează birou ⟶</button>
+
+      <div class="lib-body" style="max-width:720px;">
+        <!-- Pane: Date birou -->
+        <div id="co-pane-date" class="lib-pane">
+          <div class="field-pair">
+            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Denumire<span class="urgency-dot co-req-dot" id="co-dot-name"></span></span><input class="form-inp co-inp" id="co-name" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Cabinet Notarial ..."></div></div>
+            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">CUI<span class="urgency-dot co-req-dot" id="co-dot-cui"></span></span><input class="form-inp co-inp mono" id="co-cui" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="RO123456789"><div class="co-inline-err" id="co-err-cui"></div></div></div>
+          </div>
+          <details>
+            <summary>Detalii birou — 5 câmpuri</summary>
+            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Website</span><input class="form-inp co-inp mono" id="co-website" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="https://..."></div></div>
+            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Oraș</span><input class="form-inp co-inp" id="co-city" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="București"></div></div>
+            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Adresă</span><input class="form-inp co-inp" id="co-address" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Str. ..."></div></div>
+            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Email</span><input class="form-inp co-inp mono" id="co-email" type="email" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="birou@..."></div></div>
+            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><input class="form-inp co-inp mono" id="co-phone" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="0700 000 000"></div></div>
+          </details>
+        </div>
+
+        <!-- Pane: Persoană de contact -->
+        <div id="co-pane-contact" class="lib-pane" style="display:none;">
+          <div class="field-pair">
+            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Nume<span class="urgency-dot co-req-dot" id="co-dot-contact-name"></span></span><input class="form-inp co-inp" id="co-contact-name" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Prenume Nume"></div></div>
+            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Email<span class="urgency-dot co-req-dot" id="co-dot-contact-email"></span></span><input class="form-inp co-inp mono" id="co-contact-email" data-req="1" type="email" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="contact@..."><div class="co-inline-err" id="co-err-contact-email"></div></div></div>
+          </div>
+          <details>
+            <summary>Detalii contact — 2 câmpuri</summary>
+            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Rol</span><input class="form-inp co-inp" id="co-contact-role" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="notar titular"></div></div>
+            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><input class="form-inp co-inp mono" id="co-contact-phone" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="0700 000 000"></div></div>
+          </details>
+        </div>
+
+        <!-- Pane: Plan -->
+        <div id="co-pane-plan" class="lib-pane" style="display:none;">
+          <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Plan abonament<span class="urgency-dot co-req-dot" id="co-dot-plan"></span></span>
+            <div class="cdd" id="cdd-co-plan" data-placeholder="— selectează plan —" style="margin-top:4px;">
+              <button class="cdd-trigger empty" type="button" style="border-bottom:none;padding:0;">— selectează plan —</button>
+              <div class="cdd-panel" role="listbox">
+                <button class="cdd-opt" type="button" data-v="trial_30d">Trial 30 zile</button>
+                <button class="cdd-opt" type="button" data-v="starter">Starter</button>
+                <button class="cdd-opt" type="button" data-v="standard">Standard</button>
+                <button class="cdd-opt" type="button" data-v="pro">Pro</button>
+                <button class="cdd-opt" type="button" data-v="complimentary">Complimentary</button>
+              </div>
+              <input type="hidden" id="co-plan" value="">
+            </div>
+          </div></div>
+          <div class="co-plan-note">La creare, Stripe generează clientul, abonamentul pe planul ales și trimite link-ul de checkout pe email-ul de contact.</div>
+        </div>
+      </div>
+
+      </div><!-- /co-main-config -->
+
+      <!-- Revizuire main pane — read-only summary, mirrors Configurare's 3-subtab structure -->
+      <div id="co-main-review" class="co-main-pane" style="display:none;">
+        <div class="lib-tabs-row">
+          <div class="lib-tabs">
+            <button class="lib-tab active" id="co-rev-tab-date" type="button" onclick="switchCoRevTab('date')">Date birou</button>
+            <button class="lib-tab" id="co-rev-tab-contact" type="button" onclick="switchCoRevTab('contact')">Persoană de contact</button>
+            <button class="lib-tab" id="co-rev-tab-plan" type="button" onclick="switchCoRevTab('plan')">Plan</button>
+          </div>
+          <button class="lib-add-btn" id="co-submit-rev" type="button" disabled><span>Confirmă</span><span>⟶</span></button>
+        </div>
+        <div class="lib-body" style="max-width:720px;">
+          <!-- Revizuire is an exact visual duplicate of Configurare: same field-pair,
+               same <details>, same plan picker. Inputs are disabled (readonly values
+               populated by renderCoReview). IDs prefixed co-rev-* so they never
+               collide with the editable Configurare inputs. -->
+          <!-- Pane: Date birou (review) -->
+          <div id="co-rev-pane-date" class="lib-pane">
+            <div class="field-pair">
+              <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Denumire</span><input class="form-inp co-inp" id="co-rev-name" style="border-bottom:none;padding:0;" disabled></div></div>
+              <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">CUI</span><input class="form-inp co-inp mono" id="co-rev-cui" style="border-bottom:none;padding:0;" disabled></div></div>
+            </div>
+            <details>
+              <summary>Detalii birou — 5 câmpuri</summary>
+              <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Website</span><input class="form-inp co-inp mono" id="co-rev-website" style="border-bottom:none;padding:0;" disabled></div></div>
+              <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Oraș</span><input class="form-inp co-inp" id="co-rev-city" style="border-bottom:none;padding:0;" disabled></div></div>
+              <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Adresă</span><input class="form-inp co-inp" id="co-rev-address" style="border-bottom:none;padding:0;" disabled></div></div>
+              <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Email</span><input class="form-inp co-inp mono" id="co-rev-email" style="border-bottom:none;padding:0;" disabled></div></div>
+              <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><input class="form-inp co-inp mono" id="co-rev-phone" style="border-bottom:none;padding:0;" disabled></div></div>
+            </details>
+          </div>
+          <!-- Pane: Persoană de contact (review) -->
+          <div id="co-rev-pane-contact" class="lib-pane" style="display:none;">
+            <div class="field-pair">
+              <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Nume</span><input class="form-inp co-inp" id="co-rev-contact-name" style="border-bottom:none;padding:0;" disabled></div></div>
+              <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Email</span><input class="form-inp co-inp mono" id="co-rev-contact-email" style="border-bottom:none;padding:0;" disabled></div></div>
+            </div>
+            <details>
+              <summary>Detalii contact — 2 câmpuri</summary>
+              <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Rol</span><input class="form-inp co-inp" id="co-rev-contact-role" style="border-bottom:none;padding:0;" disabled></div></div>
+              <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><input class="form-inp co-inp mono" id="co-rev-contact-phone" style="border-bottom:none;padding:0;" disabled></div></div>
+            </details>
+          </div>
+          <!-- Pane: Plan (review) — read-only display of the chosen plan -->
+          <div id="co-rev-pane-plan" class="lib-pane" style="display:none;">
+            <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Plan abonament</span><input class="form-inp co-inp" id="co-rev-plan-label" style="border-bottom:none;padding:0;" disabled></div></div>
+            <div class="co-plan-note">La creare, Stripe generează clientul, abonamentul pe planul ales și trimite link-ul de checkout pe email-ul de contact.</div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1060,7 +1451,6 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 
 <!-- PLACEHOLDERS VIEWER (inline expanded row, no modal) -->
 
-<hr class="rule-hr">
 <div class="footer">
   <span>notariat.co · Admin · <span id="footer-user">—</span></span>
   <span id="footer-date">—</span>
@@ -1121,7 +1511,15 @@ var SEED_TEMPLATES = [
   // Historical seeds — demonstrate Istoric view (superseded/archived)
   {id:'st6',office_id:'seed-1',act_type:'procuri',   subtype:'Vânzare imobil',      name:'Procură — Vânzare imobil (v1)',  status:'superseded',uploaded_at:'28 mar 2026',placeholders:['MANDANT_NAME','MANDATAR_NAME','CASE_REF'],storage_path:'seed-1/procuri/vanzare-imobil-v1.docx'},
   {id:'st7',office_id:'seed-2',act_type:'declaratii',subtype:'De notorietate',      name:'Declarație de notorietate',      status:'archived',  uploaded_at:'12 feb 2026',placeholders:['DECLARANT_NAME','DECLARANT_CNP','CASE_REF'],storage_path:'seed-2/declaratii/notorietate.docx'},
-  {id:'st8',office_id:'seed-2',act_type:'procuri',   subtype:'Generală',            name:'Procură Generală (v1)',          status:'superseded',uploaded_at:'3 mar 2026', placeholders:['MANDANT_NAME','MANDATAR_NAME','CASE_REF'],storage_path:'seed-2/procuri/generala-v1.docx'}
+  {id:'st8',office_id:'seed-2',act_type:'procuri',   subtype:'Generală',            name:'Procură Generală (v1)',          status:'superseded',uploaded_at:'3 mar 2026', placeholders:['MANDANT_NAME','MANDATAR_NAME','CASE_REF'],storage_path:'seed-2/procuri/generala-v1.docx'},
+  // ── DEMO SEEDS (throwaway, seed-1 only, revert before ship) ───────────────
+  // Purpose: let admin visually inspect how ACTIVE renders with multiple acts
+  // per category + multiple categories. Delete this block (st_demo_*) to revert.
+  {id:'st_demo_1',office_id:'seed-1',act_type:'procuri',    subtype:'Cumpărare imobil',         name:'Procură — Cumpărare imobil',            status:'active',uploaded_at:'10 apr 2026',placeholders:['MANDANT_NAME','MANDANT_CNP','MANDATAR_NAME','CASE_REF'],storage_path:'seed-1/procuri/cumparare-imobil.docx'},
+  {id:'st_demo_2',office_id:'seed-1',act_type:'procuri',    subtype:'Generală',                 name:'Procură Generală',                       status:'active',uploaded_at:'05 apr 2026',placeholders:['MANDANT_NAME','MANDANT_CNP','MANDATAR_NAME','CASE_REF'],storage_path:'seed-1/procuri/generala.docx'},
+  {id:'st_demo_3',office_id:'seed-1',act_type:'declaratii', subtype:'Plecare minor în străinătate',name:'Declarație — Plecare minor',           status:'active',uploaded_at:'12 apr 2026',placeholders:['DECLARANT_NAME','DECLARANT_CNP','MINOR_NAME','CASE_REF'],storage_path:'seed-1/declaratii/plecare-minor.docx'},
+  {id:'st_demo_4',office_id:'seed-1',act_type:'legalizari', subtype:'Copie',                     name:'Legalizare Copie',                       status:'active',uploaded_at:'08 apr 2026',placeholders:['DOC_TYPE','CASE_REF'],storage_path:'seed-1/legalizari/copie.docx'},
+  {id:'st_demo_5',office_id:'seed-1',act_type:'imputerniciri',subtype:'Bancară',                 name:'Împuternicire Bancară',                  status:'active',uploaded_at:'02 apr 2026',placeholders:['MANDANT_NAME','MANDATAR_NAME','BANK_NAME','CASE_REF'],storage_path:'seed-1/imputerniciri/bancara.docx'}
 ];
 // Raw intake seed (UI-only mock; schema matches finalized office_raw_intake — see doc_generator_raw_intake_coordination.md)
 var SEED_RAW_INTAKE = [
@@ -1345,9 +1743,10 @@ function initUI(){
   initToday();
   updateKPI();
   setDosareHeight();
+  setBirouriHeight();
   renderA();
   // Scroll sound on all scrollable containers (matches canonical v48)
-  ['today-scroll','list-b-scroll'].forEach(function(id){
+  ['today-scroll','list-b-scroll','list-a-scroll'].forEach(function(id){
     var el=document.getElementById(id);
     if(el) el.addEventListener('scroll',soundScroll,{passive:true});
   });
@@ -1372,7 +1771,7 @@ function initToday(){
   var el=document.getElementById('today-scroll'),wrap=document.getElementById('today-wrap');
   var countEl=document.getElementById('today-count');
   if(countEl) countEl.textContent=today.length||'';
-  if(!today.length){el.innerHTML='<div style="font-family:var(--mono);font-size:11px;color:var(--grey2);padding:8px 0;">Nicio programare azi.</div>';return;}
+  if(!today.length){el.innerHTML='<div class="lib-empty" style="padding:20px 0;"><div class="lib-empty-line">Nicio programare azi</div></div>';return;}
   var html='';
   today.forEach(function(c,i){
     var m=c.pref.match(/(\d{1,2}:\d{2})/),t=m?m[1]:'—';
@@ -1470,7 +1869,18 @@ function renderA(){
     var tb=TEMPLATES.filter(function(t){return t.office_id===b.id&&t.status==='active';}).length;
     return ta-tb;
   });
-  if(!list.length){document.getElementById('list-a').innerHTML='<div class="empty-state"><span class="empty-glyph">—</span><span class="empty-text">Niciun birou</span></div>';return;}
+  if(!list.length){
+    var isFiltered=q||sortMode==='avertisment'||sortMode==='abonament'||exploratorbOfficeId||exploratorbCity||adminActFilter!=='toate';
+    var emptyMsg=isFiltered
+      ? '<div class="empty-state"><span class="empty-glyph">—</span><span class="empty-text">Niciun birou pentru filtrele curente</span></div>'
+      : (OFFICES.length===0
+        ? '<div class="empty-state"><span class="empty-glyph">—</span><span class="empty-text">Niciun birou înregistrat — adaugă primul prin „+ Adaugă birou"</span></div>'
+        : '<div class="empty-state"><span class="empty-glyph">—</span><span class="empty-text">Niciun birou</span></div>');
+    document.getElementById('list-a').innerHTML=emptyMsg;
+    var hca=document.getElementById('hdr-count-a');if(hca)hca.textContent='· 0';
+    setBirouriHeight();
+    return;
+  }
   var html='';
   list.forEach(function(o,i){
     // item 7: filter cases by act type
@@ -1489,6 +1899,8 @@ function renderA(){
     html+='</div>';
   });
   document.getElementById('list-a').innerHTML=html;
+  var hca=document.getElementById('hdr-count-a');if(hca)hca.textContent='· '+list.length;
+  setBirouriHeight();
 }
 
 // ══ VIEW B — DOSARE ══════════════════════════════════════════════════
@@ -1508,7 +1920,17 @@ function renderB(){
     if(q&&c.client.toLowerCase().indexOf(q)<0&&c.ref.toLowerCase().indexOf(q)<0&&c.act.toLowerCase().indexOf(q)<0) return false;
     return true;
   });
-  if(!list.length){document.getElementById('list-b').innerHTML='<div class="empty-state"><span class="empty-glyph">—</span><span class="empty-text">Niciun dosar</span></div>';return;}
+  if(!list.length){
+    var isFilteredB=q||filterStatus!=='toate'||adminActFilter!=='toate'||exploratorbOfficeId||exploratorbCity;
+    var emptyMsgB=isFilteredB
+      ? '<div class="empty-state"><span class="empty-glyph">—</span><span class="empty-text">Niciun dosar pentru filtrele curente</span></div>'
+      : (CASES.length===0
+        ? '<div class="empty-state"><span class="empty-glyph">—</span><span class="empty-text">Niciun dosar în sistem — așteptăm prima înregistrare</span></div>'
+        : '<div class="empty-state"><span class="empty-glyph">—</span><span class="empty-text">Niciun dosar</span></div>');
+    document.getElementById('list-b').innerHTML=emptyMsgB;
+    var hcb0=document.getElementById('hdr-count-b');if(hcb0)hcb0.textContent='· 0';
+    return;
+  }
   var html='';
   list.forEach(function(c,i){
     var statusLabel=c.status==='nou'?'Nou':c.status==='in-lucru'?'activ':'programat';
@@ -1520,11 +1942,12 @@ function renderB(){
     html+='<div><div class="l-act">'+h(c.act)+urg+flag+'</div></div>';
     html+='<div class="l-client">'+h(c.client)+'</div>';
     html+='<div></div>';
-    html+='<div class="l-date"><span class="l-date-main">'+h(c.pref||'flexibil')+'</span></div>';
+    html+='<div class="l-date">'+h(c.pref||'flexibil')+'</div>';
     html+='<div class="l-status'+(c.status==='nou'?' nou':'')+'">'+statusLabel+'</div>';
     html+='</div>';
   });
   document.getElementById('list-b').innerHTML=html;
+  var hcb=document.getElementById('hdr-count-b');if(hcb)hcb.textContent='· '+list.length;
   setDosareHeight();
 }
 
@@ -1557,7 +1980,6 @@ function openOffice(oid){
   var tpls=TEMPLATES.filter(function(t){return t.office_id===oid&&t.status==='active';});
   var cov=coverageFor(oid);
   document.getElementById('om-title').textContent=o.name;
-  document.getElementById('om-meta').textContent=o.notary+' · '+o.city+' · '+o.email;
   document.getElementById('om-status-tag').innerHTML=officeStatusTag(o.status);
   document.getElementById('of-name').textContent=o.name;
   document.getElementById('of-cui').textContent=o.cui||'—';
@@ -1600,6 +2022,9 @@ function openOffice(oid){
   });
   renderLibrary(oid);
   renderOnboarding(oid);
+  renderDeactivatePreview();
+  // Reset DETALII / DOSARE / ONBOARDING subtabs to their first pane (silent)
+  resetOmSubtabs();
   document.getElementById('om-overlay').classList.add('open');
   document.getElementById('om').classList.add('open');
   activateTab('detalii');
@@ -1611,31 +2036,165 @@ function closeOffice(){
   currentOfficeId=null;
 }
 function activateTab(name){
-  document.querySelectorAll('.om-tab').forEach(function(t){t.classList.toggle('active',t.dataset.tab===name);});
-  document.querySelectorAll('.om-panel').forEach(function(p){p.classList.toggle('active',p.id==='tab-'+name);});
+  // Scoped to BIROURI modal (#om) — data-tab attribute distinguishes from create-modal's data-comain tabs
+  document.querySelectorAll('#om .om-tab').forEach(function(t){t.classList.toggle('active',t.dataset.tab===name);});
+  document.querySelectorAll('#om .om-panel').forEach(function(p){p.classList.toggle('active',p.id==='tab-'+name);});
 }
 function renderOmDosare(oid){
   var cs=CASES.filter(function(c){return c.oid===oid;});
-  if(!cs.length){document.getElementById('om-dosare-list').innerHTML='<div class="empty-state"><span class="empty-glyph">—</span><span class="empty-text">Niciun dosar activ</span></div>';return;}
-  var html='';
-  cs.forEach(function(c,i){
-    var statusLabel=c.status==='nou'?'Nou':c.status==='in-lucru'?'activ':'programat';
-    var urg=c.urgent?'<span class="urgency-dot"></span>':'';
-    var flag=c.urgent?' <span class="l-flag">! Urgent</span>':'';
-    html+='<div class="list-row-shared" data-id="'+h(c.id)+'">';
-    html+='<div class="l-num">'+pad(i+1)+'</div>';
-    html+='<div><div class="l-act">'+h(c.act)+urg+flag+'</div></div>';
-    html+='<div class="l-client">'+h(c.client)+'</div>';
-    html+='<div></div>';
-    html+='<div class="l-date"><span class="l-date-main">'+h(c.pref||'flexibil')+'</span></div>';
-    html+='<div class="l-status'+(c.status==='nou'?' nou':'')+'">'+statusLabel+'</div>';
-    html+='</div>';
+  var attn=[];var prog=[];
+  cs.forEach(function(c){
+    if(c.urgent||c.status==='nou') attn.push(c);
+    else prog.push(c);
   });
-  document.getElementById('om-dosare-list').innerHTML=html;
+  function rowHtml(c){
+    // State priority: urgent > nou > status
+    var state,label;
+    if(c.urgent){state='urgent';label='Urgent';}
+    else if(c.status==='nou'){state='nou';label='Nou';}
+    else if(c.status==='in-lucru'){state='activ';label='Activ';}
+    else {state='programat';label='Programat';}
+    var html='<div class="dos-row" data-id="'+h(c.id)+'">';
+    html+='<div class="dos-inner">';
+    html+='<span class="dos-lbl">'+h(c.act)+' · '+h(c.pref||'fără dată')+'</span>';
+    html+='<span class="dos-val">'+h(c.client)+'</span>';
+    html+='</div>';
+    html+='<span class="dos-state '+state+'"><span class="dos-state-dot"></span>'+label+'</span>';
+    html+='</div>';
+    return html;
+  }
+  var emptyAttn='<div class="lib-empty"><div class="lib-empty-line">Niciun dosar care necesită atenție</div><div class="lib-empty-sub">Dosarele urgente sau cu status „nou" apar aici</div></div>';
+  var emptyProg='<div class="lib-empty"><div class="lib-empty-line">Niciun dosar programat</div><div class="lib-empty-sub">Dosarele active sau programate apar aici</div></div>';
+  var attnHtml=attn.length?attn.map(rowHtml).join(''):emptyAttn;
+  var progHtml=prog.length?prog.map(rowHtml).join(''):emptyProg;
+  document.getElementById('dos-list-attn').innerHTML=attnHtml;
+  document.getElementById('dos-list-prog').innerHTML=progHtml;
+  document.getElementById('dos-count-attn').textContent='· '+attn.length;
+  document.getElementById('dos-count-prog').textContent='· '+prog.length;
 }
 
 // ══ LIBRARY TABS (3-tab system: active | brute | istoric) ══════════════════
 var tplView='active'; // 'active' | 'brute' | 'istoric'
+
+// ══ OFFICE-MODAL SUBTAB SWITCHERS (DETALII / DOSARE / ONBOARDING) ══════════
+// No persistence — always reset to first subtab on openOffice(). See resetOmSubtabs().
+function setDetTab(v){
+  ['date','contact','abon','stat'].forEach(function(t){
+    var tab=document.getElementById('om-det-tab-'+t);
+    var pane=document.getElementById('om-det-pane-'+t);
+    if(tab) tab.classList.toggle('active',t===v);
+    if(pane) pane.style.display=(t===v?'block':'none');
+  });
+}
+function setDosTab(v){
+  ['attn','prog'].forEach(function(t){
+    var tab=document.getElementById('om-dos-tab-'+t);
+    var pane=document.getElementById('om-dos-pane-'+t);
+    if(tab) tab.classList.toggle('active',t===v);
+    if(pane) pane.style.display=(t===v?'block':'none');
+  });
+}
+function setObTab(v){
+  ['config','operare'].forEach(function(t){
+    var tab=document.getElementById('om-ob-tab-'+t);
+    var pane=document.getElementById('om-ob-pane-'+t);
+    if(tab) tab.classList.toggle('active',t===v);
+    if(pane) pane.style.display=(t===v?'block':'none');
+  });
+}
+function switchDetTab(v){soundTabSwitch();setDetTab(v);}
+function switchDosTab(v){soundTabSwitch();setDosTab(v);}
+function switchObTab(v){soundTabSwitch();setObTab(v);}
+// Reset all three subtabs to their first pane (silent). Called from openOffice().
+function resetOmSubtabs(){setDetTab('date');setDosTab('attn');setObTab('config');}
+
+// ══ CASE-MODAL SUBTAB SWITCHERS (DETALII / COMUNICARE) ═════════════════════
+// No persistence — always reset to first subtab on openCaseModal(). See resetCmSubtabs().
+function setCmDetTab(v){
+  ['date','audit'].forEach(function(t){
+    var tab=document.getElementById('cm-det-tab-'+t);
+    var pane=document.getElementById('cm-det-pane-'+t);
+    if(tab) tab.classList.toggle('active',t===v);
+    if(pane) pane.style.display=(t===v?'block':'none');
+  });
+}
+function setCmComTab(v){
+  ['istoric','actiuni'].forEach(function(t){
+    var tab=document.getElementById('cm-com-tab-'+t);
+    var pane=document.getElementById('cm-com-pane-'+t);
+    if(tab) tab.classList.toggle('active',t===v);
+    if(pane) pane.style.display=(t===v?'block':'none');
+  });
+  // Confirmă ⟶ button lives in the Comunicare lib-tabs-row but only applies to Acțiuni rapide
+  var btn=document.getElementById('cm-ar-confirm-btn');
+  if(btn) btn.style.display=(v==='actiuni'?'':'none');
+}
+function switchCmDetTab(v){soundTabSwitch();setCmDetTab(v);}
+function switchCmComTab(v){soundTabSwitch();setCmComTab(v);}
+// Reset case-modal subtabs to their first pane (silent). Called from openCaseModal().
+function resetCmSubtabs(){setCmDetTab('date');setCmComTab('actiuni');}
+
+// ══ CREATE-OFFICE MODAL SUBTAB SWITCHER (DATE / CONTACT / PLAN) ════════════
+function setCoTab(v){
+  ['date','contact','plan'].forEach(function(t){
+    var tab=document.getElementById('co-tab-'+t);
+    var pane=document.getElementById('co-pane-'+t);
+    if(tab) tab.classList.toggle('active',t===v);
+    if(pane) pane.style.display=(t===v?'block':'none');
+  });
+}
+function switchCoTab(v){soundTabSwitch();setCoTab(v);}
+
+// ══ CREATE-OFFICE MODAL MAIN-TAB SWITCHER (CONFIGURARE / REVIZUIRE) ════════
+function setCoMainTab(v){
+  var tabs=document.querySelectorAll('#om-create .om-tab');
+  Array.prototype.forEach.call(tabs,function(t){t.classList.toggle('active',t.getAttribute('data-comain')===v);});
+  document.getElementById('co-main-config').style.display=(v==='config'?'block':'none');
+  document.getElementById('co-main-review').style.display=(v==='review'?'block':'none');
+  if(v==='review'){renderCoReview();setCoRevTab('date');}
+}
+function switchCoMainTab(v){soundTabSwitch();setCoMainTab(v);}
+
+// ══ CREATE-OFFICE REVIZUIRE SUB-TAB SWITCHER (mirrors Configurare's) ═══════
+function setCoRevTab(v){
+  ['date','contact','plan'].forEach(function(t){
+    var tab=document.getElementById('co-rev-tab-'+t);
+    var pane=document.getElementById('co-rev-pane-'+t);
+    if(tab) tab.classList.toggle('active',t===v);
+    if(pane) pane.style.display=(t===v?'block':'none');
+  });
+}
+function switchCoRevTab(v){soundTabSwitch();setCoRevTab(v);}
+
+// Render Revizuire panes — read-only summary of all fields, split across the 3 sub-panes
+// that mirror Configurare's 3 sub-tabs (Date birou / Persoană de contact / Plan).
+function renderCoReview(){
+  // Mirror every editable co-* input value into the matching read-only co-rev-*
+  // input. Revizuire is an exact duplicate of Configurare's visual shape, so
+  // populating is a 1:1 copy with an empty '—' fallback for unfilled fields.
+  function mirror(srcId,dstId){
+    var src=document.getElementById(srcId),dst=document.getElementById(dstId);
+    if(!src||!dst)return;
+    var val=(src.value||'').trim();
+    dst.value=val||'—';
+  }
+  mirror('co-name','co-rev-name');
+  mirror('co-cui','co-rev-cui');
+  mirror('co-website','co-rev-website');
+  mirror('co-city','co-rev-city');
+  mirror('co-address','co-rev-address');
+  mirror('co-email','co-rev-email');
+  mirror('co-phone','co-rev-phone');
+  mirror('co-contact-name','co-rev-contact-name');
+  mirror('co-contact-email','co-rev-contact-email');
+  mirror('co-contact-role','co-rev-contact-role');
+  mirror('co-contact-phone','co-rev-contact-phone');
+  // Plan: resolve the hidden co-plan value to its human label before mirroring.
+  var plan=(document.getElementById('co-plan')||{value:''}).value;
+  var planLabel={trial_30d:'Trial 30 zile',starter:'Starter',standard:'Standard',pro:'Pro',complimentary:'Complimentary'}[plan]||'—';
+  var dst=document.getElementById('co-rev-plan-label');
+  if(dst)dst.value=planLabel;
+}
 
 function switchLibTab(v){
   if(v===tplView)return;
@@ -1660,16 +2219,18 @@ function renderLibrary(oid){
   document.getElementById('lib-count-brute').textContent='· '+brute.length;
   document.getElementById('lib-count-istoric').textContent='· '+history.length;
   document.getElementById('lib-dot-brute').style.display=brute.length>0?'inline-block':'none';
-  // Progress bar + summary
+  // Progress bar + summary (DOM dropped — kept coverage computation so it is available if we bring the indicators back)
   var TARGET=5;var covered=0;
   Object.keys(SUBTYPES).forEach(function(k){if(active.some(function(t){return t.act_type===k;}))covered++;});
-  var pct=Math.round(covered/TARGET*100);
-  document.getElementById('tpl-prog-fill').style.width=pct+'%';
-  document.getElementById('tpl-prog-label').textContent=covered+' / '+TARGET+' tipuri de acte acoperite';
-  var parts=[];
-  if(active.length) parts.push(active.length+' șablon'+(active.length===1?'':'oane')+' activ'+(active.length===1?'':'e'));
-  if(brute.length) parts.push(brute.length+' intrări brute de clasificat');
-  document.getElementById('tpl-summary').textContent=parts.length?parts.join(' · '):'Nicio activitate — adaugă primul șablon';
+  var pctFill=document.getElementById('tpl-prog-fill');if(pctFill)pctFill.style.width=Math.round(covered/TARGET*100)+'%';
+  var pctLbl=document.getElementById('tpl-prog-label');if(pctLbl)pctLbl.textContent=covered+' / '+TARGET+' tipuri de acte acoperite';
+  var sumEl=document.getElementById('tpl-summary');
+  if(sumEl){
+    var parts=[];
+    if(active.length) parts.push(active.length+' șablon'+(active.length===1?'':'oane')+' activ'+(active.length===1?'':'e'));
+    if(brute.length) parts.push(brute.length+' intrări brute de clasificat');
+    sumEl.textContent=parts.length?parts.join(' · '):'Nicio activitate — adaugă primul șablon';
+  }
   // Render current pane
   if(tplView==='active') renderLibActive(oid,active);
   else if(tplView==='brute') renderLibBrute(oid,brute);
@@ -1694,6 +2255,7 @@ function renderLibActive(oid,tpls){
       html+='<span class="row-sub">'+h(tpl.subtype)+'</span>';
       html+='<span class="row-date">'+h(tpl.uploaded_at||'—')+'</span>';
       html+='<span class="row-actions">';
+      html+='<button class="lib-act-link" onclick="downloadTemplate(\''+h(tpl.id)+'\')">Descarcă</button>';
       html+='<button class="lib-act-link" onclick="showPlaceholders(\''+h(tpl.id)+'\',this)">Tokeni</button>';
       html+='<button class="lib-act-link" onclick="openReplaceModal(\''+h(actType)+'\',\''+h(tpl.subtype)+'\')">Înlocuiește</button>';
       html+='<button class="lib-act-link" onclick="armOrArchive(\''+h(tpl.id)+'\',this)">Arhivează</button>';
@@ -1714,7 +2276,7 @@ function renderLibBrute(oid,items){
   var html='';
   items.forEach(function(r){
     html+='<div class="lib-row-brute" data-rid="'+h(r.id)+'">';
-    html+='<div class="row-fname-wrap"><div class="row-fname">'+h(r.filename)+'</div><div class="row-fname-meta">Încărcat '+h(r.uploaded_at)+'</div></div>';
+    html+='<div class="row-fname-wrap"><div class="row-fname-meta">Încărcat '+h(r.uploaded_at)+'</div><div class="row-fname">'+h(r.filename)+'</div></div>';
     // Act-type cdd
     var actOpts='';
     Object.keys(SUBTYPES).forEach(function(k){actOpts+='<button class="cdd-opt" type="button" data-v="'+h(k)+'">'+h(ACT_LABELS[k])+'</button>';});
@@ -1726,7 +2288,7 @@ function renderLibBrute(oid,items){
     // Subtype cdd
     var subOpts='';
     if(r.act_type){(SUBTYPES[r.act_type]||[]).forEach(function(s){subOpts+='<button class="cdd-opt" type="button" data-v="'+h(s)+'">'+h(s)+'</button>';});}
-    var subPlaceholder=r.act_type?'— subtip —':'— selectează tip act mai întâi —';
+    var subPlaceholder='— subtip —';
     html+='<div class="cdd raw-intake-cdd" id="cdd-raw-sub-'+h(r.id)+'" data-placeholder="'+h(subPlaceholder)+'">';
     html+='<button class="cdd-trigger'+(r.subtype?'':' empty')+(r.act_type?'':' disabled')+'" type="button">'+h(r.subtype||subPlaceholder)+'</button>';
     html+='<div class="cdd-panel" role="listbox">'+subOpts+'</div>';
@@ -1736,6 +2298,7 @@ function renderLibBrute(oid,items){
     html+='<div></div>';
     // Actions
     html+='<span class="row-actions">';
+    html+='<button class="lib-act-link" onclick="downloadRawIntake(\''+h(r.id)+'\')">Descarcă</button>';
     var canTokenize=r.act_type&&r.subtype;
     if(canTokenize) html+='<button class="doc-chip" onclick="openTokenizeFromRaw(\''+h(r.id)+'\')">Finalizează ⟶</button>';
     else html+='<button class="lib-act-link inactive" onclick="openTokenizeFromRaw(\''+h(r.id)+'\')">Finalizează</button>';
@@ -1787,6 +2350,7 @@ function renderLibIstoric(oid,tpls){
       html+='<span class="row-date">'+h(tpl.uploaded_at||'—')+'</span>';
       html+='<span><span class="lib-status-pill '+h(tpl.status)+'">'+h(tpl.status)+'</span></span>';
       html+='<span class="row-actions">';
+      html+='<button class="lib-act-link" onclick="downloadTemplate(\''+h(tpl.id)+'\')">Descarcă</button>';
       html+='<button class="lib-act-link" onclick="showPlaceholders(\''+h(tpl.id)+'\',this)">Tokeni</button>';
       html+='<button class="lib-act-link" onclick="restoreTemplate(\''+h(tpl.id)+'\')">Restabilește ⟶</button>';
       html+='</span>';
@@ -1799,6 +2363,35 @@ function renderLibIstoric(oid,tpls){
 
 // Legacy call-sites: renderCoverage(oid) → renderLibrary(oid). renderRawIntake(oid) → renderLibrary(oid).
 function renderCoverage(oid){renderLibrary(oid);}
+
+// ══ DOWNLOAD STUBS — wait for doc-generator chat (Phase 4) to deliver signed-URL flow ══════
+// Contract: backend must accept template_id / raw_intake_id and respond with a short-lived signed URL
+// pointing at the .docx (or .pdf, for raw intake) in the office-templates / office-raw-intake buckets.
+// Client then triggers navigation to that URL to start the browser download.
+// Stubs here just confirm the click registered so admins don't think the button is dead.
+function downloadTemplate(tplId){
+  var tpl=TEMPLATES.find(function(t){return t.id===tplId;});
+  if(!tpl){soundErr();showToast('Șablon inexistent.');return;}
+  if(DB_LIVE){
+    // TODO(doc-generator chat, Phase 4): replace stub with signed-URL fetch via RPC or Edge Function.
+    // Example target: sb.rpc('get_template_download_url', {tpl_id: tplId}).then(function(res){ window.location.href = res.data.url; });
+    soundSelect();showToast('Descărcarea așteaptă backend-ul. (template_id='+tpl.id+')');
+  } else {
+    // Seed-mode: no real file exists. Surface a toast naming the storage path so admin sees which file would download.
+    soundSelect();showToast('Descărcare mock: '+h(tpl.storage_path||tpl.id));
+  }
+}
+
+function downloadRawIntake(rid){
+  var r=RAW_INTAKE.find(function(x){return x.id===rid;});
+  if(!r){soundErr();showToast('Fișier brut inexistent.');return;}
+  if(DB_LIVE){
+    // TODO(doc-generator chat, Phase 4): replace stub with signed-URL fetch for office_raw_intake bucket.
+    soundSelect();showToast('Descărcarea așteaptă backend-ul. (raw_intake_id='+r.id+')');
+  } else {
+    soundSelect();showToast('Descărcare mock: '+h(r.filename||r.storage_path||r.id));
+  }
+}
 
 function restoreTemplate(tplId){
   var tpl=TEMPLATES.find(function(t){return t.id===tplId;});if(!tpl)return;
@@ -1831,20 +2424,55 @@ function restoreTemplate(tplId){
 function renderOnboarding(oid){
   var o=OM[oid];
   var cov=coverageFor(oid);
-  var items=[
-    {label:'Date birou completate',done:!!(o.email&&o.phone&&o.email!=='—')},
-    {label:'Notar principal confirmat',done:!!(o.notary&&o.notary!=='—')},
-    {label:'Email acces dashboard trimis',done:o.status==='activ'},
-    {label:'Acoperire minimă (1 șablon per tip de act)',done:cov.covered>=cov.target}
+  var isComp=(o.plan==='complimentary');
+  var subActive=(o.subscription_status==='active'||o.subscription_status==='trialing');
+  var hasFinalizedCase=CASES.some(function(c){return c.oid===oid&&c.status==='finalizat';});
+  // Configurare (setup) items — most auto-populate at creation
+  var config=[
+    {label:'Birou înregistrat în platformă', state:'done'},
+    {label:'Plan configurat',                state:o.plan?'done':'pending'},
+    {label:'Persoană de contact setată',     state:(o.contact_name&&o.contact_email)?'done':'pending'},
+    {label:'Client Stripe creat',            state:isComp?'na':(o.stripe_customer_id?'done':'pending')},
+    {label:'Abonament Stripe activ',         state:isComp?'na':(subActive?'done':'pending')},
+    {label:'Link de checkout trimis',        state:isComp?'na':(o.stripe_subscription_id?'done':'pending')}
   ];
-  var html='';
-  items.forEach(function(item){
-    html+='<div class="field-stacked"><div class="field-stacked-inner" style="flex-direction:row;align-items:center;justify-content:space-between;">';
-    html+='<span class="fs-val">'+h(item.label)+'</span>';
-    html+=(item.done?'<span class="tag tag-acoperit">✓ Gata</span>':'<span class="tag tag-lipsa">Lipsă</span>');
-    html+='</div></div>';
-  });
-  document.getElementById('onboarding-list').innerHTML=html;
+  // Operare (downstream) items — light up as office starts working
+  var operare=[
+    {label:'Primul șablon încărcat',              state:cov.covered>=1?'done':'pending'},
+    {label:'Acoperire minimă (1 per tip act)',    state:cov.covered>=cov.target?'done':'pending', meta:cov.covered+' / '+cov.target},
+    {label:'Primul dosar finalizat',              state:hasFinalizedCase?'done':'pending'}
+  ];
+  // Mock timestamp per item (done → derived from o.since; pending/na → status phrase)
+  // At Phase 4, replace this block with real event timestamps from Supabase.
+  function timestampFor(item){
+    if(item.state==='pending') return 'ÎN AȘTEPTARE';
+    if(item.state==='na')      return 'NU SE APLICĂ';
+    return (o.since||'—').toUpperCase();
+  }
+  // Row renderer — mirrors .field-stacked two-line format (mono label top, sans value bottom).
+  // State signaled by grey2 on line 1 for pending/na; done items render full-ink label + value.
+  function rowHtml(item){
+    var ts=timestampFor(item);
+    var meta=item.meta?' · '+h(item.meta):'';
+    var dim=(item.state!=='done')?' style="opacity:.55;"':'';
+    var html='<div class="field-stacked field-stacked-plain"'+dim+'>';
+    html+=  '<div class="field-stacked-inner">';
+    html+=    '<span class="fs-lbl">'+h(ts)+meta+'</span>';
+    html+=    '<span class="fs-val">'+h(item.label)+'</span>';
+    html+=  '</div>';
+    html+='</div>';
+    return html;
+  }
+  document.getElementById('ob-list-config').innerHTML=config.map(rowHtml).join('');
+  document.getElementById('ob-list-operare').innerHTML=operare.map(rowHtml).join('');
+  // Per-column counts — exclude N/A from both sides
+  function colCount(items){
+    var app=items.filter(function(i){return i.state!=='na';});
+    var d=app.filter(function(i){return i.state==='done';}).length;
+    return d+' / '+app.length;
+  }
+  document.getElementById('ob-count-config').textContent='· '+colCount(config);
+  document.getElementById('ob-count-operare').textContent='· '+colCount(operare);
 }
 
 // ══ RAW INTAKE ═══════════════════════════════════════════════════════
@@ -1989,7 +2617,9 @@ function addRawIntakeFiles(files){
       if(!cdd)return;
       if(cdd.classList.contains('open')){closeAll();return;}
       openCddEl(cdd);
-      focusOpt(cdd,0);
+      // Do NOT auto-focus first option — scrollIntoView on open can push the parent
+      // scroll container when the panel sits near viewport edge. Focus is applied
+      // on first arrow-key press instead (see keydown handler below).
       return;
     }
     var opt=e.target.closest?e.target.closest('.cdd-opt'):null;
@@ -2528,11 +3158,69 @@ function copyOfficeField(key){
   }catch(e){soundErr();}
 }
 
+// Copy the rendered text of a DOM element by id (used for case-modal fields
+// whose display value is derived, e.g. office name looked up via o.name
+// or urgency rendered as 'Marcat urgent'). Empty/placeholder '—' is a no-op.
+function copyFieldText(elId){
+  var el=document.getElementById(elId);if(!el)return;
+  var val=(el.textContent||'').trim();
+  if(!val||val==='—')return;
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(val);
+    } else {
+      var ta=document.createElement('textarea');ta.value=val;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');}catch(e){}
+      document.body.removeChild(ta);
+    }
+    soundCopy();showToast('Copiat: '+val);
+  }catch(e){soundErr();}
+}
+
 function openOfficeMaps(){
   var o=OM[currentOfficeId];if(!o||!o.address)return;
   var q=encodeURIComponent(o.address+', '+o.city);
   soundSelect();
   window.open('https://www.google.com/maps/search/?api=1&query='+q,'_blank','noopener');
+}
+
+// Deactivate / Suspend — two graduated off-boarding actions in the
+// BIROURI > Dezactivare tab. Both go through doc-generator chat / contract:
+//   SENT_amendment_office_deactivation.md
+// SUSPENDARE: reversible pause, Stripe pause_collection, admin can resume.
+// DEZACTIVARE: archive + cancel_at_period_end, reactivation via support.
+function switchDeactTab(which){
+  soundTabSwitch();
+  var isSuspend=(which==='suspend');
+  document.getElementById('om-deact-tabs-suspend').style.display=isSuspend?'flex':'none';
+  document.getElementById('om-deact-tabs-deact').style.display=isSuspend?'none':'flex';
+  document.getElementById('om-deact-pane-suspend').style.display=isSuspend?'block':'none';
+  document.getElementById('om-deact-pane-deact').style.display=isSuspend?'none':'block';
+}
+function suspendOffice(){
+  var o=OM[currentOfficeId];if(!o)return;
+  if(!confirm('Suspendă '+(o.name||'biroul')+'?\n\nAbonamentul Stripe va fi pus pe pauză și nu se vor mai emite facturi până la reactivare. Dosarele existente rămân accesibile read-only.'))return;
+  if(window.DB_LIVE){showToast('Suspendarea așteaptă backend-ul');return;}
+  soundFinalizat();
+  showToast('Suspendat: '+o.name+' · fără facturare până la reactivare');
+  if(typeof closeOffice==='function')closeOffice();
+}
+function deactivateOffice(){
+  var o=OM[currentOfficeId];if(!o)return;
+  if(!confirm('Dezactivează '+(o.name||'biroul')+'?\n\nBiroul va fi arhivat și abonamentul Stripe va fi anulat la sfârșitul perioadei curente. Acțiunea este reversibilă prin contactarea Anthropic.'))return;
+  if(window.DB_LIVE){showToast('Dezactivarea așteaptă backend-ul');return;}
+  soundFinalizat();
+  showToast('Arhivat: '+o.name+' · abonament anulat la finalul perioadei');
+  if(typeof closeOffice==='function')closeOffice();
+}
+// Populate both status previews when the office modal opens.
+function renderDeactivatePreview(){
+  var o=OM[currentOfficeId];if(!o)return;
+  var cycleEnd=o.current_period_end||'sfârșit perioadă';
+  var deactEl=document.getElementById('om-deact-status-preview');
+  if(deactEl)deactEl.textContent='canceled · activ până la '+cycleEnd;
+  var suspEl=document.getElementById('om-suspend-status-preview');
+  if(suspEl)suspEl.textContent='paused · fără facturare';
 }
 
 function openOfficeMail(which){
@@ -2785,120 +3473,464 @@ document.querySelectorAll('.filter-tag[data-sort]').forEach(function(btn){
   });
 });
 
-// ══ DOSARE ADAPTIVE HEIGHT (item 6) ═════════════════════════════
+// ══ ADAPTIVE LIST HEIGHTS ═══════════════════════════════════════
+// Both BIROURI (view-a) and DOSARE (view-b) cap at 4 visible rows — beyond that, scroll kicks in.
+// Row height = 20px top + 20px bottom + content + 1px border, clamped to min-height:64px on the row itself.
 function setDosareHeight(){
   var scroll=document.getElementById('list-b-scroll');
   if(!scroll)return;
   var rows=CASES.length;
-  var ROW_H=47;
-  var HDR_H=41;
+  var ROW_H=64;
   var MIN_ROWS=4;
-  var MAX_ROWS=11;
+  var MAX_ROWS=4;
   var visible=Math.min(Math.max(rows,MIN_ROWS),MAX_ROWS);
   scroll.style.maxHeight=(visible*ROW_H)+'px';
   scroll.style.overflowY=rows>MAX_ROWS?'auto':'visible';
 }
 
-// ══ CASE MODAL (items 7+8) ═══════════════════════════════════════
+function setBirouriHeight(){
+  var scroll=document.getElementById('list-a-scroll');
+  if(!scroll)return;
+  var rows=OFFICES.length;
+  var ROW_H=64;
+  var MIN_ROWS=4;
+  var MAX_ROWS=4;
+  var visible=Math.min(Math.max(rows,MIN_ROWS),MAX_ROWS);
+  scroll.style.maxHeight=(visible*ROW_H)+'px';
+  scroll.style.overflowY=rows>MAX_ROWS?'auto':'visible';
+}
+
+// ══ CASE MODAL — 4-tab redesign ══════════════════════════════════
 var cmCaseId=null;
-var cmUrgent=false;
-var cmStatus='nou';
+// Launch context — set when case modal is opened from inside office modal.
+// Populated by openCaseModal, consumed by cmGoBackToOffice + closeCaseModal.
+var cmLaunchedFromOfficeId=null;
+
+function activateCmTab(name){
+  document.querySelectorAll('.cm-tab').forEach(function(t){t.classList.toggle('active',t.dataset.cmtab===name);});
+  document.querySelectorAll('.cm-panel').forEach(function(p){p.classList.toggle('active',p.id==='cm-tab-'+name);});
+}
 
 function openCaseModal(cid){
   soundSwitch();
   var c=CASES.find(function(x){return x.id===cid;});
   if(!c)return;
   cmCaseId=cid;
-  cmUrgent=c.urgent;
-  cmStatus=c.status;
+  // Capture launch context: if office modal is currently open, stash its id so back-button can return.
+  var omEl=document.getElementById('om');
+  if(omEl&&omEl.classList.contains('open')){
+    cmLaunchedFromOfficeId=currentOfficeId;
+    // Close office modal so user sees a clean single-modal stack (not nested)
+    omEl.classList.remove('open');
+    document.getElementById('om-overlay').classList.remove('open');
+  } else {
+    cmLaunchedFromOfficeId=null;
+  }
+  // Show/hide the back button based on launch context
+  var backBtn=document.getElementById('cm-back');
+  if(backBtn) backBtn.style.display=cmLaunchedFromOfficeId?'':'none';
   var o=OM[c.oid]||{};
-  document.getElementById('cm-title').textContent=c.client;
-  document.getElementById('cm-meta').textContent=c.ref+' · '+h(o.name||'');
+  // Header
+  document.getElementById('cm-title').textContent=(c.act||'Dosar')+' — '+c.client;
   document.getElementById('cm-status-tag').innerHTML=statusTag(c.urgent?'urgent':c.status);
+  // Detalii panel — read-only
   document.getElementById('cm-ref').textContent=c.ref;
-  document.getElementById('cm-act').value=c.act;
-  document.getElementById('cm-subtype').value=c.subtype||'—';
-  document.getElementById('cm-client').value=c.client;
-  document.getElementById('cm-pref').value=c.pref||'—';
-  document.getElementById('cm-notes').value=c.admin_notes||'';
+  document.getElementById('cm-act').textContent=c.act||'—';
+  document.getElementById('cm-subtype').textContent=c.subtype||'—';
+  document.getElementById('cm-client').textContent=c.client;
+  document.getElementById('cm-pref').textContent=c.pref||'—';
+  document.getElementById('cm-office-name').textContent=o.name||'—';
+  document.getElementById('cm-urgent-lbl').textContent=c.urgent?'Marcat urgent':'—';
   document.getElementById('cm-created').textContent=c.created||'—';
   document.getElementById('cm-updated').textContent=c.updated_at||'—';
   document.getElementById('cm-id').textContent=typeof c.id==='string'?c.id:'(demo)';
-  // office selector — populate cdd panel from OFFICES, preselect current
-  var panel=document.getElementById('cdd-cm-office').querySelector('.cdd-panel');
+  // Intervenție panel — context tags (one per pane)
+  var statusLabel=c.status==='nou'?'Nou':(c.status==='in-lucru'?'Activ':(c.status==='programat'?'Programat':c.status));
+  var statusTagCls=c.status==='nou'?'tag tag-nou':'tag tag-activ';
+  // status pane
+  var statusCurTag=document.getElementById('iv-status-cur-tag');
+  statusCurTag.textContent=statusLabel;
+  statusCurTag.className=statusTagCls;
+  // office pane
+  var officeTag=document.getElementById('iv-office-cur-tag');
+  officeTag.textContent=o.name||'—';
+  officeTag.className='tag tag-activ';
+  // reschedule pane
+  var prefTag=document.getElementById('iv-pref-cur-tag');
+  prefTag.textContent=c.pref||'—';
+  prefTag.className='tag tag-activ';
+  // urgent pane — preseed picker to the opposite of current (the likely intended action)
+  var urgTag=document.getElementById('iv-urgent-cur-tag');
+  urgTag.textContent=c.urgent?'! Urgent':'Normal';
+  urgTag.className=c.urgent?'tag tag-urgent':'tag tag-activ';
+  document.querySelectorAll('#iv-urgent-sel .status-sel-btn').forEach(function(b){
+    b.classList.toggle('sel-active',b.dataset.u===(c.urgent?'0':'1'));
+  });
+  // cancel pane — preseed picker to the applicable action (Anulează if active, Restabilește if cancelled)
+  var cancelTag=document.getElementById('iv-cancel-cur-tag');
+  cancelTag.textContent=statusLabel;
+  cancelTag.className=statusTagCls;
+  document.querySelectorAll('#iv-cancel-sel .status-sel-btn').forEach(function(b){
+    var target=(c.status==='anulat')?'nou':'anulat';
+    b.classList.toggle('sel-active',b.dataset.c===target);
+  });
+  // Intervenție — preseed status picker to current
+  document.querySelectorAll('#iv-status-sel .status-sel-btn').forEach(function(b){
+    b.classList.toggle('sel-active',b.dataset.s===c.status);
+  });
+  // Intervenție — populate office cdd
+  var panel=document.getElementById('cdd-iv-office').querySelector('.cdd-panel');
   var oHtml='';
-  OFFICES.forEach(function(of){oHtml+='<button class="cdd-opt" type="button" data-v="'+h(of.id)+'">'+h(of.name)+'</button>';});
+  OFFICES.forEach(function(of){if(of.id!==c.oid)oHtml+='<button class="cdd-opt" type="button" data-v="'+h(of.id)+'">'+h(of.name)+'</button>';});
   panel.innerHTML=oHtml;
-  cddSetValue('cdd-cm-office',c.oid||'',false);
-  // urgent button
-  document.getElementById('cm-urgent-dot').style.display=cmUrgent?'inline-block':'none';
-  document.getElementById('cm-urgent-btn').textContent=cmUrgent?'! Urgent — Dezactivează':'Marchează urgent';
-  document.getElementById('cm-urgent-btn').className=cmUrgent?'doc-chip doc-chip-alert':'doc-chip';
-  // status selector
-  cmRefreshStatusSel();
+  cddSetValue('cdd-iv-office','',false);
+  // Reset intervenție sub-tabs to first (status) + clear inputs
+  document.querySelectorAll('#cm-tab-interventie .lib-tab').forEach(function(t){
+    t.classList.toggle('active',t.dataset.ivtab==='status');
+  });
+  document.querySelectorAll('#cm-tab-interventie .iv-pane').forEach(function(p){
+    p.classList.toggle('active',p.id==='iv-pane-status');
+  });
+  // Clear all error states
+  ['status','office','pref','urgent','cancel'].forEach(function(k){
+    var err=document.getElementById('iv-'+k+'-err');
+    if(err)err.classList.remove('show');
+  });
+  document.getElementById('iv-pref-date').value='';
+  document.getElementById('iv-pref-time').value='';
+  document.getElementById('iv-status-reason').value='';
+  document.getElementById('iv-office-reason').value='';
+  document.getElementById('iv-pref-reason').value='';
+  document.getElementById('iv-urgent-reason').value='';
+  document.getElementById('iv-cancel-reason').value='';
+  // Reset to Detalii tab
+  activateCmTab('detalii');
+  // Reset DETALII / COMUNICARE subtabs to their first pane (silent)
+  resetCmSubtabs();
+  // Populate COMUNICARE Istoric + AUDIT log with seed data (scoped to this case)
+  renderCmComIstoric(cid);
+  renderCmAudit(cid);
+  // Reset Acțiuni rapide picker (Nudge client preselected by cmArReset).
+  // Confirmă button visibility is driven by setCmComTab('actiuni') inside resetCmSubtabs above.
+  cmArReset();
   document.getElementById('cm-overlay').classList.add('open');
   document.getElementById('cm').classList.add('open');
 }
+
 function closeCaseModal(){
   soundSwitch();
   document.getElementById('cm-overlay').classList.remove('open');
   document.getElementById('cm').classList.remove('open');
   cmCaseId=null;
+  cmLaunchedFromOfficeId=null;
 }
-function cmSetStatus(s,btn){
-  cmStatus=s;
-  cmRefreshStatusSel();
+
+// Back-button: close case modal, reopen the office modal that launched it.
+function cmGoBackToOffice(){
+  var oid=cmLaunchedFromOfficeId;
+  if(!oid){closeCaseModal();return;}
+  soundSwitch();
+  document.getElementById('cm-overlay').classList.remove('open');
+  document.getElementById('cm').classList.remove('open');
+  cmCaseId=null;
+  cmLaunchedFromOfficeId=null;
+  openOffice(oid);
 }
-function cmRefreshStatusSel(){
-  document.querySelectorAll('#cm-status-sel .status-sel-btn').forEach(function(b){
-    b.classList.toggle('sel-active',b.dataset.s===cmStatus);
+
+// ── INTERVENȚIE flow (sub-tabs) ─────────────────────────────────
+function switchIvTab(name){
+  soundTabSwitch();
+  document.querySelectorAll('#cm-tab-interventie .lib-tab').forEach(function(t){
+    t.classList.toggle('active',t.dataset.ivtab===name);
+  });
+  document.querySelectorAll('#cm-tab-interventie .iv-pane').forEach(function(p){
+    p.classList.toggle('active',p.id==='iv-pane-'+name);
+  });
+  // clear any stale error on the pane we're switching to
+  var errId='iv-'+(name==='reschedule'?'pref':name)+'-err';
+  var err=document.getElementById(errId);
+  if(err)err.classList.remove('show');
+}
+
+function ivCommitCurrent(){
+  var activeTab=document.querySelector('#cm-tab-interventie .lib-tab.active');
+  if(!activeTab)return;
+  ivCommit(activeTab.dataset.ivtab);
+}
+
+function ivStatusPick(s,btn){
+  soundSelect();
+  document.querySelectorAll('#iv-status-sel .status-sel-btn').forEach(function(b){
+    b.classList.toggle('sel-active',b.dataset.s===s);
   });
 }
-function cmToggleUrgent(){
-  cmUrgent=!cmUrgent;
-  document.getElementById('cm-urgent-dot').style.display=cmUrgent?'inline-block':'none';
-  document.getElementById('cm-urgent-btn').textContent=cmUrgent?'! Urgent — Dezactivează':'Marchează urgent';
-  document.getElementById('cm-urgent-btn').className=cmUrgent?'doc-chip doc-chip-alert':'doc-chip';
+
+function ivUrgentPick(u,btn){
+  soundSelect();
+  document.querySelectorAll('#iv-urgent-sel .status-sel-btn').forEach(function(b){
+    b.classList.toggle('sel-active',b.dataset.u===u);
+  });
 }
-function cmAction(type){
-  if(type==='nudge'){soundSelect();showToast('Nudge trimis clientului ⟶');}
-  if(type==='notary'){soundSelect();showToast('Notar contactat ⟶');}
+
+function ivCancelPick(c,btn){
+  soundSelect();
+  document.querySelectorAll('#iv-cancel-sel .status-sel-btn').forEach(function(b){
+    b.classList.toggle('sel-active',b.dataset.c===c);
+  });
 }
-function cmSave(){
+
+function ivCommit(kind){
   var c=CASES.find(function(x){return x.id===cmCaseId;});
-  if(!c)return;
-  c.act=document.getElementById('cm-act').value;
-  c.subtype=document.getElementById('cm-subtype').value;
-  c.client=document.getElementById('cm-client').value;
-  c.pref=document.getElementById('cm-pref').value;
-  c.admin_notes=document.getElementById('cm-notes').value;
-  c.status=cmStatus;
-  c.urgent=cmUrgent;
-  var newOid=document.getElementById('cm-office').value;
-  c.oid=newOid;
+  if(!c){soundErr();return;}
+  var errId='iv-'+(kind==='reschedule'?'pref':kind)+'-err';
+  var errEl=document.getElementById(errId);
+  if(errEl)errEl.classList.remove('show');
+  var changed={};
+  var reason='';
+  if(kind==='status'){
+    var picked=document.querySelector('#iv-status-sel .status-sel-btn.sel-active');
+    var newStatus=picked?picked.dataset.s:null;
+    reason=document.getElementById('iv-status-reason').value.trim();
+    if(!newStatus||!reason){errEl.classList.add('show');soundErr();return;}
+    changed={status:newStatus};
+    c.status=newStatus;
+  } else if(kind==='office'){
+    var newOid=document.getElementById('iv-office-val').value;
+    reason=document.getElementById('iv-office-reason').value.trim();
+    if(!newOid||!reason){errEl.classList.add('show');soundErr();return;}
+    changed={office_id:newOid};
+    c.oid=newOid;
+  } else if(kind==='reschedule'){
+    var newDate=document.getElementById('iv-pref-date').value;
+    var newTime=document.getElementById('iv-pref-time').value;
+    reason=document.getElementById('iv-pref-reason').value.trim();
+    if(!newDate||!newTime||!reason){errEl.classList.add('show');soundErr();return;}
+    // Assemble display string "28 apr, 14:00" from ISO date + HH:MM
+    var monthsRo=['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','nov','dec'];
+    var parts=newDate.split('-');
+    var newPref=parseInt(parts[2],10)+' '+monthsRo[parseInt(parts[1],10)-1]+', '+newTime;
+    changed={preferred_date:newPref};
+    c.pref=newPref;
+  } else if(kind==='urgent'){
+    var pickedU=document.querySelector('#iv-urgent-sel .status-sel-btn.sel-active');
+    var newUrgent=pickedU?pickedU.dataset.u:null;
+    reason=document.getElementById('iv-urgent-reason').value.trim();
+    if(!newUrgent||!reason){errEl.classList.add('show');soundErr();return;}
+    var urgBool=(newUrgent==='1');
+    if(urgBool===!!c.urgent){errEl.classList.add('show');soundErr();return;} // no-op guard
+    changed={urgent:urgBool};
+    c.urgent=urgBool;
+  } else if(kind==='cancel'){
+    var pickedC=document.querySelector('#iv-cancel-sel .status-sel-btn.sel-active');
+    var newCancel=pickedC?pickedC.dataset.c:null;
+    reason=document.getElementById('iv-cancel-reason').value.trim();
+    if(!newCancel||!reason){errEl.classList.add('show');soundErr();return;}
+    // newCancel is either 'anulat' (cancel) or 'nou' (restore).
+    // Restore is only meaningful if case was cancelled; cancel is only meaningful if not.
+    if(newCancel==='anulat'&&c.status==='anulat'){errEl.classList.add('show');soundErr();return;}
+    if(newCancel==='nou'&&c.status!=='anulat'){errEl.classList.add('show');soundErr();return;}
+    changed={status:newCancel};
+    c.status=newCancel;
+  }
+  // TODO: when case_audit_log table ships, INSERT one row here with actor, event_type, before/after, reason.
   if(DB_LIVE){
-    sb.from('cases').update({
-      status:cmStatus,urgent:cmUrgent,
-      client_name:c.client,preferred_date:c.pref,
-      subtype:c.subtype,admin_notes:c.admin_notes
-    }).eq('id',cmCaseId).then(function(res){
+    sb.from('cases').update(changed).eq('id',cmCaseId).then(function(res){
       if(res.error){soundErr();showToast('Eroare: '+res.error.message);return;}
-      soundFinalizat();showToast('Dosar salvat ✓');
+      soundFinalizat();showToast('Intervenție aplicată ✓');
       closeCaseModal();renderCurrent();updateKPI();
       if(currentOfficeId) renderOmDosare(currentOfficeId);
     });
   } else {
-    soundFinalizat();showToast('Dosar salvat (demo) ✓');
+    soundFinalizat();showToast('Intervenție aplicată (demo) ✓');
     closeCaseModal();renderCurrent();updateKPI();
     if(currentOfficeId) renderOmDosare(currentOfficeId);
   }
 }
 
+// ══ COMUNICARE — ACȚIUNI RAPIDE (pick + confirm, mirrors INTERVENȚIE STATUS) ═════
+var cmArPicked=null;
+// Channel of the outbound message (email|phone). phone → SMS via the backend's
+// sms-gateway (doc-generator chat owns the Resend-vs-SMS routing; see amendment).
+var cmArChannel=null;
+function cmArPick(v,btn){
+  soundSelect();
+  cmArPicked=v;
+  document.querySelectorAll('#cm-ar-sel .status-sel-btn').forEach(function(b){b.classList.remove('sel-active');});
+  if(btn)btn.classList.add('sel-active');
+  document.getElementById('cm-ar-err').style.display='none';
+}
+function cmArPickChannel(ch,btn){
+  soundSelect();
+  cmArChannel=ch;
+  document.querySelectorAll('#cm-ar-ch-sel .status-sel-btn').forEach(function(b){b.classList.remove('sel-active');});
+  if(btn)btn.classList.add('sel-active');
+  document.getElementById('cm-ar-err').style.display='none';
+}
+function cmArReset(){
+  // Defaults: Nudge client + Email (covers ~90% of cases per ops). The user
+  // can override both on any open of the modal.
+  cmArPicked='nudge';
+  cmArChannel='email';
+  document.querySelectorAll('#cm-ar-sel .status-sel-btn').forEach(function(b){
+    b.classList.toggle('sel-active',b.getAttribute('data-ar')==='nudge');
+  });
+  document.querySelectorAll('#cm-ar-ch-sel .status-sel-btn').forEach(function(b){
+    b.classList.toggle('sel-active',b.getAttribute('data-ch')==='email');
+  });
+  var msg=document.getElementById('cm-ar-msg');if(msg)msg.value='';
+  var err=document.getElementById('cm-ar-err');if(err)err.style.display='none';
+}
+function cmArCommit(){
+  var msg=(document.getElementById('cm-ar-msg').value||'').trim();
+  if(!cmArPicked||!cmArChannel||!msg){
+    document.getElementById('cm-ar-err').style.display='block';
+    soundErr();return;
+  }
+  // TODO(doc-generator chat, Phase 4): persist to case_communications
+  //   INSERT INTO case_communications (case_id, direction='outbound', channel=<cmArChannel>,
+  //     subject=<action label>, body=<msg>, sent_by=<auth.uid()>, sent_at=now())
+  //   For recipient resolution + actual send (Resend for email, SMS gateway for
+  //   phone), see amendment: SENT_amendment_nudge_channel_routing.md
+  var who=cmArPicked==='nudge'?'Nudge trimis clientului':'Notar contactat';
+  var via=cmArChannel==='email'?'email':'SMS';
+  soundFinalizat();showToast(who+' ('+via+') ⟶');
+  cmArReset();
+  setCmComTab('istoric');
+  renderCmComIstoric(cmCaseId);
+}
+
+// ══ COMUNICARE — ISTORIC (seed visualization; backend wires at Phase 4) ═════════
+// Channel labels: email | sms | phone | in_person (4 locked values)
+// Direction labels: inbound | outbound | internal (3 locked values)
+var CHANNEL_LABELS={email:'Email',sms:'SMS',phone:'Telefon',in_person:'În persoană'};
+var DIRECTION_LABELS={inbound:'↙ Primit',outbound:'↗ Trimis',internal:'↔ Intern'};
+// Per-case seed: short synthetic log to show the visual pattern. Keyed by case id.
+// When DB_LIVE, this is replaced by SELECT FROM case_communications WHERE case_id=…
+function seedComIstoric(caseId){
+  var seeds={
+    c1:[
+      {at:'10 apr, 09:14',direction:'inbound', channel:'email',   actor:'Popescu Maria-Elena',summary:'Solicitare inițială procură vânzare imobil, atașat proiect.'},
+      {at:'10 apr, 11:02',direction:'outbound',channel:'email',   actor:'Sistem (automat)',   summary:'Confirmare primire · link pentru încărcare documente trimis.'},
+      {at:'12 apr, 16:33',direction:'outbound',channel:'sms',     actor:'Admin',              summary:'Reminder încărcare CI mandant (rămase 48h).'},
+      {at:'14 apr, 10:21',direction:'inbound', channel:'email',   actor:'Popescu Maria-Elena',summary:'CI mandant + mandatar încărcate · întreabă despre onorariu.'},
+      {at:'14 apr, 11:45',direction:'internal',channel:'in_person',actor:'Admin · Notar Ardelean',summary:'Discuție internă: trimitem draft final pentru vânzare imobil.'}
+    ],
+    c2:[
+      {at:'08 apr, 08:30',direction:'inbound', channel:'email',   actor:'Ionescu Alexandru',  summary:'Cerere declarație acceptare succesiune.'},
+      {at:'09 apr, 14:12',direction:'outbound',channel:'email',   actor:'Sistem (automat)',   summary:'Draft trimis pentru revizuire, template completat.'},
+      {at:'20 apr, 09:08',direction:'outbound',channel:'sms',     actor:'Admin',              summary:'Reminder programare 22 apr, 10:00.'}
+    ],
+    c3:[
+      {at:'05 apr, 15:22',direction:'inbound', channel:'phone',   actor:'Stan Gabriela',      summary:'Apel inițial · partaj bunuri · stabilit email pentru urmărire.'},
+      {at:'08 apr, 10:44',direction:'outbound',channel:'email',   actor:'Admin',              summary:'Listă documente necesare pentru partaj trimisă.'},
+      {at:'14 apr, 11:30',direction:'inbound', channel:'email',   actor:'Stan Gabriela',      summary:'Documente atașate · confirmă programare 16 apr.'}
+    ]
+  };
+  // Fallback for cases without specific seed — show a minimal synthetic trail
+  return seeds[caseId]||[
+    {at:'— · —:—',direction:'inbound',channel:'email',actor:'—',summary:'Nicio comunicare încă — backend-ul urmează să populeze istoricul.'}
+  ];
+}
+function renderCmComIstoric(caseId){
+  var el=document.getElementById('cm-com-istoric-list');
+  if(!el)return;
+  var items=seedComIstoric(caseId);
+  if(!items.length){
+    el.innerHTML='<div class="lib-empty"><div class="lib-empty-line">Nicio comunicare înregistrată</div><div class="lib-empty-sub">Evenimentele vor apărea aici pe măsură ce se trimit/primesc mesaje</div></div>';
+    return;
+  }
+  var html='';
+  items.forEach(function(it){
+    var chLbl=h(CHANNEL_LABELS[it.channel]||it.channel);
+    var dirLbl=h(DIRECTION_LABELS[it.direction]||it.direction);
+    // Left cell: when (label) + channel · direction (value)
+    // Right cell: actor (label) + message summary (value)
+    html+='<div class="cm-2col-row">';
+    html+='<div class="cm-2col-cell">';
+    html+='<span class="cm-2col-lbl">'+h(it.at)+'</span>';
+    html+='<span class="cm-2col-val">'+chLbl+' · '+dirLbl+'</span>';
+    html+='</div>';
+    html+='<div class="cm-2col-cell">';
+    html+='<span class="cm-2col-lbl">'+h(it.actor||'—')+'</span>';
+    html+='<span class="cm-2col-val">'+h(it.summary)+'</span>';
+    html+='</div>';
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
+
+// ══ AUDIT LOG (seed visualization; backend wires at Phase 4) ════════════════════
+// Event types (9 locked): status_changed | office_reassigned | rescheduled | urgency_changed |
+//   cancelled | restored | template_applied | case_created | case_closed
+// Actor roles (5 locked): admin | notary | system | client | support
+var EVENT_LABELS={
+  status_changed:'Status schimbat', office_reassigned:'Birou schimbat',
+  rescheduled:'Reprogramat',        urgency_changed:'Urgență modificată',
+  cancelled:'Anulat',               restored:'Restabilit',
+  template_applied:'Șablon aplicat',case_created:'Dosar creat',
+  case_closed:'Dosar închis'
+};
+var ACTOR_LABELS={admin:'Admin',notary:'Notar',system:'Sistem',client:'Client',support:'Support'};
+function seedAuditLog(caseId){
+  var seeds={
+    c1:[
+      {at:'10 apr, 09:14',event_type:'case_created',    actor:'system',summary:'Dosar creat din raw_intake — client Popescu Maria-Elena.'},
+      {at:'10 apr, 09:14',event_type:'template_applied',actor:'system',summary:'Șablon procuri/vânzare-imobil aplicat (v2).'},
+      {at:'10 apr, 11:02',event_type:'urgency_changed', actor:'admin', summary:'Urgență: normal ⟶ urgent (motiv: termen 17 apr).'},
+      {at:'12 apr, 16:33',event_type:'status_changed',  actor:'admin', summary:'Status: nou ⟶ in-lucru (motiv: trecere la draft final).'}
+    ],
+    c2:[
+      {at:'08 apr, 08:30',event_type:'case_created',    actor:'system',summary:'Dosar creat — Ionescu Alexandru.'},
+      {at:'09 apr, 14:12',event_type:'template_applied',actor:'system',summary:'Șablon declaratii/acceptare-succesiune aplicat.'},
+      {at:'09 apr, 14:15',event_type:'status_changed',  actor:'admin', summary:'Status: nou ⟶ in-lucru.'},
+      {at:'18 apr, 10:00',event_type:'rescheduled',     actor:'notary',summary:'Reprogramat: 20 apr, 14:00 ⟶ 22 apr, 10:00 (motiv: notarul indisponibil).'}
+    ],
+    c3:[
+      {at:'05 apr, 15:22',event_type:'case_created',    actor:'system',summary:'Dosar creat din apel telefonic.'},
+      {at:'08 apr, 10:44',event_type:'template_applied',actor:'system',summary:'Șablon acorduri/partaj-bunuri aplicat.'},
+      {at:'14 apr, 11:35',event_type:'status_changed',  actor:'admin', summary:'Status: in-lucru ⟶ programat (motiv: documente complete).'}
+    ]
+  };
+  return seeds[caseId]||[
+    {at:'— · —:—',event_type:'case_created',actor:'system',summary:'Audit log gol — backend-ul urmează să populeze.'}
+  ];
+}
+function renderCmAudit(caseId){
+  var el=document.getElementById('cm-audit-list');
+  if(!el)return;
+  var items=seedAuditLog(caseId);
+  if(!items.length){
+    el.innerHTML='<div class="lib-empty"><div class="lib-empty-line">Niciun eveniment audit</div><div class="lib-empty-sub">Modificările dosarului vor apărea aici</div></div>';
+    return;
+  }
+  var html='';
+  items.forEach(function(it){
+    var evLbl=h(EVENT_LABELS[it.event_type]||it.event_type);
+    var actorLbl=h(ACTOR_LABELS[it.actor]||it.actor);
+    html+='<div class="cm-2col-row">';
+    // Left cell: when + what happened
+    html+='<div class="cm-2col-cell">';
+    html+='<span class="cm-2col-lbl">'+h(it.at)+'</span>';
+    html+='<span class="cm-2col-val">'+evLbl+'</span>';
+    html+='</div>';
+    // Right cell: who + details
+    html+='<div class="cm-2col-cell">';
+    html+='<span class="cm-2col-lbl">'+actorLbl+'</span>';
+    html+='<span class="cm-2col-val">'+h(it.summary)+'</span>';
+    html+='</div>';
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
+
+// Tab click wiring
+document.querySelectorAll('.cm-tab').forEach(function(tab){
+  tab.addEventListener('click',function(){soundTabSwitch();activateCmTab(this.dataset.cmtab);});
+});
+
 document.getElementById('cm-close').addEventListener('click',closeCaseModal);
-document.getElementById('cm-cancel').addEventListener('click',closeCaseModal);
+document.getElementById('cm-close-footer').addEventListener('click',closeCaseModal);
 document.getElementById('cm-overlay').addEventListener('click',closeCaseModal);
-document.getElementById('cm-save').addEventListener('click',cmSave);
-// currentCaseId handled by cmCaseId in case modal
 
 // ══ CREATE OFFICE (onboarding) ══════════════════════════════════════
 var _coSubmitting=false;
@@ -2913,15 +3945,23 @@ function openCreateOffice(){
   ids.forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   cddSetValue('cdd-co-plan','',false);
   Array.prototype.forEach.call(document.querySelectorAll('#om-create details'),function(d){d.open=false;});
+  _setInlineErr('co-err-cui','');
+  _setInlineErr('co-err-contact-email','');
   var err=document.getElementById('co-error');err.style.display='none';err.textContent='';
   var submit=document.getElementById('co-submit');
   submit.disabled=true;
-  submit.textContent='Creează birou ⟶';
+  submit.innerHTML='<span>Creează birou</span><span>⟶</span>';
+  var submitRev=document.getElementById('co-submit-rev');
+  submitRev.disabled=true;
+  submitRev.innerHTML='<span>Confirmă</span><span>⟶</span>';
   _coSubmitting=false;
   validateOfficeForm(); // show all 4 required-field dots on fresh open
+  setCoMainTab('config'); // always land on Configurare main tab
+  setCoTab('date'); // always land on Date birou sub-tab
   document.getElementById('om-create-overlay').classList.add('open');
   document.getElementById('om-create').classList.add('open');
-  setTimeout(function(){var n=document.getElementById('co-name');if(n)n.focus();},160);
+  // No autofocus on opening: both Denumire and CUI remain visually identical until the
+  // admin picks one. The focus highlight (field-stacked:has(.co-inp:focus)) then kicks in.
 }
 function closeCreateOffice(){
   if(_coSubmitting)return; // don't close mid-submit
@@ -2929,21 +3969,94 @@ function closeCreateOffice(){
   document.getElementById('om-create-overlay').classList.remove('open');
   document.getElementById('om-create').classList.remove('open');
 }
+// Romanian CUI validator — ANAF checksum algorithm.
+// Returns {ok, normalized, error}. Accepts optional "RO" prefix (case-insensitive),
+// 2–10 digits body. Control digit is the last digit; body is verified against
+// weights [7,5,3,2,1,7,5,3,2] aligned from the RIGHT (rightmost N weights for
+// a body of length N). sum·10 mod 11; if 10 → expected control is 0.
+function validateCUI(raw){
+  if(!raw)return {ok:false,normalized:'',error:''};
+  var s=String(raw).trim().toUpperCase().replace(/^RO/,'').replace(/\s+/g,'');
+  if(!/^[0-9]+$/.test(s))return {ok:false,normalized:s,error:'CUI invalid — doar cifre.'};
+  if(s.length<2||s.length>10)return {ok:false,normalized:s,error:'CUI invalid — 2–10 cifre.'};
+  var ctrl=parseInt(s.charAt(s.length-1),10);
+  var body=s.substring(0,s.length-1);
+  var weights=[7,5,3,2,1,7,5,3,2];
+  var wOffset=weights.length-body.length;
+  var sum=0;
+  for(var i=0;i<body.length;i++){sum+=parseInt(body.charAt(i),10)*weights[wOffset+i];}
+  var expected=(sum*10)%11;
+  if(expected===10)expected=0;
+  if(expected!==ctrl)return {ok:false,normalized:s,error:'CUI invalid — cifră de control.'};
+  return {ok:true,normalized:s,error:''};
+}
+// Normalize CUI for duplicate comparison (strip RO, uppercase, digits only)
+function _normCUI(raw){return String(raw||'').trim().toUpperCase().replace(/^RO/,'').replace(/\s+/g,'');}
+// Find existing office by normalized CUI; returns office row or null
+function findOfficeByCUI(cui){
+  var n=_normCUI(cui);if(!n)return null;
+  for(var i=0;i<OFFICES.length;i++){if(_normCUI(OFFICES[i].cui)===n)return OFFICES[i];}
+  return null;
+}
+// Find existing office by case-insensitive contact_email; returns office row or null
+function findOfficeByContactEmail(email){
+  var e=String(email||'').trim().toLowerCase();if(!e)return null;
+  for(var i=0;i<OFFICES.length;i++){
+    var ce=String(OFFICES[i].contact_email||'').trim().toLowerCase();
+    if(ce&&ce===e)return OFFICES[i];
+  }
+  return null;
+}
+function _setInlineErr(elId,msg){
+  var el=document.getElementById(elId);if(!el)return;
+  if(msg){el.textContent=msg;el.classList.add('visible');}
+  else{el.textContent='';el.classList.remove('visible');}
+}
 function validateOfficeForm(){
   var name=document.getElementById('co-name').value.trim();
   var cui=document.getElementById('co-cui').value.trim();
   var cname=document.getElementById('co-contact-name').value.trim();
   var cemail=document.getElementById('co-contact-email').value.trim();
   var plan=document.getElementById('co-plan').value;
-  var emailOk=cemail.length>0&&cemail.indexOf('@')>0&&cemail.indexOf('.')>0;
-  // Per-field dot visibility — hide when field is valid
+  var emailShapeOk=cemail.length>0&&cemail.indexOf('@')>0&&cemail.indexOf('.')>0;
+  // CUI — checksum + duplicate
+  var cuiErr='';var cuiOk=false;
+  if(cui){
+    var cv=validateCUI(cui);
+    if(!cv.ok){cuiErr=cv.error;}
+    else{
+      var dupCUI=findOfficeByCUI(cui);
+      if(dupCUI){cuiErr='CUI deja folosit — '+(dupCUI.name||'fără nume')+'.';}
+      else{cuiOk=true;}
+    }
+  }
+  // Contact email — duplicate check (format handled by emailShapeOk)
+  var emailErr='';var emailOk=false;
+  if(emailShapeOk){
+    var dupMail=findOfficeByContactEmail(cemail);
+    if(dupMail){emailErr='Email deja folosit — '+(dupMail.name||'fără nume')+'.';}
+    else{emailOk=true;}
+  }
+  // Dot visibility — shown only when field is empty; hidden when present (valid or not)
   document.getElementById('co-dot-name').style.display=name?'none':'inline-block';
   document.getElementById('co-dot-cui').style.display=cui?'none':'inline-block';
   document.getElementById('co-dot-contact-name').style.display=cname?'none':'inline-block';
-  document.getElementById('co-dot-contact-email').style.display=emailOk?'none':'inline-block';
+  document.getElementById('co-dot-contact-email').style.display=cemail?'none':'inline-block';
   document.getElementById('co-dot-plan').style.display=plan?'none':'inline-block';
-  var ok=!!(name&&cui&&cname&&emailOk&&plan);
+  // Inline error visibility — mutually exclusive with dot (field has content but is invalid/duplicate)
+  _setInlineErr('co-err-cui',cuiErr);
+  _setInlineErr('co-err-contact-email',emailErr);
+  // Pane-level dots — show on a sub-tab label when its pane has any unfilled required field or inline error.
+  // Helps admins find where to look when submit stays disabled.
+  var paneDateNeedsAttn = !name || !cuiOk;                 // Date birou pane has Denumire + CUI required
+  var paneContactNeedsAttn = !cname || !emailOk;           // Persoană de contact pane has Nume + Email required
+  var panePlanNeedsAttn = !plan;                           // Plan pane has only Plan abonament
+  document.getElementById('co-tab-dot-date').style.display   = paneDateNeedsAttn    ? 'inline-block' : 'none';
+  document.getElementById('co-tab-dot-contact').style.display= paneContactNeedsAttn ? 'inline-block' : 'none';
+  document.getElementById('co-tab-dot-plan').style.display   = panePlanNeedsAttn    ? 'inline-block' : 'none';
+  var ok=!!(name&&cuiOk&&cname&&emailOk&&plan);
   document.getElementById('co-submit').disabled=!ok||_coSubmitting;
+  document.getElementById('co-submit-rev').disabled=!ok||_coSubmitting;
   return ok;
 }
 function collectOfficePayload(){
@@ -2992,15 +4105,20 @@ function submitOfficeCreation(){
   if(!validateOfficeForm())return;
   _coSubmitting=true;
   var submit=document.getElementById('co-submit');
+  var submitRev=document.getElementById('co-submit-rev');
   submit.disabled=true;
-  submit.textContent='Se creează...';
+  submitRev.disabled=true;
+  submit.innerHTML='<span>Se creează...</span>';
+  submitRev.innerHTML='<span>Se creează...</span>';
   var err=document.getElementById('co-error');err.style.display='none';err.textContent='';
   var payload=collectOfficePayload();
   simulateZapier(payload,function(res){
     if(!res||!res.ok){
       _coSubmitting=false;
-      submit.textContent='Creează birou ⟶';
+      submit.innerHTML='<span>Creează birou</span><span>⟶</span>';
+      submitRev.innerHTML='<span>Confirmă</span><span>⟶</span>';
       submit.disabled=false;
+      submitRev.disabled=false;
       var msg=(res&&res.message)||'Eroare necunoscută — încearcă din nou.';
       err.textContent=msg;
       err.style.display='block';
@@ -3049,9 +4167,18 @@ function submitOfficeCreation(){
 }
 
 document.getElementById('om-create-close').addEventListener('click',closeCreateOffice);
-document.getElementById('co-cancel').addEventListener('click',closeCreateOffice);
 document.getElementById('om-create-overlay').addEventListener('click',closeCreateOffice);
-document.getElementById('co-submit').addEventListener('click',submitOfficeCreation);
+// Configurare → Revizuire: validate all required fields before advancing,
+// then switch main tab to Revizuire and render the read-only summary.
+// The actual office creation happens only when co-submit-rev is clicked.
+function advanceToReview(){
+  if(!validateOfficeForm())return; // re-run to be safe; button may be briefly stale
+  soundSelect();
+  setCoMainTab('review');
+  renderCoReview();
+}
+document.getElementById('co-submit').addEventListener('click',advanceToReview);
+document.getElementById('co-submit-rev').addEventListener('click',submitOfficeCreation);
 document.getElementById('co-plan').addEventListener('change',validateOfficeForm);
 Array.prototype.forEach.call(document.querySelectorAll('#om-create .co-inp'),function(inp){
   inp.addEventListener('input',validateOfficeForm);
@@ -3070,7 +4197,7 @@ document.getElementById('upload-cancel').addEventListener('click',closeUploadMod
 document.getElementById('upload-close').addEventListener('click',closeUploadModal);
 document.getElementById('upload-overlay').addEventListener('click',closeUploadModal);
 
-document.querySelectorAll('.om-tab').forEach(function(tab){
+document.querySelectorAll('.om-tab[data-tab]').forEach(function(tab){
   tab.addEventListener('click',function(){activateTab(this.dataset.tab);soundSelect();});
 });
 document.querySelectorAll('.filter-tag[data-status]').forEach(function(btn){
@@ -3093,9 +4220,9 @@ var _sa=document.getElementById('search-a');if(_sa)_sa.addEventListener('input',
 var _sb=document.getElementById('search-b');if(_sb)_sb.addEventListener('input',renderB);
 document.addEventListener('click',function(e){
   var or=e.target.closest('.list-row-office');
-  if(or&&or.dataset.oid){soundSelect();openOffice(or.dataset.oid);}
-  var cr=e.target.closest('.list-row-shared[data-id]');
-  if(cr&&cr.dataset.id){soundSelect();openCaseModal(cr.dataset.id);}
+  if(or&&or.dataset.oid){or.scrollIntoView({block:'center',behavior:'smooth'});soundSelect();openOffice(or.dataset.oid);}
+  var cr=e.target.closest('.list-row-shared[data-id], .dos-row[data-id]');
+  if(cr&&cr.dataset.id){cr.scrollIntoView({block:'center',behavior:'smooth'});soundSelect();openCaseModal(cr.dataset.id);}
 });
 
 // ══ BOOT ════════════════════════════════════════════════════════════
