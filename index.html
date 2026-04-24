@@ -132,6 +132,16 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .search-inp::placeholder{color:var(--grey2);}
 .search-inp:focus{color:var(--ink);}
 
+/* ── SEARCH CHIPS — popover that appears below the search input on focus.
+   Offers tag shortcuts (status: suspendat, etc.) without occupying permanent
+   vertical space. Clicking a chip fills the input and re-runs the filter. */
+.search-wrap{position:relative;display:inline-flex;align-items:baseline;margin-left:16px;}
+.search-chips{position:absolute;top:calc(100% + 8px);left:0;display:none;align-items:center;gap:8px;background:var(--white);padding:10px 12px;border:1px solid var(--rule);white-space:nowrap;z-index:20;}
+.search-wrap.show-chips .search-chips{display:inline-flex;}
+.search-chip-hint{font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--grey2);text-transform:uppercase;margin-right:4px;}
+.search-chip{font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase;padding:4px 10px;border:1px solid var(--rule);background:none;color:var(--grey);cursor:pointer;transition:all .15s;line-height:1.2;}
+.search-chip:hover{color:var(--ink);border-color:var(--ink);}
+
 /* ── LIST ROWS (v48 pattern: 6-col grid) ── */
 /* ── LIST ROWS — exact v48 list-hdr-shared / list-row-shared ── */
 .list-hdr-shared{display:grid;grid-template-columns:50px 240px 220px 1fr 240px 160px;padding:12px 20px 14px;background:transparent;border-bottom:2px solid var(--ink);gap:24px;}
@@ -622,7 +632,7 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
    Rollback: revert renderCmAudit() + renderCmComIstoric() markup + drop these
    rules. Snapshots: notariat_admin_v27_pre_audit_2col.html (AUDIT) +
    notariat_admin_v27_pre_istoric_2col.html (COMUNICARE/Istoric). */
-.cm-2col-row{display:grid;grid-template-columns:220px 1fr;gap:36px;align-items:start;padding:16px 0;border-bottom:1px solid var(--rule);}
+.cm-2col-row{display:grid;grid-template-columns:auto 1fr;gap:36px;align-items:start;padding:16px 0;border-bottom:1px solid var(--rule);}
 .cm-2col-row:first-child{padding-top:0;}
 .cm-2col-row:last-child{border-bottom:none;}
 .cm-2col-cell{display:flex;flex-direction:column;gap:4px;min-width:0;}
@@ -848,7 +858,13 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
     <button class="filter-tag" data-sort="coverage">Acoperire ↑</button>
     <button class="filter-tag" data-sort="dosare">Dosare ↓</button>
     <button class="filter-tag" data-sort="avertisment">! Avertisment</button>
-    <input class="search-inp" id="search-a" placeholder="Caută birou/oraș..." autocomplete="off" style="margin-left:16px;">
+    <div class="search-wrap">
+      <input class="search-inp" id="search-a" placeholder="Caută birou, oraș, status..." autocomplete="off">
+      <div class="search-chips" id="search-chips-a">
+        <button class="search-chip" type="button" data-chip="status: suspendat">Suspendat</button>
+        <button class="search-chip" type="button" data-chip="status: dezactivat">Dezactivat</button>
+      </div>
+    </div>
   </div>
   <div id="filter-row-b" class="filter-group" style="display:none;">
     <button class="filter-tag active" data-status="toate">Toate</button>
@@ -856,7 +872,13 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
     <button class="filter-tag" data-status="in-lucru">Active</button>
     <button class="filter-tag" data-status="programat">Programate</button>
     <button class="filter-tag" data-status="urgent">Urgențe</button>
-    <input class="search-inp" id="search-b" placeholder="Caută dosar..." autocomplete="off" style="margin-left:16px;">
+    <div class="search-wrap">
+      <input class="search-inp" id="search-b" placeholder="Caută act, client, status..." autocomplete="off">
+      <div class="search-chips" id="search-chips-b">
+        <button class="search-chip" type="button" data-chip="status: anulat">Anulat</button>
+        <button class="search-chip" type="button" data-chip="status: finalizat">Finalizat</button>
+      </div>
+    </div>
   </div>
   <div class="view-switcher">
     <button class="view-btn active" id="vbtn-a" onclick="switchView('a')">
@@ -1198,52 +1220,32 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
       </div>
     </div>
 
-    <!-- Tab: Dezactivare — two graduated off-boarding actions.
-         SUSPENDARE (reversible, admin-toggleable, Stripe pause_collection).
-         DEZACTIVARE (soft-delete + Stripe cancel_at_period_end, support to reverse).
+    <!-- Tab: Dezactivare — single Status sub-tab with a 3-button status-sel.
+         Mirrors DOSARE / INTERVENȚIE / STATUS structure: status-sel + Motiv + Confirm.
+         Actions: Suspendă (pause_collection), Dezactivează (cancel_at_period_end), Reactivează.
+         Current state pre-selected and disabled; other two remain pickable.
          See amendment: SENT_amendment_office_deactivation.md for schema + Stripe wiring. -->
     <div class="om-panel" id="tab-dezactivare">
-      <!-- Suspendare sub-pane header -->
-      <div class="lib-tabs-row" id="om-deact-tabs-suspend">
+      <div class="lib-tabs-row">
         <div class="lib-tabs">
-          <button class="lib-tab active" id="om-deact-tab-suspend" type="button" onclick="switchDeactTab('suspend')">Suspendare</button>
-          <button class="lib-tab" id="om-deact-tab-deact" type="button" onclick="switchDeactTab('deact')">Dezactivare</button>
+          <button class="lib-tab active" type="button">Status</button>
         </div>
-        <button class="lib-add-btn" type="button" id="om-suspend-btn" onclick="suspendOffice()"><span>⏸</span><span>Suspendă</span></button>
-      </div>
-      <!-- Dezactivare sub-pane header (mirrors suspend header; toggled by switchDeactTab) -->
-      <div class="lib-tabs-row" id="om-deact-tabs-deact" style="display:none;">
-        <div class="lib-tabs">
-          <button class="lib-tab" type="button" onclick="switchDeactTab('suspend')">Suspendare</button>
-          <button class="lib-tab active" type="button" onclick="switchDeactTab('deact')">Dezactivare</button>
-        </div>
-        <button class="lib-add-btn lib-add-btn-danger" type="button" id="om-deactivate-btn" onclick="deactivateOffice()"><span>—</span><span>Dezactivează</span></button>
+        <button class="lib-add-btn" type="button" id="om-life-confirm-btn" onclick="lifeCommit()"><span>Confirmă</span><span>⟶</span></button>
       </div>
       <div class="lib-body">
-        <!-- Pane: Suspendare — reversible pause, 18 words -->
-        <div id="om-deact-pane-suspend" class="lib-pane">
-          <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner">
-            <span class="fs-lbl">Ce se întâmplă</span>
-            <span class="fs-val mono">Abonament pus pe pauză. Dosarele rămân read-only. Poți reactiva oricând din acest tab.</span>
-          </div></div>
-          <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner">
-            <span class="fs-lbl">Status abonament după suspendare</span>
-            <span class="fs-val mono" id="om-suspend-status-preview">—</span>
-          </div></div>
+        <div class="iv-pane active" id="om-life-pane">
+          <div class="iv-form-inner">
+            <div class="iv-ctx-line">Status curent: <span id="om-life-cur-tag" class="tag tag-activ">—</span></div>
+            <div class="status-sel" id="om-life-sel">
+              <button class="status-sel-btn" data-life="suspended" onclick="lifePick('suspended',this)">‖ Suspendă</button>
+              <button class="status-sel-btn" data-life="dezactivat" onclick="lifePick('dezactivat',this)">— Dezactivează</button>
+              <button class="status-sel-btn" data-life="active" onclick="lifePick('active',this)">Reactivează</button>
+            </div>
+            <span class="iv-form-lbl" style="margin-top:16px;">Motiv</span>
+            <textarea class="iv-form-textarea" id="om-life-reason" placeholder="Ex: birou nu mai răspunde de 48h, suspendăm până revine online."></textarea>
+            <span class="iv-form-err" id="om-life-err">Motivul este obligatoriu</span>
+          </div>
         </div>
-        <!-- Pane: Dezactivare — archive + cancel, 19 words -->
-        <div id="om-deact-pane-deact" class="lib-pane" style="display:none;">
-          <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner">
-            <span class="fs-lbl">Ce se întâmplă</span>
-            <span class="fs-val mono">Birou arhivat. Abonament anulat la final de perioadă. Dosarele rămân read-only. Reactivare prin Anthropic.</span>
-          </div></div>
-          <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner">
-            <span class="fs-lbl">Status abonament după dezactivare</span>
-            <span class="fs-val mono" id="om-deact-status-preview">—</span>
-          </div></div>
-        </div>
-      </div>
-    </div>
       </div>
     </div>
 
@@ -1479,8 +1481,10 @@ var DB_LIVE = false; // true once Supabase responds
 var SEED_OFFICES = [
   {id:'seed-1',name:'Cabinet Notarial Ionescu', city:'Timișoara',  notary:'Ana Golana',   email:'ionescu@notariat.co', phone:'0721 111 222',status:'activ',   since:'Ian 2026',address:'Str. Vasile Alecsandri nr. 1',cui:'RO45123456',website:'https://ionescu-notariat.ro',contact_name:'Ana Golana',     contact_role:'notar titular',contact_email:'ana.golana@ionescu-notariat.ro',contact_phone:'0721 111 223',subscription_status:'active', plan:'standard',billing_cycle:'monthly',current_period_end:'12 mai 2026',trial_ends_at:null},
   {id:'seed-2',name:'Cabinet Notarial Popescu', city:'București',  notary:'Dan Popescu',  email:'popescu@notariat.co', phone:'0722 333 444',status:'activ',   since:'Feb 2026',address:'Bd. Unirii nr. 45',           cui:'RO45234567',website:'https://popescu-not.ro',      contact_name:'Dan Popescu',    contact_role:'notar titular',contact_email:'dan.popescu@popescu-not.ro',    contact_phone:'0722 333 445',subscription_status:'active', plan:'pro',     billing_cycle:'yearly', current_period_end:'03 feb 2027',trial_ends_at:null},
-  {id:'seed-3',name:'Cabinet Notarial Moldovan',city:'Cluj-Napoca',notary:'Ioana Moldovan',email:'moldovan@notariat.co',phone:'0733 555 666',status:'avertisment',since:'Mar 2026',address:'Str. Republicii nr. 12',      cui:'RO45345678',website:'',                            contact_name:'Ioana Moldovan', contact_role:'notar titular',contact_email:'ioana@moldovan-notariat.ro',    contact_phone:'0733 555 667',subscription_status:'past_due',plan:'starter', billing_cycle:'monthly',current_period_end:'28 apr 2026',trial_ends_at:null},
-  {id:'seed-4',name:'Cabinet Notarial Ardelean',city:'Timișoara',  notary:'Radu Ardelean',email:'ardelean@notariat.co',phone:'0744 777 888',status:'activ',   since:'Apr 2026',address:'Bd. Revoluției nr. 23',       cui:'RO45456789',website:'https://ardelean-notariat.ro',contact_name:'Radu Ardelean',  contact_role:'notar titular',contact_email:'radu@ardelean-notariat.ro',     contact_phone:'0744 777 889',subscription_status:'trial',  plan:'standard',billing_cycle:'monthly',current_period_end:'05 mai 2026',trial_ends_at:'28 apr 2026'}
+  {id:'seed-3',name:'Cabinet Notarial Moldovan',city:'Cluj-Napoca',notary:'Ioana Moldovan',email:'moldovan@notariat.co',phone:'0733 555 666',status:'avertisment',since:'Mar 2026',address:'Str. Republicii nr. 12',      cui:'RO45345678',website:'',                            contact_name:'Ioana Moldovan', contact_role:'notar titular',contact_email:'ioana@moldovan-notariat.ro',    contact_phone:'0733 555 667',subscription_status:'past_due',plan:'starter', billing_cycle:'monthly',current_period_end:'28 apr 2026',trial_ends_at:null,lifecycle_status:'suspended'},
+  {id:'seed-4',name:'Cabinet Notarial Ardelean',city:'Timișoara',  notary:'Radu Ardelean',email:'ardelean@notariat.co',phone:'0744 777 888',status:'activ',   since:'Apr 2026',address:'Bd. Revoluției nr. 23',       cui:'RO45456789',website:'https://ardelean-notariat.ro',contact_name:'Radu Ardelean',  contact_role:'notar titular',contact_email:'radu@ardelean-notariat.ro',     contact_phone:'0744 777 889',subscription_status:'trial',  plan:'standard',billing_cycle:'monthly',current_period_end:'05 mai 2026',trial_ends_at:'28 apr 2026'},
+  {id:'seed-5',name:'Cabinet Notarial Stoica',  city:'Iași',       notary:'Mihai Stoica',  email:'stoica@notariat.co',  phone:'0755 000 111',status:'activ',   since:'Dec 2025',address:'Str. Păcurari nr. 8',         cui:'RO45567890',website:'',                            contact_name:'Mihai Stoica',   contact_role:'notar titular',contact_email:'mihai@stoica-notariat.ro',      contact_phone:'0755 000 112',subscription_status:'canceled',plan:'standard',billing_cycle:'monthly',current_period_end:'15 apr 2026',trial_ends_at:null,lifecycle_status:'dezactivat'},
+  {id:'seed-6',name:'Cabinet Notarial Vasilescu',city:'Brașov',     notary:'Elena Vasilescu',email:'vasilescu@notariat.co',phone:'0766 222 333',status:'activ',   since:'Feb 2026',address:'Str. Republicii nr. 34',      cui:'RO45678901',website:'',                            contact_name:'Elena Vasilescu',contact_role:'notar titular',contact_email:'elena@vasilescu-notariat.ro',   contact_phone:'0766 222 334',subscription_status:'active',  plan:'standard',billing_cycle:'monthly',current_period_end:'08 mai 2026',trial_ends_at:null}
 ];
 var SEED_CASES = [
   {id:'c1', oid:'seed-1',type:'procuri',      act:'Procură',       subtype:'Vânzare imobil',       ref:'NOT-2026-0041',client:'Popescu Maria-Elena',status:'nou',      urgent:true, pref:'17 apr, 14:00',created:'10 apr'},
@@ -1500,7 +1504,9 @@ var SEED_CASES = [
   {id:'c15',oid:'seed-3',type:'declaratii',   act:'Declarație',    subtype:'Pierdere act',         ref:'NOT-2026-0037',client:'Muresan Dana',       status:'in-lucru', urgent:false,pref:'28 apr, 10:00',created:'7 apr'},
   {id:'c16',oid:'seed-4',type:'procuri',      act:'Procură',       subtype:'Vânzare imobil',       ref:'NOT-2026-0046',client:'Ardelean Stefania',  status:'nou',      urgent:false,pref:'21 apr, 13:00',created:'12 apr'},
   {id:'c17',oid:'seed-4',type:'declaratii',   act:'Declarație',    subtype:'Luare în spațiu',      ref:'NOT-2026-0047',client:'Neagu Victor',       status:'in-lucru', urgent:true, pref:'16 apr, 15:30',created:'12 apr'},
-  {id:'c18',oid:'seed-4',type:'legalizari',   act:'Legalizare',    subtype:'Copie',                ref:'NOT-2026-0048',client:'Oprea Liliana',      status:'programat',urgent:false,pref:'22 apr, 09:30',created:'11 apr'}
+  {id:'c18',oid:'seed-4',type:'legalizari',   act:'Legalizare',    subtype:'Copie',                ref:'NOT-2026-0048',client:'Oprea Liliana',      status:'programat',urgent:false,pref:'22 apr, 09:30',created:'11 apr'},
+  {id:'c19',oid:'seed-1',type:'declaratii',   act:'Declarație',    subtype:'De notorietate',       ref:'NOT-2026-0028',client:'Pop Laura',          status:'anulat',   urgent:false,pref:'15 apr, 10:00',created:'1 apr'},
+  {id:'c20',oid:'seed-2',type:'procuri',      act:'Procură',       subtype:'Generală',             ref:'NOT-2026-0029',client:'Visan Andrei',       status:'anulat',   urgent:false,pref:'12 apr, 14:00',created:'2 apr'}
 ];
 var SEED_TEMPLATES = [
   {id:'st1',office_id:'seed-1',act_type:'procuri',   subtype:'Vânzare imobil',      name:'Procură — Vânzare imobil',       status:'active',uploaded_at:'15 apr 2026',placeholders:['MANDANT_NAME','MANDANT_CNP','MANDATAR_NAME','CASE_REF'],storage_path:'seed-1/procuri/vanzare-imobil.docx'},
@@ -1511,15 +1517,7 @@ var SEED_TEMPLATES = [
   // Historical seeds — demonstrate Istoric view (superseded/archived)
   {id:'st6',office_id:'seed-1',act_type:'procuri',   subtype:'Vânzare imobil',      name:'Procură — Vânzare imobil (v1)',  status:'superseded',uploaded_at:'28 mar 2026',placeholders:['MANDANT_NAME','MANDATAR_NAME','CASE_REF'],storage_path:'seed-1/procuri/vanzare-imobil-v1.docx'},
   {id:'st7',office_id:'seed-2',act_type:'declaratii',subtype:'De notorietate',      name:'Declarație de notorietate',      status:'archived',  uploaded_at:'12 feb 2026',placeholders:['DECLARANT_NAME','DECLARANT_CNP','CASE_REF'],storage_path:'seed-2/declaratii/notorietate.docx'},
-  {id:'st8',office_id:'seed-2',act_type:'procuri',   subtype:'Generală',            name:'Procură Generală (v1)',          status:'superseded',uploaded_at:'3 mar 2026', placeholders:['MANDANT_NAME','MANDATAR_NAME','CASE_REF'],storage_path:'seed-2/procuri/generala-v1.docx'},
-  // ── DEMO SEEDS (throwaway, seed-1 only, revert before ship) ───────────────
-  // Purpose: let admin visually inspect how ACTIVE renders with multiple acts
-  // per category + multiple categories. Delete this block (st_demo_*) to revert.
-  {id:'st_demo_1',office_id:'seed-1',act_type:'procuri',    subtype:'Cumpărare imobil',         name:'Procură — Cumpărare imobil',            status:'active',uploaded_at:'10 apr 2026',placeholders:['MANDANT_NAME','MANDANT_CNP','MANDATAR_NAME','CASE_REF'],storage_path:'seed-1/procuri/cumparare-imobil.docx'},
-  {id:'st_demo_2',office_id:'seed-1',act_type:'procuri',    subtype:'Generală',                 name:'Procură Generală',                       status:'active',uploaded_at:'05 apr 2026',placeholders:['MANDANT_NAME','MANDANT_CNP','MANDATAR_NAME','CASE_REF'],storage_path:'seed-1/procuri/generala.docx'},
-  {id:'st_demo_3',office_id:'seed-1',act_type:'declaratii', subtype:'Plecare minor în străinătate',name:'Declarație — Plecare minor',           status:'active',uploaded_at:'12 apr 2026',placeholders:['DECLARANT_NAME','DECLARANT_CNP','MINOR_NAME','CASE_REF'],storage_path:'seed-1/declaratii/plecare-minor.docx'},
-  {id:'st_demo_4',office_id:'seed-1',act_type:'legalizari', subtype:'Copie',                     name:'Legalizare Copie',                       status:'active',uploaded_at:'08 apr 2026',placeholders:['DOC_TYPE','CASE_REF'],storage_path:'seed-1/legalizari/copie.docx'},
-  {id:'st_demo_5',office_id:'seed-1',act_type:'imputerniciri',subtype:'Bancară',                 name:'Împuternicire Bancară',                  status:'active',uploaded_at:'02 apr 2026',placeholders:['MANDANT_NAME','MANDATAR_NAME','BANK_NAME','CASE_REF'],storage_path:'seed-1/imputerniciri/bancara.docx'}
+  {id:'st8',office_id:'seed-2',act_type:'procuri',   subtype:'Generală',            name:'Procură Generală (v1)',          status:'superseded',uploaded_at:'3 mar 2026', placeholders:['MANDANT_NAME','MANDATAR_NAME','CASE_REF'],storage_path:'seed-2/procuri/generala-v1.docx'}
 ];
 // Raw intake seed (UI-only mock; schema matches finalized office_raw_intake — see doc_generator_raw_intake_coordination.md)
 var SEED_RAW_INTAKE = [
@@ -1844,9 +1842,35 @@ function hasBillingIssue(o){
 }
 
 // ══ VIEW A — BIROURI ════════════════════════════════════════════════
+// Search-driven lifecycle filter: query 'status: suspendat' / 'status: dezactivat'
+// surfaces the matching bucket. Any other query defaults to the Active bucket
+// (suspended + dezactivat offices are hidden unless explicitly searched for).
+function parseStatusQuery(q){
+  var m=q.match(/^status\s*:\s*(\S+)/);
+  return m?m[1]:null;
+}
+// Romanian UI labels mapped to the lifecycle_status enum.
+var LIFECYCLE_SEARCH_MAP={
+  suspendat:'suspended',suspendate:'suspended',
+  dezactivat:'dezactivat',dezactivate:'dezactivat',
+  activ:'active',active:'active'
+};
+var CASE_STATUS_SEARCH_MAP={
+  anulat:'anulat',anulate:'anulat',
+  finalizat:'finalizat',finalizate:'finalizat'
+};
 function renderA(){
   var q=(function(){var el=document.getElementById('search-a');return el?(el.value||'').toLowerCase().trim():'';}());
+  var statusTok=parseStatusQuery(q);
+  var lifecycleFilter=statusTok?(LIFECYCLE_SEARCH_MAP[statusTok]||null):'active';
+  // Strip the 'status: X' prefix so any trailing text runs as a normal search.
+  var textQ=statusTok?q.replace(/^status\s*:\s*\S+\s*/,'').trim():q;
   var list=OFFICES.filter(function(o){
+    // Lifecycle gate first. When user searched 'status: X', show only that bucket;
+    // otherwise default to Active (hide suspended/dezactivat).
+    if(lifecycleFilter){
+      if((o.lifecycle_status||'active')!==lifecycleFilter) return false;
+    }
     if(sortMode==='avertisment') return o.status==='avertisment';
     if(sortMode==='abonament') return hasBillingIssue(o);
     if(exploratorbOfficeId&&o.id!==exploratorbOfficeId) return false;
@@ -1855,7 +1879,7 @@ function renderA(){
       var hasMatch=CASES.some(function(c){return c.oid===o.id&&c.type===adminActFilter;});
       if(!hasMatch) return false;
     }
-    if(q&&o.name.toLowerCase().indexOf(q)<0&&o.city.toLowerCase().indexOf(q)<0) return false;
+    if(textQ&&o.name.toLowerCase().indexOf(textQ)<0&&o.city.toLowerCase().indexOf(textQ)<0) return false;
     return true;
   });
   if(sortMode==='name') list.sort(function(a,b){return a.name.localeCompare(b.name);});
@@ -1895,7 +1919,11 @@ function renderA(){
     html+='<div class="l-client">'+h(o.city)+'</div>';
     html+='<div class="o-progress"><div class="o-prog-bar"><div class="o-prog-fill" style="width:'+pct+'%"></div></div><span class="o-prog-count">'+cov.covered+' / '+cov.target+'</span></div>';
     html+='<div class="l-date"><span class="l-date-main">'+cs.length+'</span><span class="l-date-slot"> dosare</span></div>';
-    html+='<div class="l-status">'+officeStatusTag(o.status)+'</div>';
+    var lcs=o.lifecycle_status;
+    var statusCell=(lcs==='suspended')
+      ? '<span class="tag tag-avertisment">Suspendat</span>'
+      : (lcs==='dezactivat' ? '<span class="tag tag-arhivat">Dezactivat</span>' : officeStatusTag(o.status));
+    html+='<div class="l-status">'+statusCell+'</div>';
     html+='</div>';
   });
   document.getElementById('list-a').innerHTML=html;
@@ -1904,20 +1932,45 @@ function renderA(){
 }
 
 // ══ VIEW B — DOSARE ══════════════════════════════════════════════════
+// Same search-chip pattern as BIROURI: 'status: anulat' / 'status: finalizat'
+// surfaces the matching bucket. Otherwise the Active lifecycle is the default
+// (canceled + finalized cases hidden unless explicitly searched).
 var filterStatus='toate';
+function caseLifecycleBucket(c){
+  if(c.status==='anulat') return 'canceled';
+  if(c.status==='finalizat') return 'finalized';
+  return 'active';
+}
 function renderB(){
   var q=(function(){var el=document.getElementById('search-b');return el?(el.value||'').toLowerCase().trim():'';}());
+  var statusTok=parseStatusQuery(q);
+  // Map the searched Romanian status keyword to a lifecycle bucket.
+  //   'status: anulat' -> canceled bucket
+  //   'status: finalizat' -> finalized bucket
+  //   anything else (or no token) -> default 'active' bucket
+  //   unknown token -> fall through (lifecycleFilter=null) so text search covers all cases
+  var lifecycleFilter='active';
+  if(statusTok){
+    var tokMapped=CASE_STATUS_SEARCH_MAP[statusTok];
+    if(tokMapped==='anulat') lifecycleFilter='canceled';
+    else if(tokMapped==='finalizat') lifecycleFilter='finalized';
+    else lifecycleFilter=null;
+  }
+  var textQ=statusTok?q.replace(/^status\s*:\s*\S+\s*/,'').trim():q;
   var list=CASES.filter(function(c){
-    // status/urgent filter
-    if(filterStatus==='urgent'&&!c.urgent) return false;
-    if(filterStatus!=='toate'&&filterStatus!=='urgent'&&c.status!==filterStatus) return false;
+    if(lifecycleFilter&&caseLifecycleBucket(c)!==lifecycleFilter) return false;
+    // status/urgent filter — only applies inside Active bucket (or when no lifecycle filter).
+    if(!lifecycleFilter||lifecycleFilter==='active'){
+      if(filterStatus==='urgent'&&!c.urgent) return false;
+      if(filterStatus!=='toate'&&filterStatus!=='urgent'&&c.status!==filterStatus) return false;
+    }
     // act-type filter — uses c.type (canonical key)
     if(adminActFilter!=='toate'&&c.type!==adminActFilter) return false;
     // office filter from explorator
     if(exploratorbOfficeId&&c.oid!==exploratorbOfficeId) return false;
     if(exploratorbCity){var of=OM[c.oid];if(!of||of.city!==exploratorbCity) return false;}
     // text search
-    if(q&&c.client.toLowerCase().indexOf(q)<0&&c.ref.toLowerCase().indexOf(q)<0&&c.act.toLowerCase().indexOf(q)<0) return false;
+    if(textQ&&c.client.toLowerCase().indexOf(textQ)<0&&c.ref.toLowerCase().indexOf(textQ)<0&&c.act.toLowerCase().indexOf(textQ)<0) return false;
     return true;
   });
   if(!list.length){
@@ -1933,7 +1986,7 @@ function renderB(){
   }
   var html='';
   list.forEach(function(c,i){
-    var statusLabel=c.status==='nou'?'Nou':c.status==='in-lucru'?'activ':'programat';
+    var statusLabel=c.status==='nou'?'Nou':(c.status==='in-lucru'?'activ':(c.status==='programat'?'programat':(c.status==='anulat'?'Anulat':(c.status==='finalizat'?'Finalizat':c.status))));
     var urg=c.urgent?'<span class="urgency-dot"></span>':'';
     var flag=c.urgent?' <span class="l-flag">! Urgent</span>':'';
     // item 11: no urgent-row red border — just normal list-row-shared
@@ -1980,7 +2033,11 @@ function openOffice(oid){
   var tpls=TEMPLATES.filter(function(t){return t.office_id===oid&&t.status==='active';});
   var cov=coverageFor(oid);
   document.getElementById('om-title').textContent=o.name;
-  document.getElementById('om-status-tag').innerHTML=officeStatusTag(o.status);
+  var omHdrLcs=o.lifecycle_status;
+  var omHdrTag=(omHdrLcs==='suspended')
+    ? '<span class="tag tag-avertisment">Suspendat</span>'
+    : (omHdrLcs==='dezactivat' ? '<span class="tag tag-arhivat">Dezactivat</span>' : officeStatusTag(o.status));
+  document.getElementById('om-status-tag').innerHTML=omHdrTag;
   document.getElementById('of-name').textContent=o.name;
   document.getElementById('of-cui').textContent=o.cui||'—';
   document.getElementById('of-website').textContent=o.website||'—';
@@ -2022,7 +2079,7 @@ function openOffice(oid){
   });
   renderLibrary(oid);
   renderOnboarding(oid);
-  renderDeactivatePreview();
+  renderLifePane();
   // Reset DETALII / DOSARE / ONBOARDING subtabs to their first pane (silent)
   resetOmSubtabs();
   document.getElementById('om-overlay').classList.add('open');
@@ -3184,43 +3241,73 @@ function openOfficeMaps(){
   window.open('https://www.google.com/maps/search/?api=1&query='+q,'_blank','noopener');
 }
 
-// Deactivate / Suspend — two graduated off-boarding actions in the
-// BIROURI > Dezactivare tab. Both go through doc-generator chat / contract:
-//   SENT_amendment_office_deactivation.md
-// SUSPENDARE: reversible pause, Stripe pause_collection, admin can resume.
-// DEZACTIVARE: archive + cancel_at_period_end, reactivation via support.
-function switchDeactTab(which){
-  soundTabSwitch();
-  var isSuspend=(which==='suspend');
-  document.getElementById('om-deact-tabs-suspend').style.display=isSuspend?'flex':'none';
-  document.getElementById('om-deact-tabs-deact').style.display=isSuspend?'none':'flex';
-  document.getElementById('om-deact-pane-suspend').style.display=isSuspend?'block':'none';
-  document.getElementById('om-deact-pane-deact').style.display=isSuspend?'none':'block';
+// BIROURI > DEZACTIVARE (Status sub-tab) — single-tab lifecycle rollback.
+// Mirrors DOSARE / INTERVENȚIE / STATUS: status-sel + Motiv + Confirm.
+// Three targets: suspended | dezactivat | active (Reactivează).
+// Current state pre-selected and disabled; the other two remain pickable.
+// Stripe mapping (per amendment B): active -> pause_collection.resume()
+//   suspended -> pause_collection.behavior='void'; dezactivat -> cancel_at_period_end:true.
+var lifePicked=null;
+function lifeCurrent(o){return (o&&o.lifecycle_status)||'active';}
+function LIFE_LABEL(s){
+  if(s==='active')return 'Activ';
+  if(s==='suspended')return 'Suspendat';
+  if(s==='dezactivat')return 'Dezactivat';
+  return s||'—';
 }
-function suspendOffice(){
+function renderLifePane(){
   var o=OM[currentOfficeId];if(!o)return;
-  if(!confirm('Suspendă '+(o.name||'biroul')+'?\n\nAbonamentul Stripe va fi pus pe pauză și nu se vor mai emite facturi până la reactivare. Dosarele existente rămân accesibile read-only.'))return;
-  if(window.DB_LIVE){showToast('Suspendarea așteaptă backend-ul');return;}
+  var cur=lifeCurrent(o);
+  // Update Status curent tag.
+  var tagEl=document.getElementById('om-life-cur-tag');
+  if(tagEl){
+    tagEl.textContent=LIFE_LABEL(cur);
+    tagEl.className='tag '+(cur==='active'?'tag-activ':(cur==='suspended'?'tag-avertisment':'tag-arhivat'));
+  }
+  // Reset picker: disable the current-state button, pre-select it visually so the
+  // admin sees where the office stands today. Enable the other two.
+  lifePicked=null;
+  document.querySelectorAll('#om-life-sel .status-sel-btn').forEach(function(b){
+    var isCur=(b.dataset.life===cur);
+    b.disabled=isCur;
+    b.classList.toggle('sel-active',isCur);
+  });
+  // Clear motiv + error state on re-open.
+  var r=document.getElementById('om-life-reason');if(r)r.value='';
+  var e=document.getElementById('om-life-err');if(e)e.classList.remove('show');
+}
+function lifePick(s,btn){
+  if(btn&&btn.disabled)return;
+  soundSelect();
+  lifePicked=s;
+  document.querySelectorAll('#om-life-sel .status-sel-btn').forEach(function(b){
+    b.classList.toggle('sel-active',b.dataset.life===s);
+  });
+}
+function lifeCommit(){
+  var o=OM[currentOfficeId];if(!o){soundErr();return;}
+  var cur=lifeCurrent(o);
+  var errEl=document.getElementById('om-life-err');
+  if(errEl)errEl.classList.remove('show');
+  if(!lifePicked||lifePicked===cur){
+    if(errEl){errEl.textContent='Alege un status diferit';errEl.classList.add('show');}
+    soundErr();return;
+  }
+  var reason=document.getElementById('om-life-reason').value.trim();
+  if(!reason){
+    if(errEl){errEl.textContent='Motivul este obligatoriu';errEl.classList.add('show');}
+    soundErr();return;
+  }
+  // TODO: when office_lifecycle_log + RPCs ship (amendment B), route through Supabase.
+  if(window.DB_LIVE){showToast('Acțiunea așteaptă backend-ul');return;}
+  o.lifecycle_status=lifePicked==='active'?null:lifePicked;
   soundFinalizat();
-  showToast('Suspendat: '+o.name+' · fără facturare până la reactivare');
+  var action=lifePicked==='suspended'?'Suspendat'
+    :(lifePicked==='dezactivat'?'Dezactivat':'Reactivat');
+  showToast(action+': '+o.name);
+  renderLifePane();
+  renderA();
   if(typeof closeOffice==='function')closeOffice();
-}
-function deactivateOffice(){
-  var o=OM[currentOfficeId];if(!o)return;
-  if(!confirm('Dezactivează '+(o.name||'biroul')+'?\n\nBiroul va fi arhivat și abonamentul Stripe va fi anulat la sfârșitul perioadei curente. Acțiunea este reversibilă prin contactarea Anthropic.'))return;
-  if(window.DB_LIVE){showToast('Dezactivarea așteaptă backend-ul');return;}
-  soundFinalizat();
-  showToast('Arhivat: '+o.name+' · abonament anulat la finalul perioadei');
-  if(typeof closeOffice==='function')closeOffice();
-}
-// Populate both status previews when the office modal opens.
-function renderDeactivatePreview(){
-  var o=OM[currentOfficeId];if(!o)return;
-  var cycleEnd=o.current_period_end||'sfârșit perioadă';
-  var deactEl=document.getElementById('om-deact-status-preview');
-  if(deactEl)deactEl.textContent='canceled · activ până la '+cycleEnd;
-  var suspEl=document.getElementById('om-suspend-status-preview');
-  if(suspEl)suspEl.textContent='paused · fără facturare';
 }
 
 function openOfficeMail(which){
@@ -3485,6 +3572,7 @@ function setDosareHeight(){
   var MAX_ROWS=4;
   var visible=Math.min(Math.max(rows,MIN_ROWS),MAX_ROWS);
   scroll.style.maxHeight=(visible*ROW_H)+'px';
+  scroll.style.minHeight=(MIN_ROWS*ROW_H)+'px';
   scroll.style.overflowY=rows>MAX_ROWS?'auto':'visible';
 }
 
@@ -3497,6 +3585,9 @@ function setBirouriHeight(){
   var MAX_ROWS=4;
   var visible=Math.min(Math.max(rows,MIN_ROWS),MAX_ROWS);
   scroll.style.maxHeight=(visible*ROW_H)+'px';
+  // Enforce same minimum height as DOSARE so BIROURI doesn't shrink below 4 rows
+  // when the active bucket contains fewer than 4 offices.
+  scroll.style.minHeight=(MIN_ROWS*ROW_H)+'px';
   scroll.style.overflowY=rows>MAX_ROWS?'auto':'visible';
 }
 
@@ -3800,9 +3891,10 @@ function cmArCommit(){
 }
 
 // ══ COMUNICARE — ISTORIC (seed visualization; backend wires at Phase 4) ═════════
-// Channel labels: email | sms | phone | in_person (4 locked values)
-// Direction labels: inbound | outbound | internal (3 locked values)
-var CHANNEL_LABELS={email:'Email',sms:'SMS',phone:'Telefon',in_person:'În persoană'};
+// April-23 locked values (see §6 in bootstrap / admin_chat_enum_drift_flag.md):
+//   channel (4): email | phone | sms | internal_note     (NOT in_person)
+//   direction (3): inbound | outbound | internal
+var CHANNEL_LABELS={email:'Email',phone:'Telefon',sms:'SMS',internal_note:'Notă internă'};
 var DIRECTION_LABELS={inbound:'↙ Primit',outbound:'↗ Trimis',internal:'↔ Intern'};
 // Per-case seed: short synthetic log to show the visual pattern. Keyed by case id.
 // When DB_LIVE, this is replaced by SELECT FROM case_communications WHERE case_id=…
@@ -3813,7 +3905,7 @@ function seedComIstoric(caseId){
       {at:'10 apr, 11:02',direction:'outbound',channel:'email',   actor:'Sistem (automat)',   summary:'Confirmare primire · link pentru încărcare documente trimis.'},
       {at:'12 apr, 16:33',direction:'outbound',channel:'sms',     actor:'Admin',              summary:'Reminder încărcare CI mandant (rămase 48h).'},
       {at:'14 apr, 10:21',direction:'inbound', channel:'email',   actor:'Popescu Maria-Elena',summary:'CI mandant + mandatar încărcate · întreabă despre onorariu.'},
-      {at:'14 apr, 11:45',direction:'internal',channel:'in_person',actor:'Admin · Notar Ardelean',summary:'Discuție internă: trimitem draft final pentru vânzare imobil.'}
+      {at:'14 apr, 11:45',direction:'internal',channel:'internal_note',actor:'Admin · Notar Ardelean',summary:'Discuție internă: trimitem draft final pentru vânzare imobil.'}
     ],
     c2:[
       {at:'08 apr, 08:30',direction:'inbound', channel:'email',   actor:'Ionescu Alexandru',  summary:'Cerere declarație acceptare succesiune.'},
@@ -3860,39 +3952,53 @@ function renderCmComIstoric(caseId){
 }
 
 // ══ AUDIT LOG (seed visualization; backend wires at Phase 4) ════════════════════
-// Event types (9 locked): status_changed | office_reassigned | rescheduled | urgency_changed |
-//   cancelled | restored | template_applied | case_created | case_closed
-// Actor roles (5 locked): admin | notary | system | client | support
+// April-23 locked values (see §6 in bootstrap / admin_chat_enum_drift_flag.md):
+//   event_type (9): status_change | office_reassign | reschedule | urgent_toggle |
+//     cancel | field_edit | document_generated | note_added | created
+//   actor_role (5): admin | notary_owner | notary_staff | client | system
+// Note: these are NOT 1-to-1 renames of the pre-drift values. Old keys like
+// 'restored', 'template_applied', 'case_closed' have no equivalent in the locked
+// set — semantics changed (field_edit, document_generated, note_added replace them).
 var EVENT_LABELS={
-  status_changed:'Status schimbat', office_reassigned:'Birou schimbat',
-  rescheduled:'Reprogramat',        urgency_changed:'Urgență modificată',
-  cancelled:'Anulat',               restored:'Restabilit',
-  template_applied:'Șablon aplicat',case_created:'Dosar creat',
-  case_closed:'Dosar închis'
+  status_change:'Schimbare status',
+  office_reassign:'Reatribuire birou',
+  reschedule:'Reprogramare',
+  urgent_toggle:'Marcare urgent',
+  cancel:'Anulare',
+  field_edit:'Editare câmp',
+  document_generated:'Document generat',
+  note_added:'Notă adăugată',
+  created:'Dosar creat'
 };
-var ACTOR_LABELS={admin:'Admin',notary:'Notar',system:'Sistem',client:'Client',support:'Support'};
+var ACTOR_LABELS={
+  admin:'Admin',
+  notary_owner:'Notar titular',
+  notary_staff:'Personal birou',
+  client:'Client',
+  system:'Sistem'
+};
 function seedAuditLog(caseId){
   var seeds={
     c1:[
-      {at:'10 apr, 09:14',event_type:'case_created',    actor:'system',summary:'Dosar creat din raw_intake — client Popescu Maria-Elena.'},
-      {at:'10 apr, 09:14',event_type:'template_applied',actor:'system',summary:'Șablon procuri/vânzare-imobil aplicat (v2).'},
-      {at:'10 apr, 11:02',event_type:'urgency_changed', actor:'admin', summary:'Urgență: normal ⟶ urgent (motiv: termen 17 apr).'},
-      {at:'12 apr, 16:33',event_type:'status_changed',  actor:'admin', summary:'Status: nou ⟶ in-lucru (motiv: trecere la draft final).'}
+      {at:'10 apr, 09:14',event_type:'created',           actor:'system',      summary:'Dosar creat din raw_intake — client Popescu Maria-Elena.'},
+      {at:'10 apr, 09:14',event_type:'document_generated',actor:'system',      summary:'Șablon procuri/vânzare-imobil aplicat (v2).'},
+      {at:'10 apr, 11:02',event_type:'urgent_toggle',     actor:'admin',       summary:'Urgență: normal ⟶ urgent (motiv: termen 17 apr).'},
+      {at:'12 apr, 16:33',event_type:'status_change',     actor:'admin',       summary:'Status: nou ⟶ in-lucru (motiv: trecere la draft final).'}
     ],
     c2:[
-      {at:'08 apr, 08:30',event_type:'case_created',    actor:'system',summary:'Dosar creat — Ionescu Alexandru.'},
-      {at:'09 apr, 14:12',event_type:'template_applied',actor:'system',summary:'Șablon declaratii/acceptare-succesiune aplicat.'},
-      {at:'09 apr, 14:15',event_type:'status_changed',  actor:'admin', summary:'Status: nou ⟶ in-lucru.'},
-      {at:'18 apr, 10:00',event_type:'rescheduled',     actor:'notary',summary:'Reprogramat: 20 apr, 14:00 ⟶ 22 apr, 10:00 (motiv: notarul indisponibil).'}
+      {at:'08 apr, 08:30',event_type:'created',           actor:'system',      summary:'Dosar creat — Ionescu Alexandru.'},
+      {at:'09 apr, 14:12',event_type:'document_generated',actor:'system',      summary:'Șablon declaratii/acceptare-succesiune aplicat.'},
+      {at:'09 apr, 14:15',event_type:'status_change',     actor:'admin',       summary:'Status: nou ⟶ in-lucru.'},
+      {at:'18 apr, 10:00',event_type:'reschedule',        actor:'notary_owner',summary:'Reprogramat: 20 apr, 14:00 ⟶ 22 apr, 10:00 (motiv: notarul indisponibil).'}
     ],
     c3:[
-      {at:'05 apr, 15:22',event_type:'case_created',    actor:'system',summary:'Dosar creat din apel telefonic.'},
-      {at:'08 apr, 10:44',event_type:'template_applied',actor:'system',summary:'Șablon acorduri/partaj-bunuri aplicat.'},
-      {at:'14 apr, 11:35',event_type:'status_changed',  actor:'admin', summary:'Status: in-lucru ⟶ programat (motiv: documente complete).'}
+      {at:'05 apr, 15:22',event_type:'created',           actor:'system',summary:'Dosar creat din apel telefonic.'},
+      {at:'08 apr, 10:44',event_type:'document_generated',actor:'system',summary:'Șablon acorduri/partaj-bunuri aplicat.'},
+      {at:'14 apr, 11:35',event_type:'status_change',     actor:'admin', summary:'Status: in-lucru ⟶ programat (motiv: documente complete).'}
     ]
   };
   return seeds[caseId]||[
-    {at:'— · —:—',event_type:'case_created',actor:'system',summary:'Audit log gol — backend-ul urmează să populeze.'}
+    {at:'— · —:—',event_type:'created',actor:'system',summary:'Audit log gol — backend-ul urmează să populeze.'}
   ];
 }
 function renderCmAudit(caseId){
@@ -4218,6 +4324,61 @@ document.querySelectorAll('.filter-tag[data-city]').forEach(function(btn){
 });
 var _sa=document.getElementById('search-a');if(_sa)_sa.addEventListener('input',renderA);
 var _sb=document.getElementById('search-b');if(_sb)_sb.addEventListener('input',renderB);
+
+// Search chips — appear when input contains the word 'status' (typed or pasted).
+// Clicking a chip fills the input with the tag token and re-runs search.
+(function wireSearchChips(){
+  function syncChipVisibility(inp){
+    var wrap=inp?inp.parentNode:null;
+    if(!wrap)return;
+    var v=(inp.value||'').toLowerCase().trim();
+    // Show chips as soon as the admin starts typing toward 'status' — any prefix
+    // ('s', 'st', 'sta', 'stat', 'statu', 'status') or the full word anywhere
+    // in the value. Matches user intent: chips act as an early autocomplete hint,
+    // not a gated reveal after the full word is typed.
+    var isPrefix=v.length>0&&'status'.indexOf(v)===0;
+    var hasWord=/status/.test(v);
+    wrap.classList.toggle('show-chips',isPrefix||hasWord);
+  }
+  ['a','b'].forEach(function(suf){
+    var inp=document.getElementById('search-'+suf);
+    if(!inp)return;
+    inp.addEventListener('input',function(){syncChipVisibility(this);});
+    // Also sync on focus in case the input already has text.
+    inp.addEventListener('focus',function(){syncChipVisibility(this);});
+    // Backspace wipes the whole status token in one hit when cursor is at end.
+    // Matches 'status' / 'status:' / 'status: <word>' with optional trailing space.
+    inp.addEventListener('keydown',function(e){
+      if(e.key!=='Backspace')return;
+      var v=this.value||'';
+      var atEnd=this.selectionStart===v.length&&this.selectionEnd===v.length;
+      if(!atEnd)return;
+      if(/^status(\s*:\s*\S*)?\s*$/i.test(v)){
+        e.preventDefault();
+        this.value='';
+        var ev=document.createEvent('Event');ev.initEvent('input',true,true);
+        this.dispatchEvent(ev);
+      }
+    });
+  });
+  document.querySelectorAll('.search-chip').forEach(function(btn){
+    btn.addEventListener('mousedown',function(e){e.preventDefault();}); // don't steal focus
+    btn.addEventListener('click',function(){
+      soundSelect();
+      var tok=this.dataset.chip||'';
+      var wrap=this.closest('.search-wrap');
+      var inp=wrap?wrap.querySelector('.search-inp'):null;
+      if(!inp)return;
+      inp.value=tok;
+      // Keep chips visible since value still contains 'status'.
+      wrap.classList.add('show-chips');
+      // Trigger the existing input handler so renderA/renderB re-run.
+      var ev=document.createEvent('Event');ev.initEvent('input',true,true);
+      inp.dispatchEvent(ev);
+      inp.focus();
+    });
+  });
+})();
 document.addEventListener('click',function(e){
   var or=e.target.closest('.list-row-office');
   if(or&&or.dataset.oid){or.scrollIntoView({block:'center',behavior:'smooth'});soundSelect();openOffice(or.dataset.oid);}
