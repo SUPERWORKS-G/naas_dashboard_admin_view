@@ -151,6 +151,7 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .hdr-count{color:inherit;opacity:.65;margin-left:6px;}
 .hdr-count:empty{display:none;}
 .list-row-shared{display:grid;grid-template-columns:50px 240px 220px 1fr 240px 160px;padding:20px 20px;border-bottom:1px solid var(--rule);cursor:pointer;transition:background 0.15s;align-items:center;border-left:3px solid transparent;gap:24px;min-height:64px;}
+.list-row-shared:last-child{border-bottom:none;}
 .list-row-shared:hover{background:var(--bg);}
 .list-row-shared.active{background:var(--bg);border-left-color:var(--red);}
 
@@ -193,6 +194,7 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .dos-cat-row{display:flex;align-items:baseline;justify-content:space-between;}
 .dos-cat-row > span:last-child{color:inherit;}
 .dos-row{padding:12px 0;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.dos-row:last-child{border-bottom:none;}
 .dos-row:hover{background:var(--bg);}
 .dos-inner{display:flex;flex-direction:column;gap:4px;min-width:0;}
 .dos-lbl{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--grey2);}
@@ -213,6 +215,7 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .list-hdr-offices span{font-family:var(--mono);font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--grey2);}
 .list-hdr-offices span:nth-child(5),.list-hdr-offices span:nth-child(6){padding-left:32px;}
 .list-row-office{display:grid;grid-template-columns:50px 1fr 140px 140px 120px 160px;gap:24px;padding:20px 20px;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s;align-items:center;border-left:3px solid transparent;min-height:64px;}
+.list-row-office:last-child{border-bottom:none;}
 .list-row-office>*:nth-child(5),.list-row-office>*:nth-child(6){padding-left:32px;}
 .list-row-office:hover{background:var(--bg);}
 .list-row-office.active{background:var(--bg);border-left-color:var(--ink);}
@@ -248,6 +251,7 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .detail-category{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--grey2);padding:16px 0 10px;border-bottom:2px solid var(--ink);margin-bottom:0;}
 .detail-category-spaced{margin-top:24px;}
 .field-stacked{padding:12px 0;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s;animation:fieldIn .18s ease both;}
+.field-stacked:last-child{border-bottom:none;}
 .field-stacked:hover{background:var(--bg);}
 .field-stacked-inner{display:flex;flex-direction:column;gap:4px;}
 .fs-lbl{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--grey2);}
@@ -1238,7 +1242,7 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
             <div class="iv-ctx-line">Status curent: <span id="om-life-cur-tag" class="tag tag-activ">—</span></div>
             <div class="status-sel" id="om-life-sel">
               <button class="status-sel-btn" data-life="suspended" onclick="lifePick('suspended',this)">‖ Suspendă</button>
-              <button class="status-sel-btn" data-life="dezactivat" onclick="lifePick('dezactivat',this)">— Dezactivează</button>
+              <button class="status-sel-btn" data-life="archived" onclick="lifePick('archived',this)">— Dezactivează</button>
               <button class="status-sel-btn" data-life="active" onclick="lifePick('active',this)">Reactivează</button>
             </div>
             <span class="iv-form-lbl" style="margin-top:16px;">Motiv</span>
@@ -1483,7 +1487,7 @@ var SEED_OFFICES = [
   {id:'seed-2',name:'Cabinet Notarial Popescu', city:'București',  notary:'Dan Popescu',  email:'popescu@notariat.co', phone:'0722 333 444',status:'activ',   since:'Feb 2026',address:'Bd. Unirii nr. 45',           cui:'RO45234567',website:'https://popescu-not.ro',      contact_name:'Dan Popescu',    contact_role:'notar titular',contact_email:'dan.popescu@popescu-not.ro',    contact_phone:'0722 333 445',subscription_status:'active', plan:'pro',     billing_cycle:'yearly', current_period_end:'03 feb 2027',trial_ends_at:null},
   {id:'seed-3',name:'Cabinet Notarial Moldovan',city:'Cluj-Napoca',notary:'Ioana Moldovan',email:'moldovan@notariat.co',phone:'0733 555 666',status:'avertisment',since:'Mar 2026',address:'Str. Republicii nr. 12',      cui:'RO45345678',website:'',                            contact_name:'Ioana Moldovan', contact_role:'notar titular',contact_email:'ioana@moldovan-notariat.ro',    contact_phone:'0733 555 667',subscription_status:'past_due',plan:'starter', billing_cycle:'monthly',current_period_end:'28 apr 2026',trial_ends_at:null,lifecycle_status:'suspended'},
   {id:'seed-4',name:'Cabinet Notarial Ardelean',city:'Timișoara',  notary:'Radu Ardelean',email:'ardelean@notariat.co',phone:'0744 777 888',status:'activ',   since:'Apr 2026',address:'Bd. Revoluției nr. 23',       cui:'RO45456789',website:'https://ardelean-notariat.ro',contact_name:'Radu Ardelean',  contact_role:'notar titular',contact_email:'radu@ardelean-notariat.ro',     contact_phone:'0744 777 889',subscription_status:'trial',  plan:'standard',billing_cycle:'monthly',current_period_end:'05 mai 2026',trial_ends_at:'28 apr 2026'},
-  {id:'seed-5',name:'Cabinet Notarial Stoica',  city:'Iași',       notary:'Mihai Stoica',  email:'stoica@notariat.co',  phone:'0755 000 111',status:'activ',   since:'Dec 2025',address:'Str. Păcurari nr. 8',         cui:'RO45567890',website:'',                            contact_name:'Mihai Stoica',   contact_role:'notar titular',contact_email:'mihai@stoica-notariat.ro',      contact_phone:'0755 000 112',subscription_status:'canceled',plan:'standard',billing_cycle:'monthly',current_period_end:'15 apr 2026',trial_ends_at:null,lifecycle_status:'dezactivat'},
+  {id:'seed-5',name:'Cabinet Notarial Stoica',  city:'Iași',       notary:'Mihai Stoica',  email:'stoica@notariat.co',  phone:'0755 000 111',status:'activ',   since:'Dec 2025',address:'Str. Păcurari nr. 8',         cui:'RO45567890',website:'',                            contact_name:'Mihai Stoica',   contact_role:'notar titular',contact_email:'mihai@stoica-notariat.ro',      contact_phone:'0755 000 112',subscription_status:'canceled',plan:'standard',billing_cycle:'monthly',current_period_end:'15 apr 2026',trial_ends_at:null,lifecycle_status:'archived'},
   {id:'seed-6',name:'Cabinet Notarial Vasilescu',city:'Brașov',     notary:'Elena Vasilescu',email:'vasilescu@notariat.co',phone:'0766 222 333',status:'activ',   since:'Feb 2026',address:'Str. Republicii nr. 34',      cui:'RO45678901',website:'',                            contact_name:'Elena Vasilescu',contact_role:'notar titular',contact_email:'elena@vasilescu-notariat.ro',   contact_phone:'0766 222 334',subscription_status:'active',  plan:'standard',billing_cycle:'monthly',current_period_end:'08 mai 2026',trial_ends_at:null}
 ];
 var SEED_CASES = [
@@ -1844,17 +1848,19 @@ function hasBillingIssue(o){
 // ══ VIEW A — BIROURI ════════════════════════════════════════════════
 // Search-driven lifecycle filter: query 'status: suspendat' / 'status: dezactivat'
 // surfaces the matching bucket. Any other query defaults to the Active bucket
-// (suspended + dezactivat offices are hidden unless explicitly searched for).
+// (suspended + archived offices are hidden unless explicitly searched for).
 function parseStatusQuery(q){
   var m=q.match(/^status\s*:\s*(\S+)/);
   return m?m[1]:null;
 }
-// Romanian UI labels mapped to the lifecycle_status enum.
+// Romanian UI labels mapped to the lifecycle_status enum (English keys per contract).
 var LIFECYCLE_SEARCH_MAP={
   suspendat:'suspended',suspendate:'suspended',
-  dezactivat:'dezactivat',dezactivate:'dezactivat',
+  dezactivat:'archived',dezactivate:'archived',
   activ:'active',active:'active'
 };
+// Display labels for lifecycle_status enum (parallel to CHANNEL_LABELS / EVENT_LABELS pattern).
+var LIFECYCLE_LABELS={active:'Activ',suspended:'Suspendat',archived:'Dezactivat'};
 var CASE_STATUS_SEARCH_MAP={
   anulat:'anulat',anulate:'anulat',
   finalizat:'finalizat',finalizate:'finalizat'
@@ -1867,7 +1873,7 @@ function renderA(){
   var textQ=statusTok?q.replace(/^status\s*:\s*\S+\s*/,'').trim():q;
   var list=OFFICES.filter(function(o){
     // Lifecycle gate first. When user searched 'status: X', show only that bucket;
-    // otherwise default to Active (hide suspended/dezactivat).
+    // otherwise default to Active (hide suspended/archived).
     if(lifecycleFilter){
       if((o.lifecycle_status||'active')!==lifecycleFilter) return false;
     }
@@ -1921,8 +1927,8 @@ function renderA(){
     html+='<div class="l-date"><span class="l-date-main">'+cs.length+'</span><span class="l-date-slot"> dosare</span></div>';
     var lcs=o.lifecycle_status;
     var statusCell=(lcs==='suspended')
-      ? '<span class="tag tag-avertisment">Suspendat</span>'
-      : (lcs==='dezactivat' ? '<span class="tag tag-arhivat">Dezactivat</span>' : officeStatusTag(o.status));
+      ? '<span class="tag tag-avertisment">'+LIFECYCLE_LABELS.suspended+'</span>'
+      : (lcs==='archived' ? '<span class="tag tag-arhivat">'+LIFECYCLE_LABELS.archived+'</span>' : officeStatusTag(o.status));
     html+='<div class="l-status">'+statusCell+'</div>';
     html+='</div>';
   });
@@ -2035,8 +2041,8 @@ function openOffice(oid){
   document.getElementById('om-title').textContent=o.name;
   var omHdrLcs=o.lifecycle_status;
   var omHdrTag=(omHdrLcs==='suspended')
-    ? '<span class="tag tag-avertisment">Suspendat</span>'
-    : (omHdrLcs==='dezactivat' ? '<span class="tag tag-arhivat">Dezactivat</span>' : officeStatusTag(o.status));
+    ? '<span class="tag tag-avertisment">'+LIFECYCLE_LABELS.suspended+'</span>'
+    : (omHdrLcs==='archived' ? '<span class="tag tag-arhivat">'+LIFECYCLE_LABELS.archived+'</span>' : officeStatusTag(o.status));
   document.getElementById('om-status-tag').innerHTML=omHdrTag;
   document.getElementById('of-name').textContent=o.name;
   document.getElementById('of-cui').textContent=o.cui||'—';
@@ -3243,25 +3249,19 @@ function openOfficeMaps(){
 
 // BIROURI > DEZACTIVARE (Status sub-tab) — single-tab lifecycle rollback.
 // Mirrors DOSARE / INTERVENȚIE / STATUS: status-sel + Motiv + Confirm.
-// Three targets: suspended | dezactivat | active (Reactivează).
+// Three targets: suspended | archived | active (Reactivează).
 // Current state pre-selected and disabled; the other two remain pickable.
 // Stripe mapping (per amendment B): active -> pause_collection.resume()
-//   suspended -> pause_collection.behavior='void'; dezactivat -> cancel_at_period_end:true.
+//   suspended -> pause_collection.behavior='void'; archived -> cancel_at_period_end:true.
 var lifePicked=null;
 function lifeCurrent(o){return (o&&o.lifecycle_status)||'active';}
-function LIFE_LABEL(s){
-  if(s==='active')return 'Activ';
-  if(s==='suspended')return 'Suspendat';
-  if(s==='dezactivat')return 'Dezactivat';
-  return s||'—';
-}
 function renderLifePane(){
   var o=OM[currentOfficeId];if(!o)return;
   var cur=lifeCurrent(o);
   // Update Status curent tag.
   var tagEl=document.getElementById('om-life-cur-tag');
   if(tagEl){
-    tagEl.textContent=LIFE_LABEL(cur);
+    tagEl.textContent=LIFECYCLE_LABELS[cur]||'—';
     tagEl.className='tag '+(cur==='active'?'tag-activ':(cur==='suspended'?'tag-avertisment':'tag-arhivat'));
   }
   // Reset picker: disable the current-state button, pre-select it visually so the
@@ -3303,7 +3303,7 @@ function lifeCommit(){
   o.lifecycle_status=lifePicked==='active'?null:lifePicked;
   soundFinalizat();
   var action=lifePicked==='suspended'?'Suspendat'
-    :(lifePicked==='dezactivat'?'Dezactivat':'Reactivat');
+    :(lifePicked==='archived'?'Dezactivat':'Reactivat');
   showToast(action+': '+o.name);
   renderLifePane();
   renderA();
