@@ -1,7 +1,15 @@
 <!DOCTYPE html>
 <!--
-  notariat.co — Admin Dashboard v9
+  acte.legal — Admin Dashboard v28
   Visual system: identical to notariat_dashboard_v48.html
+  v28: Phase 1.2 (notary office subscriptions) — Plan sub-tab wired to
+       admin-create-office-subscription Edge Function; Abonament sub-tab
+       extended with tier dropdown, pending-change row, discount line,
+       resend-setup-link button. Four elements layout-locked but stubbed
+       (round 2 wires to admin-change-office-tier / admin-resend-setup-
+       link / admin-get-office-discount). Extend-trial button killed
+       (handled via Stripe Dashboard for MVP).
+       Copy: notariat / notariat.co → acte.legal everywhere.
   Features: office list · case management · onboarding · template library
   Tokens: --ink #000000 · --white #fafaf8 · --red #d42b2b · --bg #f3f2ef
   Typography: 11px mono · 14px sans · 24px serif · 40px serif
@@ -11,7 +19,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>notariat.co — Admin</title>
+<title>acte.legal — Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@300;400&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -264,9 +272,11 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .sub-pill{display:inline-flex;align-items:center;font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase;padding:4px 10px;border:1px solid transparent;line-height:1.2;white-space:nowrap;}
 .sub-pill.active{background:var(--ink);color:var(--white);border-color:var(--ink);}
 .sub-pill.trial{background:none;color:var(--grey);border-color:var(--rule);}
+.sub-pill.trialing{background:none;color:var(--grey);border-color:var(--rule);}
 .sub-pill.past_due{background:var(--red-lt);color:var(--red);border-color:var(--red);}
 .sub-pill.canceled{background:none;color:var(--grey2);border-color:var(--rule);}
 .sub-pill.paused{background:none;color:var(--grey);border-color:var(--rule);}
+.sub-pill.incomplete{background:none;color:var(--grey);border-color:var(--grey);}
 
 /* ── COVERAGE GRID ── */
 .coverage-wrap{margin-bottom:32px;}
@@ -450,6 +460,15 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .cdd-panel{position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--white);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);z-index:300;max-height:240px;overflow-y:auto;scrollbar-width:none;display:none;}
 .cdd-panel::-webkit-scrollbar{display:none;}
 .cdd.open .cdd-panel{display:block;animation:cddIn .15s ease;}
+/* v28 / Phase 1.2: when a cdd dropdown sits inside a .field-stacked row that
+   has its own animation-induced stacking context, sibling rows below paint
+   ABOVE the cdd-panel even at z-index:300 (siblings are siblings, not
+   children, so panel's z-index only applies within its own row's stacking
+   context). Hoist the row's z-index when its dropdown is open so the panel
+   visually overlays the rows below. Affects: cdd-of-plan in Abonament pane.
+   No effect on cdd dropdowns inside non-stacking-context parents (e.g.
+   create-office Plan pane has no sibling rows after the dropdown). */
+.field-stacked:has(.cdd.open){z-index:400;position:relative;}
 /* Upward-opening variant — triggered when insufficient space below the trigger.
    Panel anchors to trigger bottom with offset above it. */
 .cdd.open-up .cdd-panel{top:auto;bottom:calc(100% + 2px);}
@@ -706,7 +725,7 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 <body>
 <!-- LOADING -->
 <div class="app-loading" id="app-loading">
-  <div class="loading-brand">notariat<span class="loading-dot">.</span></div>
+  <div class="loading-brand">acte<span class="loading-dot">.</span>legal</div>
   <div class="loading-sub">Se încarcă<span class="loading-dot">...</span></div>
 </div>
 
@@ -714,7 +733,7 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 <div class="auth-screen hidden" id="auth-screen">
   <div class="auth-box">
     <div class="auth-brand">
-      <div class="auth-title">notariat.co</div>
+      <div class="auth-title">acte.legal</div>
     </div>
     <div class="form-group">
       <span class="form-lbl">Email</span>
@@ -741,7 +760,7 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 <!-- HEADER -->
 <div class="header-strip">
   <div class="hs-left">
-    <span class="brand">notariat</span>
+    <span class="brand">acte.legal</span>
     <span class="brand-pipe">/</span>
     <span class="brand-sub">Admin</span>
   </div>
@@ -1151,13 +1170,40 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
           <div class="field-stacked" id="of-contact-email-row" onclick="openOfficeMail('contact')"><div class="field-stacked-inner"><span class="fs-lbl">Email</span><span class="fs-val mono" id="of-contact-email">—</span></div></div>
           <div class="field-stacked" id="of-contact-phone-row" onclick="openOfficeTel('contact')"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><span class="fs-val mono" id="of-contact-phone">—</span></div></div>
         </div>
-        <!-- Pane: Abonament -->
+        <!-- Pane: Abonament
+             v28: Plan converted from static value to cdd dropdown (tier change). Added rows
+             for pending tier change ("Schimbă la"), discount ("Reducere"), and a resend
+             setup-link button (visible only when status='incomplete'). The dropdown +
+             pending row + discount row + resend button are LAYOUT-LOCKED but call
+             stubPending() — round 2 (master chat v15+) wires them to admin-change-office-
+             tier, admin-get-office-discount, admin-resend-setup-link. -->
         <div id="om-det-pane-abon" class="lib-pane" style="display:none;">
           <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Status</span><span class="fs-val"><span class="sub-pill" id="of-sub-status">—</span></span></div></div>
-          <div class="field-stacked field-stacked-plain" id="of-plan-row"><div class="field-stacked-inner"><span class="fs-lbl">Plan</span><span class="fs-val" id="of-plan">—</span></div></div>
+          <!-- Plan: dropdown replaces the v27 static value. Same cdd primitive used in
+               create-office Plan sub-tab; field-stacked-plain wrapper preserved so X/Y
+               rhythm matches surrounding rows exactly. STUB until round 2. -->
+          <div class="field-stacked field-stacked-plain" id="of-plan-row"><div class="field-stacked-inner"><span class="fs-lbl">Plan</span>
+            <div class="cdd" id="cdd-of-plan" data-placeholder="—" style="margin-top:4px;">
+              <button class="cdd-trigger empty" type="button" style="border-bottom:none;padding:0;">—</button>
+              <div class="cdd-panel" role="listbox">
+                <button class="cdd-opt" type="button" data-v="complimentary_trial">Trial 30 zile</button>
+                <button class="cdd-opt" type="button" data-v="starter">Starter</button>
+                <button class="cdd-opt" type="button" data-v="standard">Standard</button>
+                <button class="cdd-opt" type="button" data-v="pro">Pro</button>
+                <button class="cdd-opt" type="button" data-v="complimentary_partner">Partner</button>
+              </div>
+              <input type="hidden" id="of-plan" value="">
+            </div>
+          </div></div>
+          <!-- Pending tier change row: visible only when tier_pending IS NOT NULL. -->
+          <div class="field-stacked field-stacked-plain" id="of-pending-row" style="display:none;"><div class="field-stacked-inner"><span class="fs-lbl">Schimbă la</span><span class="fs-val mono" id="of-pending-val">—</span></div></div>
           <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Ciclu</span><span class="fs-val mono" id="of-cycle">—</span></div></div>
           <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Expiră la</span><span class="fs-val mono" id="of-period-end">—</span></div></div>
           <div class="field-stacked field-stacked-plain" id="of-trial-row" style="display:none;"><div class="field-stacked-inner"><span class="fs-lbl">Expiră trial</span><span class="fs-val mono" id="of-trial-end">—</span></div></div>
+          <!-- Discount row: always rendered, populated read-only via admin-get-office-discount (round 2). -->
+          <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Reducere</span><span class="fs-val" id="of-discount">—</span></div></div>
+          <!-- Resend setup-link button: visible only when status='incomplete'. -->
+          <div class="field-stacked field-stacked-plain" id="of-resend-row" style="display:none;"><div class="field-stacked-inner"><span class="fs-lbl">Link card</span><span class="fs-val"><button class="cdd-trigger" type="button" id="of-resend-btn" style="border-bottom:none;padding:0;text-align:left;cursor:pointer;">Trimite link card pe email ⟶</button></span></div></div>
         </div>
         <!-- Pane: Statistici -->
         <div id="om-det-pane-stat" class="lib-pane" style="display:none;">
@@ -1325,15 +1371,17 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
             <div class="cdd" id="cdd-co-plan" data-placeholder="— selectează plan —" style="margin-top:4px;">
               <button class="cdd-trigger empty" type="button" style="border-bottom:none;padding:0;">— selectează plan —</button>
               <div class="cdd-panel" role="listbox">
-                <button class="cdd-opt" type="button" data-v="trial_30d">Trial 30 zile</button>
+                <button class="cdd-opt" type="button" data-v="complimentary_trial">Trial 30 zile</button>
                 <button class="cdd-opt" type="button" data-v="starter">Starter</button>
                 <button class="cdd-opt" type="button" data-v="standard">Standard</button>
                 <button class="cdd-opt" type="button" data-v="pro">Pro</button>
-                <button class="cdd-opt" type="button" data-v="complimentary">Complimentary</button>
+                <button class="cdd-opt" type="button" data-v="complimentary_partner">Partner</button>
               </div>
               <input type="hidden" id="co-plan" value="">
             </div>
           </div></div>
+          <!-- Trial auto-convert note: visible only when complimentary_trial selected. -->
+          <div class="co-plan-note" id="co-plan-trial-note" style="display:none;">După 30 de zile se convertește automat la Starter.</div>
           <div class="co-plan-note">La creare, Stripe generează clientul, abonamentul pe planul ales și trimite link-ul de checkout pe email-ul de contact.</div>
         </div>
       </div>
@@ -1458,7 +1506,7 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 <!-- PLACEHOLDERS VIEWER (inline expanded row, no modal) -->
 
 <div class="footer">
-  <span>notariat.co · Admin · <span id="footer-user">—</span></span>
+  <span>acte.legal · Admin · <span id="footer-user">—</span></span>
   <span id="footer-date">—</span>
 </div>
 </div><!-- end main-page -->
@@ -1469,6 +1517,43 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 var SUPA_URL = 'https://geuogfnlybyrsnlrjdit.supabase.co';
 var SUPA_KEY = 'sb_publishable_kd6KYiBJG_MKQJJsSTOa3Q_rGljVwoX';
 var sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// v28 / Phase 1.2: Edge Functions for office subscriptions require the LEGACY anon JWT
+// (not sb_publishable_*) — confirmed by master chat (same pattern as /plateste's
+// create-checkout-session). Paste the eyJ... key below before live testing. If empty,
+// submitOfficeCreation falls back to seed-mode simulation.
+var SUPA_LEGACY_ANON_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldW9nZm5seWJ5cnNubHJqZGl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1OTUzNjgsImV4cCI6MjA5MDE3MTM2OH0.hXPERtU4HSonRGYb_7-5MsfSbbBAzqrRwQOVjXoZVTI'; // legacy anon JWT (acte.legal Supabase project)
+
+// v28 / Phase 1.2: Edge Function endpoints. admin-create-office-subscription is LIVE
+// in test mode (round 1). Others are placeholders for round 2 — string is correct,
+// function not yet deployed; current UI surfaces stub via stubPending().
+var EDGE_FN = {
+  createOfficeSubscription: SUPA_URL + '/functions/v1/admin-create-office-subscription',
+  changeOfficeTier:         SUPA_URL + '/functions/v1/admin-change-office-tier',         // round 2
+  resendSetupLink:          SUPA_URL + '/functions/v1/admin-resend-setup-link',          // round 2
+  getOfficeDiscount:        SUPA_URL + '/functions/v1/admin-get-office-discount'         // round 2
+};
+
+// v28 / Phase 1.2: thin wrapper for Edge Function POSTs. Returns {ok, status, body}.
+// Body is parsed JSON; on non-2xx the body should match { error: "<code>" } per master
+// chat's contract. Surfaces network errors with ok:false / status:0.
+function edgeFetch(url,payload){
+  return fetch(url,{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization':'Bearer '+SUPA_LEGACY_ANON_JWT
+    },
+    body:JSON.stringify(payload)
+  }).then(function(r){
+    return r.text().then(function(txt){
+      var body=null; try{body=JSON.parse(txt);}catch(e){body={raw:txt};}
+      return {ok:r.ok,status:r.status,body:body};
+    });
+  }).catch(function(err){
+    return {ok:false,status:0,body:{error:'network_error',detail:String(err)}};
+  });
+}
 
 // ── DATA LAYER ────────────────────────────────────────────────────
 // OFFICES, CASES, TEMPLATES are populated by loadAll() on boot.
@@ -1483,12 +1568,12 @@ var DB_LIVE = false; // true once Supabase responds
 
 // Seeds — used only when Supabase is unreachable (validation phase)
 var SEED_OFFICES = [
-  {id:'seed-1',name:'Cabinet Notarial Ionescu', city:'Timișoara',  notary:'Ana Golana',   email:'ionescu@notariat.co', phone:'0721 111 222',status:'activ',   since:'Ian 2026',address:'Str. Vasile Alecsandri nr. 1',cui:'RO45123456',website:'https://ionescu-notariat.ro',contact_name:'Ana Golana',     contact_role:'notar titular',contact_email:'ana.golana@ionescu-notariat.ro',contact_phone:'0721 111 223',subscription_status:'active', plan:'standard',billing_cycle:'monthly',current_period_end:'12 mai 2026',trial_ends_at:null},
-  {id:'seed-2',name:'Cabinet Notarial Popescu', city:'București',  notary:'Dan Popescu',  email:'popescu@notariat.co', phone:'0722 333 444',status:'activ',   since:'Feb 2026',address:'Bd. Unirii nr. 45',           cui:'RO45234567',website:'https://popescu-not.ro',      contact_name:'Dan Popescu',    contact_role:'notar titular',contact_email:'dan.popescu@popescu-not.ro',    contact_phone:'0722 333 445',subscription_status:'active', plan:'pro',     billing_cycle:'yearly', current_period_end:'03 feb 2027',trial_ends_at:null},
-  {id:'seed-3',name:'Cabinet Notarial Moldovan',city:'Cluj-Napoca',notary:'Ioana Moldovan',email:'moldovan@notariat.co',phone:'0733 555 666',status:'avertisment',since:'Mar 2026',address:'Str. Republicii nr. 12',      cui:'RO45345678',website:'',                            contact_name:'Ioana Moldovan', contact_role:'notar titular',contact_email:'ioana@moldovan-notariat.ro',    contact_phone:'0733 555 667',subscription_status:'past_due',plan:'starter', billing_cycle:'monthly',current_period_end:'28 apr 2026',trial_ends_at:null,lifecycle_status:'suspended'},
-  {id:'seed-4',name:'Cabinet Notarial Ardelean',city:'Timișoara',  notary:'Radu Ardelean',email:'ardelean@notariat.co',phone:'0744 777 888',status:'activ',   since:'Apr 2026',address:'Bd. Revoluției nr. 23',       cui:'RO45456789',website:'https://ardelean-notariat.ro',contact_name:'Radu Ardelean',  contact_role:'notar titular',contact_email:'radu@ardelean-notariat.ro',     contact_phone:'0744 777 889',subscription_status:'trial',  plan:'standard',billing_cycle:'monthly',current_period_end:'05 mai 2026',trial_ends_at:'28 apr 2026'},
-  {id:'seed-5',name:'Cabinet Notarial Stoica',  city:'Iași',       notary:'Mihai Stoica',  email:'stoica@notariat.co',  phone:'0755 000 111',status:'activ',   since:'Dec 2025',address:'Str. Păcurari nr. 8',         cui:'RO45567890',website:'',                            contact_name:'Mihai Stoica',   contact_role:'notar titular',contact_email:'mihai@stoica-notariat.ro',      contact_phone:'0755 000 112',subscription_status:'canceled',plan:'standard',billing_cycle:'monthly',current_period_end:'15 apr 2026',trial_ends_at:null,lifecycle_status:'archived'},
-  {id:'seed-6',name:'Cabinet Notarial Vasilescu',city:'Brașov',     notary:'Elena Vasilescu',email:'vasilescu@notariat.co',phone:'0766 222 333',status:'activ',   since:'Feb 2026',address:'Str. Republicii nr. 34',      cui:'RO45678901',website:'',                            contact_name:'Elena Vasilescu',contact_role:'notar titular',contact_email:'elena@vasilescu-notariat.ro',   contact_phone:'0766 222 334',subscription_status:'active',  plan:'standard',billing_cycle:'monthly',current_period_end:'08 mai 2026',trial_ends_at:null}
+  {id:'seed-1',name:'Cabinet Notarial Ionescu', city:'Timișoara',  notary:'Ana Golana',   email:'ionescu@acte.legal', phone:'0721 111 222',status:'activ',   since:'Ian 2026',address:'Str. Vasile Alecsandri nr. 1',cui:'RO45123456',website:'https://ionescu-notariat.ro',contact_name:'Ana Golana',     contact_role:'notar titular',contact_email:'ana.golana@ionescu-notariat.ro',contact_phone:'0721 111 223',subscription_status:'active', plan:'standard',billing_cycle:'monthly',current_period_end:'12 mai 2026',trial_ends_at:null},
+  {id:'seed-2',name:'Cabinet Notarial Popescu', city:'București',  notary:'Dan Popescu',  email:'popescu@acte.legal', phone:'0722 333 444',status:'activ',   since:'Feb 2026',address:'Bd. Unirii nr. 45',           cui:'RO45234567',website:'https://popescu-not.ro',      contact_name:'Dan Popescu',    contact_role:'notar titular',contact_email:'dan.popescu@popescu-not.ro',    contact_phone:'0722 333 445',subscription_status:'active', plan:'pro',     billing_cycle:'yearly', current_period_end:'03 feb 2027',trial_ends_at:null},
+  {id:'seed-3',name:'Cabinet Notarial Moldovan',city:'Cluj-Napoca',notary:'Ioana Moldovan',email:'moldovan@acte.legal',phone:'0733 555 666',status:'avertisment',since:'Mar 2026',address:'Str. Republicii nr. 12',      cui:'RO45345678',website:'',                            contact_name:'Ioana Moldovan', contact_role:'notar titular',contact_email:'ioana@moldovan-notariat.ro',    contact_phone:'0733 555 667',subscription_status:'past_due',plan:'starter', billing_cycle:'monthly',current_period_end:'28 apr 2026',trial_ends_at:null,lifecycle_status:'suspended'},
+  {id:'seed-4',name:'Cabinet Notarial Ardelean',city:'Timișoara',  notary:'Radu Ardelean',email:'ardelean@acte.legal',phone:'0744 777 888',status:'activ',   since:'Apr 2026',address:'Bd. Revoluției nr. 23',       cui:'RO45456789',website:'https://ardelean-notariat.ro',contact_name:'Radu Ardelean',  contact_role:'notar titular',contact_email:'radu@ardelean-notariat.ro',     contact_phone:'0744 777 889',subscription_status:'trial',  plan:'standard',billing_cycle:'monthly',current_period_end:'05 mai 2026',trial_ends_at:'28 apr 2026'},
+  {id:'seed-5',name:'Cabinet Notarial Stoica',  city:'Iași',       notary:'Mihai Stoica',  email:'stoica@acte.legal',  phone:'0755 000 111',status:'activ',   since:'Dec 2025',address:'Str. Păcurari nr. 8',         cui:'RO45567890',website:'',                            contact_name:'Mihai Stoica',   contact_role:'notar titular',contact_email:'mihai@stoica-notariat.ro',      contact_phone:'0755 000 112',subscription_status:'canceled',plan:'standard',billing_cycle:'monthly',current_period_end:'15 apr 2026',trial_ends_at:null,lifecycle_status:'archived'},
+  {id:'seed-6',name:'Cabinet Notarial Vasilescu',city:'Brașov',     notary:'Elena Vasilescu',email:'vasilescu@acte.legal',phone:'0766 222 333',status:'activ',   since:'Feb 2026',address:'Str. Republicii nr. 34',      cui:'RO45678901',website:'',                            contact_name:'Elena Vasilescu',contact_role:'notar titular',contact_email:'elena@vasilescu-notariat.ro',   contact_phone:'0766 222 334',subscription_status:'active',  plan:'standard',billing_cycle:'monthly',current_period_end:'08 mai 2026',trial_ends_at:null}
 ];
 var SEED_CASES = [
   {id:'c1', oid:'seed-1',type:'procuri',      act:'Procură',       subtype:'Vânzare imobil',       ref:'NOT-2026-0041',client:'Popescu Maria-Elena',status:'nou',      urgent:true, pref:'17 apr, 14:00',created:'10 apr'},
@@ -2059,16 +2144,46 @@ function openOffice(oid){
   var subPill=document.getElementById('of-sub-status');
   subPill.className='sub-pill '+(o.subscription_status||'active');
   subPill.textContent=subStatusLabel(o.subscription_status);
-  document.getElementById('of-plan').textContent=planLabel(o.plan);
+  // v28: Plan is now a cdd dropdown — set its value via cddSetValue (silent: no
+  // change event fires, so handler doesn't think the admin just picked a new tier).
+  cddSetValue('cdd-of-plan',o.plan||'',false);
   document.getElementById('of-cycle').textContent=o.billing_cycle==='yearly'?'Anual':(o.billing_cycle==='monthly'?'Lunar':'—');
   document.getElementById('of-period-end').textContent=o.current_period_end||'—';
-  // Trial expiry row is visible only while on trial
+  // Trial expiry row is visible only while on trial (legacy 'trial' or Stripe-native 'trialing')
   var trialRow=document.getElementById('of-trial-row');
-  if(o.subscription_status==='trial'&&o.trial_ends_at){
+  if((o.subscription_status==='trial'||o.subscription_status==='trialing')&&o.trial_ends_at){
     trialRow.style.display='';
     document.getElementById('of-trial-end').textContent=o.trial_ends_at;
   } else {
     trialRow.style.display='none';
+  }
+  // v28 / Phase 1.2: pending tier change row. Visible only when tier_pending IS NOT NULL.
+  // Round 2 (master chat v15+) populates o.tier_pending + o.tier_pending_effective_at via
+  // stripe-webhook on customer.subscription.updated → schedule-fired transition.
+  var pendingRow=document.getElementById('of-pending-row');
+  if(o.tier_pending&&o.tier_pending_effective_at){
+    pendingRow.style.display='';
+    document.getElementById('of-pending-val').textContent=planLabel(o.tier_pending)+' pe '+o.tier_pending_effective_at;
+  } else {
+    pendingRow.style.display='none';
+  }
+  // v28 / Phase 1.2: discount line. STUB — round 2 fetches from Stripe via
+  // admin-get-office-discount Edge Function, normalized output:
+  //   { has_discount, discount: { label, duration, duration_months, coupon_id } }
+  // Until then, render whatever's on the office row (none for seed data).
+  var discountEl=document.getElementById('of-discount');
+  if(o.discount&&o.discount.label){
+    discountEl.textContent=o.discount.label+(o.discount.duration_months?' · '+o.discount.duration_months+' luni':'');
+  } else {
+    discountEl.textContent='Nicio reducere';
+  }
+  // v28 / Phase 1.2: resend setup-link row. Visible only when status='incomplete'
+  // AND tier is not complimentary_partner (partners have no Stripe subscription).
+  var resendRow=document.getElementById('of-resend-row');
+  if(o.subscription_status==='incomplete'&&o.plan!=='complimentary_partner'){
+    resendRow.style.display='';
+  } else {
+    resendRow.style.display='none';
   }
   document.getElementById('of-stat-dosare').textContent=cs.length;
   document.getElementById('of-stat-urgente').textContent=urg;
@@ -3202,10 +3317,19 @@ function updateOmStats(){
 }
 
 // ══ OFFICE DETAILS — actionable field handlers + subscription/plan labels ══
-var SUB_STATUS_LABELS={trial:'Trial',active:'Activ',past_due:'Restanță',canceled:'Anulat',paused:'Suspendat'};
-var PLAN_LABELS={starter:'Starter',standard:'Standard',pro:'Pro'};
+// v28 / Phase 1.2: expanded labels to cover Stripe-native status values
+// (trialing, incomplete) and full 5-tier set (complimentary_trial, complimentary_partner).
+// Legacy 'trial'/'complimentary' kept as aliases so existing seed rows continue rendering.
+var SUB_STATUS_LABELS={trial:'Trial',trialing:'Trial',active:'Activ',past_due:'Restanță',canceled:'Anulat',paused:'Suspendat',incomplete:'Incomplet'};
+var PLAN_LABELS={starter:'Starter',standard:'Standard',pro:'Pro',complimentary_trial:'Trial 30 zile',complimentary_partner:'Partner',trial_30d:'Trial 30 zile',complimentary:'Partner'};
 function subStatusLabel(s){return SUB_STATUS_LABELS[s]||'—';}
 function planLabel(p){return PLAN_LABELS[p]||'—';}
+
+// v28 / Phase 1.2: stub helper for layout-locked-but-unwired UI elements.
+// Round 2 (master chat v15+) replaces each stub call with a real Edge Function fetch.
+// Keep the toast text consistent across all 4 stubbed surfaces so the propagation
+// audit is trivial: grep stubPending → list of round-2 wiring targets.
+function stubPending(label){showToast(label+' — funcție în pregătire');}
 
 function copyOfficeField(key){
   var o=OM[currentOfficeId];if(!o||!o[key])return;
@@ -4181,13 +4305,85 @@ function collectOfficePayload(){
     plan:document.getElementById('co-plan').value
   };
 }
-// Phase A: seed-fallback simulates a 500ms Zapier happy-path round-trip.
-// Phase B swaps this for a real POST with typed errors + 15s timeout-polling.
+// v28 / Phase 1.2: createOfficeSubscription wraps two operations:
+//   1. Insert the notary_offices row (frontend, RLS-aware, returns UUID)
+//   2. POST to admin-create-office-subscription with { office_id, tier, contact_email }
+//      to provision Stripe customer + subscription + setup link
+//
+// ⚠️ ARCHITECTURAL NOTE FOR ROUND 2: master chat's Edge Function contract requires
+// office_id to ALREADY EXIST in notary_offices before invocation. This means the
+// frontend either (a) writes notary_offices directly via the supabase client (RLS
+// must permit), or (b) we ask master chat to fold the office insert into the same
+// Edge Function call. Current implementation: (a). If master chat prefers (b), the
+// Edge Function input contract changes and this function gets a single POST instead
+// of two operations. SURFACE THIS QUESTION before round 2 backend lock.
+//
+// Until SUPA_LEGACY_ANON_JWT is set, falls back to simulateZapier (seed mode) —
+// preserves v27 behavior for non-Supabase / no-key environments.
+function createOfficeSubscription(payload,cb){
+  if(!SUPA_LEGACY_ANON_JWT){
+    return simulateZapier(payload,cb);
+  }
+  // Step 1: insert notary_offices row (direct sb client, RLS-aware).
+  var officeRow={
+    name:payload.name,
+    cui:payload.cui,
+    website:payload.website,
+    city:payload.city,
+    address:payload.address,
+    email:payload.email,
+    phone:payload.phone,
+    contact_name:payload.contact_name,
+    contact_role:payload.contact_role,
+    contact_email:payload.contact_email,
+    contact_phone:payload.contact_phone
+  };
+  sb.from('notary_offices').insert(officeRow).select('id').single().then(function(insRes){
+    if(insRes.error||!insRes.data||!insRes.data.id){
+      cb({ok:false,message:'Eroare la salvarea biroului: '+((insRes.error&&insRes.error.message)||'necunoscută')});
+      return;
+    }
+    var officeId=insRes.data.id;
+    // Step 2: call admin-create-office-subscription Edge Function.
+    edgeFetch(EDGE_FN.createOfficeSubscription,{
+      office_id:officeId,
+      tier:payload.plan,
+      contact_email:payload.contact_email
+    }).then(function(efRes){
+      if(!efRes.ok){
+        // Surface the typed error code from master chat's contract:
+        // 400 office_id_required / tier_required / contact_email_required / invalid_tier / invalid_json
+        // 404 office_not_found / 409 subscription_already_exists / 500 db_error / db_insert_failed / config_load_failed
+        // 502 stripe_customer_create_failed / stripe_subscription_create_failed
+        var code=(efRes.body&&efRes.body.error)||'unknown_error';
+        cb({ok:false,message:'Abonament nu s-a creat ('+code+'). Biroul a fost salvat — încearcă din nou tier-ul.'});
+        return;
+      }
+      var b=efRes.body||{};
+      cb({
+        ok:true,
+        office_id:officeId,
+        stripe_customer_id:b.stripe_customer_id||null,
+        stripe_subscription_id:b.stripe_subscription_id||null,
+        subscription_status:b.subscription_status||'active',
+        trial_ends_at:null, // populated by webhook on customer.subscription.created
+        current_period_end:'—', // populated by webhook
+        setup_url:b.setup_url||null
+      });
+    });
+  }).catch(function(err){
+    cb({ok:false,message:'Eroare rețea: '+String(err)});
+  });
+}
+// Seed-mode simulator — kept as fallback for environments without legacy JWT
+// or for offline UI validation. v28 leaves this intact.
 function simulateZapier(payload,cb){
   setTimeout(function(){
     var id='new-'+Date.now().toString(36);
     var now=new Date();
-    var trial=payload.plan==='trial_30d';
+    // v28: tier values updated to match locked DB CHECK constraint.
+    var trial=payload.plan==='complimentary_trial';
+    var partner=payload.plan==='complimentary_partner';
     var trialEnd=null,periodEnd=null;
     if(trial){
       var t=new Date(now.getTime()+30*24*3600*1000);
@@ -4198,11 +4394,12 @@ function simulateZapier(payload,cb){
     cb({
       ok:true,
       office_id:id,
-      stripe_customer_id:'cus_mock_'+id,
-      stripe_subscription_id:'sub_mock_'+id,
-      subscription_status:trial?'trial':'active',
+      stripe_customer_id:partner?null:'cus_mock_'+id,
+      stripe_subscription_id:partner?null:'sub_mock_'+id,
+      subscription_status:trial?'trialing':(partner?'active':'incomplete'),
       trial_ends_at:trialEnd,
-      current_period_end:periodEnd
+      current_period_end:periodEnd,
+      setup_url:partner?null:'https://checkout.stripe.com/mock/'+id
     });
   },500);
 }
@@ -4218,7 +4415,7 @@ function submitOfficeCreation(){
   submitRev.innerHTML='<span>Se creează...</span>';
   var err=document.getElementById('co-error');err.style.display='none';err.textContent='';
   var payload=collectOfficePayload();
-  simulateZapier(payload,function(res){
+  createOfficeSubscription(payload,function(res){
     if(!res||!res.ok){
       _coSubmitting=false;
       submit.innerHTML='<span>Creează birou</span><span>⟶</span>';
@@ -4263,8 +4460,29 @@ function submitOfficeCreation(){
     _coSubmitting=false;
     validateOfficeForm();
     soundFinalizat();
-    var toastMsg=payload.plan==='complimentary'?'Birou creat.':'Birou creat. Link de plată trimis la '+payload.contact_email+'.';
-    showToast(toastMsg);
+    // v28 / Phase 1.2: setup-link delivery is dashboard-owned (per master chat reply).
+    // Resend pipeline (Resend.com) ships in master chat v15+ as admin-send-setup-link-
+    // email Edge Function. INTERIM: use mailto: so admin opens their own client with
+    // the link pre-filled. Same surface in round 2 — only the click handler swaps from
+    // mailto: to fetch().
+    if(res.setup_url&&payload.plan!=='complimentary_partner'){
+      // Compose a mailto: with setup_url pre-filled. Subject + body in Romanian.
+      var subj=encodeURIComponent('Acte.legal — Configurează cardul biroului');
+      var body=encodeURIComponent(
+        'Bună ziua,\n\nPentru a finaliza configurarea contului acte.legal pentru '+payload.name+
+        ', vă rugăm să introduceți datele cardului folosind link-ul securizat de mai jos:\n\n'+
+        res.setup_url+'\n\n'+
+        'Link-ul este unic — la prima accesare se deschide o pagină Stripe pentru introducerea cardului.\n\nMulțumim,\nEchipa acte.legal'
+      );
+      var mailtoHref='mailto:'+encodeURIComponent(payload.contact_email)+'?subject='+subj+'&body='+body;
+      // Open mailto: in same window — admin's mail client takes over.
+      try{window.location.href=mailtoHref;}catch(e){}
+      showToast('Birou creat. Deschid client-ul de email cu link-ul pre-completat.');
+    } else if(payload.plan==='complimentary_partner'){
+      showToast('Birou creat. Cont Partner — fără abonament Stripe.');
+    } else {
+      showToast('Birou creat.');
+    }
     // Close + refresh
     document.getElementById('om-create-overlay').classList.remove('open');
     document.getElementById('om-create').classList.remove('open');
@@ -4285,7 +4503,39 @@ function advanceToReview(){
 }
 document.getElementById('co-submit').addEventListener('click',advanceToReview);
 document.getElementById('co-submit-rev').addEventListener('click',submitOfficeCreation);
-document.getElementById('co-plan').addEventListener('change',validateOfficeForm);
+document.getElementById('co-plan').addEventListener('change',function(){
+  validateOfficeForm();
+  // v28: trial auto-convert note visibility — only when complimentary_trial selected.
+  var note=document.getElementById('co-plan-trial-note');
+  if(note){
+    note.style.display=document.getElementById('co-plan').value==='complimentary_trial'?'':'none';
+  }
+});
+// v28 / Phase 1.2: existing-office Plan dropdown — STUB until round 2 wires
+// admin-change-office-tier. Picking the same tier as current is a no-op visually
+// (cddSetValue from renderOfficeAbon already shows it selected); picking a different
+// tier toasts "funcție în pregătire" and does not change DB. Round 2 handler:
+//   if (newTier === o.plan && !o.tier_pending) → no-op
+//   if (newTier === o.plan && o.tier_pending)  → call admin-change-office-tier to cancel
+//   if (newTier !== o.plan)                    → call admin-change-office-tier to schedule
+//   on success: refresh office row from office_subscriptions, re-render Abonament pane.
+document.getElementById('of-plan').addEventListener('change',function(){
+  var picked=document.getElementById('of-plan').value;
+  var o=OM[currentOfficeId];
+  if(!o||!picked)return;
+  // No-op: same tier picked, no pending change.
+  if(picked===o.plan&&!o.tier_pending)return;
+  // STUB: resync dropdown to current value (the change isn't real until master
+  // chat v15+ wires admin-change-office-tier). Toast explains why nothing changed.
+  cddSetValue('cdd-of-plan',o.plan||'',false);
+  showToast('Schimbarea de plan necesită backend round 2 — momentan blocată.');
+});
+// v28 / Phase 1.2: resend setup-link button — STUB until round 2.
+// Round 2 handler: POST to admin-resend-setup-link with { office_id }, on 200
+// showToast('Link nou trimis pe email.'), on 429 showToast('Așteaptă un minut...').
+document.getElementById('of-resend-btn').addEventListener('click',function(){
+  stubPending('Trimite link card');
+});
 Array.prototype.forEach.call(document.querySelectorAll('#om-create .co-inp'),function(inp){
   inp.addEventListener('input',validateOfficeForm);
 });
