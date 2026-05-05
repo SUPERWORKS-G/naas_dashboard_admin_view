@@ -1,7 +1,27 @@
 <!DOCTYPE html>
 <!--
-  acte.legal — Admin Dashboard v28
+  acte.legal — Admin Dashboard v29
   Visual system: identical to notariat_dashboard_v48.html
+  v29: Supabase API key migration — legacy anon JWT (eyJ...) replaced with
+       new publishable key (sb_publishable_*). Single SUPA_KEY constant now
+       used by both the Supabase client and Edge Function auth headers.
+       SUPA_LEGACY_ANON_JWT removed entirely. Confirmed by master chat:
+       Phase B step 0 spike PASSED, both live functions migrated and
+       verified. No contract / endpoint / CORS changes.
+       ALSO: notary_offices schema alignment per master chat lock —
+       stripped phantom fields (email / phone / website / notary_name)
+       from create-office form, REVIZUIRE pane, payload, and office-list
+       SELECT. Single-contact-person model: contact_email / contact_phone
+       only. Plan-label lookup map fixed to use canonical tier values
+       (complimentary_trial / complimentary_partner) — previous mapping
+       used stale trial_30d / complimentary keys, causing REVIZUIRE plan
+       row to silently render '—' on every selection.
+       ALSO: Fix B — admin-create-office-subscription v3 now owns the
+       notary_offices insert (service-role, RLS-safe). Frontend posts
+       single { office: {...}, tier } payload; no more direct sb client
+       insert into notary_offices. Error surface aligned to v3 contract:
+       office_with_cui_already_exists / office_field_required (with
+       field name) / invalid_tier / stripe_state_committed flag.
   v28: Phase 1.2 (notary office subscriptions) — Plan sub-tab wired to
        admin-create-office-subscription Edge Function; Abonament sub-tab
        extended with tier dropdown, pending-change row, discount line,
@@ -1343,12 +1363,9 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
             <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">CUI<span class="urgency-dot co-req-dot" id="co-dot-cui"></span></span><input class="form-inp co-inp mono" id="co-cui" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="RO123456789"><div class="co-inline-err" id="co-err-cui"></div></div></div>
           </div>
           <details>
-            <summary>Detalii birou — 5 câmpuri</summary>
-            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Website</span><input class="form-inp co-inp mono" id="co-website" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="https://..."></div></div>
+            <summary>Detalii birou — 2 câmpuri</summary>
             <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Oraș</span><input class="form-inp co-inp" id="co-city" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="București"></div></div>
             <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Adresă</span><input class="form-inp co-inp" id="co-address" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Str. ..."></div></div>
-            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Email</span><input class="form-inp co-inp mono" id="co-email" type="email" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="birou@..."></div></div>
-            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><input class="form-inp co-inp mono" id="co-phone" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="0700 000 000"></div></div>
           </details>
         </div>
 
@@ -1410,12 +1427,9 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
               <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">CUI</span><input class="form-inp co-inp mono" id="co-rev-cui" style="border-bottom:none;padding:0;" disabled></div></div>
             </div>
             <details>
-              <summary>Detalii birou — 5 câmpuri</summary>
-              <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Website</span><input class="form-inp co-inp mono" id="co-rev-website" style="border-bottom:none;padding:0;" disabled></div></div>
+              <summary>Detalii birou — 2 câmpuri</summary>
               <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Oraș</span><input class="form-inp co-inp" id="co-rev-city" style="border-bottom:none;padding:0;" disabled></div></div>
               <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Adresă</span><input class="form-inp co-inp" id="co-rev-address" style="border-bottom:none;padding:0;" disabled></div></div>
-              <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Email</span><input class="form-inp co-inp mono" id="co-rev-email" style="border-bottom:none;padding:0;" disabled></div></div>
-              <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Telefon</span><input class="form-inp co-inp mono" id="co-rev-phone" style="border-bottom:none;padding:0;" disabled></div></div>
             </details>
           </div>
           <!-- Pane: Persoană de contact (review) -->
@@ -1518,13 +1532,7 @@ var SUPA_URL = 'https://geuogfnlybyrsnlrjdit.supabase.co';
 var SUPA_KEY = 'sb_publishable_kd6KYiBJG_MKQJJsSTOa3Q_rGljVwoX';
 var sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
-// v28 / Phase 1.2: Edge Functions for office subscriptions require the LEGACY anon JWT
-// (not sb_publishable_*) — confirmed by master chat (same pattern as /plateste's
-// create-checkout-session). Paste the eyJ... key below before live testing. If empty,
-// submitOfficeCreation falls back to seed-mode simulation.
-var SUPA_LEGACY_ANON_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldW9nZm5seWJ5cnNubHJqZGl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1OTUzNjgsImV4cCI6MjA5MDE3MTM2OH0.hXPERtU4HSonRGYb_7-5MsfSbbBAzqrRwQOVjXoZVTI'; // legacy anon JWT (acte.legal Supabase project)
-
-// v28 / Phase 1.2: Edge Function endpoints. admin-create-office-subscription is LIVE
+// v29 / Phase 1.2: Edge Function endpoints. admin-create-office-subscription is LIVE
 // in test mode (round 1). Others are placeholders for round 2 — string is correct,
 // function not yet deployed; current UI surfaces stub via stubPending().
 var EDGE_FN = {
@@ -1542,7 +1550,7 @@ function edgeFetch(url,payload){
     method:'POST',
     headers:{
       'Content-Type':'application/json',
-      'Authorization':'Bearer '+SUPA_LEGACY_ANON_JWT
+      'Authorization':'Bearer '+SUPA_KEY
     },
     body:JSON.stringify(payload)
   }).then(function(r){
@@ -1551,7 +1559,14 @@ function edgeFetch(url,payload){
       return {ok:r.ok,status:r.status,body:body};
     });
   }).catch(function(err){
-    return {ok:false,status:0,body:{error:'network_error',detail:String(err)}};
+    // v29: surface the underlying error reason. The most common cause of a
+    // .catch() trip is CORS preflight rejection — the fetch never gets an HTTP
+    // response, so r.ok is never set. file:// origin is the usual culprit when
+    // the dashboard is opened locally; deploy to GitHub Pages or whichever
+    // origin master chat has on the CORS allowlist.
+    var detail=String(err&&err.message||err);
+    console.error('[edgeFetch] network/CORS failure:',url,detail);
+    return {ok:false,status:0,body:{error:'network_error',detail:detail}};
   });
 }
 
@@ -1779,8 +1794,11 @@ function bootApp(user){
 
 function loadAll(){
   // Load offices + templates from Supabase; fall back to seeds if infra not yet live
+  // v29: select aligned to real notary_offices schema (single-contact-person model
+  // per master chat lock). Phantom columns (email/phone/notary_name/website/status)
+  // removed; status now derived from lifecycle_status.
   Promise.all([
-    sb.from('notary_offices').select('id,name,city,notary_name,email,phone,status,created_at'),
+    sb.from('notary_offices').select('id,name,city,address,contact_name,contact_email,contact_phone,lifecycle_status,plan,subscription_status,created_at'),
     sb.from('office_templates').select('*').eq('status','active')
   ]).then(function(results){
     var offRes=results[0], tplRes=results[1];
@@ -1793,12 +1811,22 @@ function loadAll(){
     } else {
       setDbBanner(true,'Conectat la Supabase · Date live');
       OFFICES=offRes.data.map(function(o){
+        // v29: derive display "status" from lifecycle_status. 'active' → 'activ',
+        // 'suspended' → 'avertisment', 'archived' → 'archived' (filtered elsewhere).
+        var displayStatus=({active:'activ',suspended:'avertisment',archived:'archived'})[o.lifecycle_status]||'activ';
         return {
-          id:o.id, name:o.name, city:o.city, notary:o.notary_name||'—',
-          email:o.email||'—', phone:o.phone||'—',
-          status:o.status||'activ',
+          id:o.id, name:o.name, city:o.city||'—',
+          notary:o.contact_name||'—',
+          email:o.contact_email||'—', phone:o.contact_phone||'—',
+          status:displayStatus,
           since:o.created_at?new Date(o.created_at).toLocaleDateString('ro-RO',{month:'short',year:'numeric'}):'—',
-          address:o.address||'—'
+          address:o.address||'—',
+          contact_name:o.contact_name||'',
+          contact_email:o.contact_email||'',
+          contact_phone:o.contact_phone||'',
+          plan:o.plan||null,
+          subscription_status:o.subscription_status||null,
+          lifecycle_status:o.lifecycle_status
         };
       });
       // Cases: loaded per-office on demand (see loadCasesForOffice).
@@ -2358,18 +2386,18 @@ function renderCoReview(){
   }
   mirror('co-name','co-rev-name');
   mirror('co-cui','co-rev-cui');
-  mirror('co-website','co-rev-website');
   mirror('co-city','co-rev-city');
   mirror('co-address','co-rev-address');
-  mirror('co-email','co-rev-email');
-  mirror('co-phone','co-rev-phone');
   mirror('co-contact-name','co-rev-contact-name');
   mirror('co-contact-email','co-rev-contact-email');
   mirror('co-contact-role','co-rev-contact-role');
   mirror('co-contact-phone','co-rev-contact-phone');
   // Plan: resolve the hidden co-plan value to its human label before mirroring.
+  // v29: tier keys aligned to schema CHECK constraint (complimentary_trial /
+  // complimentary_partner) — previous mapping used stale trial_30d / complimentary
+  // and silently fell through to '—' on every selection.
   var plan=(document.getElementById('co-plan')||{value:''}).value;
-  var planLabel={trial_30d:'Trial 30 zile',starter:'Starter',standard:'Standard',pro:'Pro',complimentary:'Complimentary'}[plan]||'—';
+  var planLabel={complimentary_trial:'Trial 30 zile',starter:'Starter',standard:'Standard',pro:'Pro',complimentary_partner:'Partner'}[plan]||'—';
   var dst=document.getElementById('co-rev-plan-label');
   if(dst)dst.value=planLabel;
 }
@@ -4171,7 +4199,7 @@ function openCreateOffice(){
   // Re-force active every time we open.
   document.getElementById('create-panel').classList.add('active');
   // reset form
-  var ids=['co-name','co-cui','co-website','co-city','co-address','co-email','co-phone','co-contact-name','co-contact-role','co-contact-email','co-contact-phone'];
+  var ids=['co-name','co-cui','co-city','co-address','co-contact-name','co-contact-role','co-contact-email','co-contact-phone'];
   ids.forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   cddSetValue('cdd-co-plan','',false);
   Array.prototype.forEach.call(document.querySelectorAll('#om-create details'),function(d){d.open=false;});
@@ -4206,9 +4234,12 @@ function closeCreateOffice(){
 // a body of length N). sum·10 mod 11; if 10 → expected control is 0.
 function validateCUI(raw){
   if(!raw)return {ok:false,normalized:'',error:''};
+  // Romanian CIF/CUI per ANAF: 2–10 digits, optional 'RO' prefix, last digit is
+  // a checksum computed against test key 753217532 (mod 11, 10→0). Validator
+  // accepts both formats (with or without RO, with or without spaces).
   var s=String(raw).trim().toUpperCase().replace(/^RO/,'').replace(/\s+/g,'');
-  if(!/^[0-9]+$/.test(s))return {ok:false,normalized:s,error:'CUI invalid — doar cifre.'};
-  if(s.length<2||s.length>10)return {ok:false,normalized:s,error:'CUI invalid — 2–10 cifre.'};
+  if(!/^[0-9]+$/.test(s))return {ok:false,normalized:s,error:'Doar cifre (opțional prefix RO).'};
+  if(s.length<2||s.length>10)return {ok:false,normalized:s,error:'Trebuie să aibă între 2 și 10 cifre.'};
   var ctrl=parseInt(s.charAt(s.length-1),10);
   var body=s.substring(0,s.length-1);
   var weights=[7,5,3,2,1,7,5,3,2];
@@ -4217,7 +4248,7 @@ function validateCUI(raw){
   for(var i=0;i<body.length;i++){sum+=parseInt(body.charAt(i),10)*weights[wOffset+i];}
   var expected=(sum*10)%11;
   if(expected===10)expected=0;
-  if(expected!==ctrl)return {ok:false,normalized:s,error:'CUI invalid — cifră de control.'};
+  if(expected!==ctrl)return {ok:false,normalized:s,error:'Cifră de control greșită — verifică pe ANAF că CUI-ul e real.'};
   return {ok:true,normalized:s,error:''};
 }
 // Normalize CUI for duplicate comparison (strip RO, uppercase, digits only)
@@ -4293,11 +4324,8 @@ function collectOfficePayload(){
   return {
     name:document.getElementById('co-name').value.trim(),
     cui:document.getElementById('co-cui').value.trim(),
-    website:document.getElementById('co-website').value.trim()||null,
     city:document.getElementById('co-city').value.trim(),
     address:document.getElementById('co-address').value.trim(),
-    email:document.getElementById('co-email').value.trim(),
-    phone:document.getElementById('co-phone').value.trim(),
     contact_name:document.getElementById('co-contact-name').value.trim(),
     contact_role:document.getElementById('co-contact-role').value.trim()||null,
     contact_email:document.getElementById('co-contact-email').value.trim(),
@@ -4305,71 +4333,76 @@ function collectOfficePayload(){
     plan:document.getElementById('co-plan').value
   };
 }
-// v28 / Phase 1.2: createOfficeSubscription wraps two operations:
-//   1. Insert the notary_offices row (frontend, RLS-aware, returns UUID)
-//   2. POST to admin-create-office-subscription with { office_id, tier, contact_email }
-//      to provision Stripe customer + subscription + setup link
+// v29 / Phase 1.2 (Fix B): createOfficeSubscription is now a single Edge Function call.
+// Master chat moved the notary_offices insert INTO admin-create-office-subscription
+// (service-role write) because RLS blocks anon-role inserts and adding a permissive
+// policy was the wrong trade-off. Frontend posts the full office payload + tier; the
+// Edge Function inserts the office row, creates Stripe customer + subscription,
+// inserts office_subscriptions, and returns office_id + Stripe state.
 //
-// ⚠️ ARCHITECTURAL NOTE FOR ROUND 2: master chat's Edge Function contract requires
-// office_id to ALREADY EXIST in notary_offices before invocation. This means the
-// frontend either (a) writes notary_offices directly via the supabase client (RLS
-// must permit), or (b) we ask master chat to fold the office insert into the same
-// Edge Function call. Current implementation: (a). If master chat prefers (b), the
-// Edge Function input contract changes and this function gets a single POST instead
-// of two operations. SURFACE THIS QUESTION before round 2 backend lock.
+// CUI is the idempotency key — same CUI returns 409 office_with_cui_already_exists
+// with the existing office_id surfaced in the response body.
 //
-// Until SUPA_LEGACY_ANON_JWT is set, falls back to simulateZapier (seed mode) —
+// Until SUPA_KEY is set, falls back to simulateZapier (seed mode) —
 // preserves v27 behavior for non-Supabase / no-key environments.
 function createOfficeSubscription(payload,cb){
-  if(!SUPA_LEGACY_ANON_JWT){
+  if(!SUPA_KEY){
     return simulateZapier(payload,cb);
   }
-  // Step 1: insert notary_offices row (direct sb client, RLS-aware).
-  var officeRow={
+  // Build the locked input shape: { office: {...}, tier }.
+  // contact_role / contact_phone are optional — only include if non-empty so the
+  // Edge Function's required-field check doesn't trip on whitespace/null.
+  var office={
     name:payload.name,
     cui:payload.cui,
-    website:payload.website,
     city:payload.city,
     address:payload.address,
-    email:payload.email,
-    phone:payload.phone,
     contact_name:payload.contact_name,
-    contact_role:payload.contact_role,
-    contact_email:payload.contact_email,
-    contact_phone:payload.contact_phone
+    contact_email:payload.contact_email
   };
-  sb.from('notary_offices').insert(officeRow).select('id').single().then(function(insRes){
-    if(insRes.error||!insRes.data||!insRes.data.id){
-      cb({ok:false,message:'Eroare la salvarea biroului: '+((insRes.error&&insRes.error.message)||'necunoscută')});
+  if(payload.contact_role)office.contact_role=payload.contact_role;
+  if(payload.contact_phone)office.contact_phone=payload.contact_phone;
+  edgeFetch(EDGE_FN.createOfficeSubscription,{
+    office:office,
+    tier:payload.plan
+  }).then(function(efRes){
+    var b=efRes.body||{};
+    if(!efRes.ok){
+      // Typed error codes per master chat v3 contract:
+      // 400 office_payload_required / office_field_required (with `field`) /
+      //     tier_required / invalid_tier
+      // 409 office_with_cui_already_exists (with existing office_id)
+      // 500 office_insert_failed (with detail) / config_load_failed /
+      //     stripe_price_not_configured / db_insert_failed (with stripe_state_committed)
+      // 502 stripe_customer_create_failed / stripe_subscription_create_failed
+      var code=b.error||'unknown_error';
+      var msg;
+      if(code==='network_error'){
+        msg='Eroare rețea/CORS. Verifică conexiunea sau deschide dashboard-ul de pe domeniul autorizat (nu file://). Vezi consola pentru detalii.';
+      } else if(code==='office_with_cui_already_exists'){
+        msg='Birou cu acest CUI există deja.';
+      } else if(code==='office_field_required'&&b.field){
+        msg='Câmp obligatoriu lipsă: '+b.field+'.';
+      } else if(code==='invalid_tier'){
+        msg='Plan invalid.';
+      } else if(b.stripe_state_committed){
+        msg='Stripe creat, dar înregistrarea în baza de date a eșuat. Webhook-ul va reconcilia. (cod: '+code+')';
+      } else {
+        msg='Crearea biroului a eșuat (cod: '+code+').';
+      }
+      cb({ok:false,message:msg,code:code,office_id:b.office_id||null});
       return;
     }
-    var officeId=insRes.data.id;
-    // Step 2: call admin-create-office-subscription Edge Function.
-    edgeFetch(EDGE_FN.createOfficeSubscription,{
-      office_id:officeId,
-      tier:payload.plan,
-      contact_email:payload.contact_email
-    }).then(function(efRes){
-      if(!efRes.ok){
-        // Surface the typed error code from master chat's contract:
-        // 400 office_id_required / tier_required / contact_email_required / invalid_tier / invalid_json
-        // 404 office_not_found / 409 subscription_already_exists / 500 db_error / db_insert_failed / config_load_failed
-        // 502 stripe_customer_create_failed / stripe_subscription_create_failed
-        var code=(efRes.body&&efRes.body.error)||'unknown_error';
-        cb({ok:false,message:'Abonament nu s-a creat ('+code+'). Biroul a fost salvat — încearcă din nou tier-ul.'});
-        return;
-      }
-      var b=efRes.body||{};
-      cb({
-        ok:true,
-        office_id:officeId,
-        stripe_customer_id:b.stripe_customer_id||null,
-        stripe_subscription_id:b.stripe_subscription_id||null,
-        subscription_status:b.subscription_status||'active',
-        trial_ends_at:null, // populated by webhook on customer.subscription.created
-        current_period_end:'—', // populated by webhook
-        setup_url:b.setup_url||null
-      });
+    cb({
+      ok:true,
+      office_id:b.office_id,
+      stripe_customer_id:b.stripe_customer_id||null,
+      stripe_subscription_id:b.stripe_subscription_id||null,
+      subscription_status:b.subscription_status||'active',
+      trial_ends_at:null, // populated by webhook on customer.subscription.created
+      current_period_end:'—', // populated by webhook
+      setup_url:b.setup_url||null,
+      setup_link_sent:b.setup_link_sent||false
     });
   }).catch(function(err){
     cb({ok:false,message:'Eroare rețea: '+String(err)});
@@ -4436,13 +4469,12 @@ function submitOfficeCreation(){
       name:payload.name,
       city:payload.city||'—',
       notary:payload.contact_name||payload.name,
-      email:payload.email||payload.contact_email,
-      phone:payload.phone||'',
+      email:payload.contact_email,
+      phone:payload.contact_phone||'',
       status:res.subscription_status==='past_due'?'avertisment':'activ',
       since:since,
       address:payload.address||'',
       cui:payload.cui,
-      website:payload.website||'',
       contact_name:payload.contact_name||'',
       contact_role:payload.contact_role||'',
       contact_email:payload.contact_email,
