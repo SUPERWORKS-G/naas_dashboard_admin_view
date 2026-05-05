@@ -28,6 +28,11 @@
        send a payload that the Edge Function will reject. REVIZUIRE pane
        mirrors the new layout. Required field count: 6 (name, cui, city,
        address, contact_name, contact_email) + plan = 7 dots.
+       ALSO: CUI + contact-email inline error helpers moved from
+       per-keystroke to on-blur display. Validation still runs live (so
+       the submit button gates correctly), but the red helper text only
+       appears once admin leaves the field — eliminates the "error
+       flashes mid-typing" friction. Field is cleared on focus/input.
   v28: Phase 1.2 (notary office subscriptions) — Plan sub-tab wired to
        admin-create-office-subscription Edge Function; Abonament sub-tab
        extended with tier dropdown, pending-change row, discount line,
@@ -4313,9 +4318,12 @@ function validateOfficeForm(){
   document.getElementById('co-dot-contact-name').style.display=cname?'none':'inline-block';
   document.getElementById('co-dot-contact-email').style.display=cemail?'none':'inline-block';
   document.getElementById('co-dot-plan').style.display=plan?'none':'inline-block';
-  // Inline error visibility — mutually exclusive with dot (field has content but is invalid/duplicate)
-  _setInlineErr('co-err-cui',cuiErr);
-  _setInlineErr('co-err-contact-email',emailErr);
+  // Inline error stash — computed every keystroke but only DISPLAYED on blur (or
+  // when admin tries to submit). Avoids the "scary red message while typing"
+  // problem where the helper text flashes on partial input. Stored as data attr;
+  // the field's own blur handler reads this and calls _setInlineErr.
+  document.getElementById('co-cui').dataset.err=cuiErr;
+  document.getElementById('co-contact-email').dataset.err=emailErr;
   // Pane-level dots — show on a sub-tab label when its pane has any unfilled required field or inline error.
   // Helps admins find where to look when submit stays disabled.
   var paneDateNeedsAttn = !name || !cuiOk || !city || !address;  // Date birou: 4 required
@@ -4586,6 +4594,26 @@ document.getElementById('of-resend-btn').addEventListener('click',function(){
 Array.prototype.forEach.call(document.querySelectorAll('#om-create .co-inp'),function(inp){
   inp.addEventListener('input',validateOfficeForm);
 });
+// CUI + contact-email inline errors: show on blur only (validation runs every
+// keystroke but the visible error message stays hidden while admin is typing).
+// On focus/input, clear any stale error so the field looks clean while editing.
+(function wireBlurErrors(){
+  var pairs=[['co-cui','co-err-cui'],['co-contact-email','co-err-contact-email']];
+  pairs.forEach(function(p){
+    var inp=document.getElementById(p[0]);
+    var errId=p[1];
+    if(!inp)return;
+    inp.addEventListener('focus',function(){_setInlineErr(errId,'');});
+    inp.addEventListener('input',function(){_setInlineErr(errId,'');});
+    inp.addEventListener('blur',function(){
+      var err=inp.dataset.err||'';
+      // Only show on blur if field has content AND there's an error. Empty field
+      // already shows the red dot — no need to double-up with helper text.
+      if(inp.value.trim()&&err){_setInlineErr(errId,err);}
+      else{_setInlineErr(errId,'');}
+    });
+  });
+})();
 document.addEventListener('keydown',function(e){
   if(e.key==='Escape'&&document.getElementById('om-create').classList.contains('open')){
     e.preventDefault();
