@@ -22,6 +22,12 @@
        insert into notary_offices. Error surface aligned to v3 contract:
        office_with_cui_already_exists / office_field_required (with
        field name) / invalid_tier / stripe_state_committed flag.
+       ALSO: required-field gating extended — Oraș + Adresă promoted out
+       of the "Detalii birou" collapsible into the main field row, marked
+       required (red dot), and added to the submit-gate so admins can't
+       send a payload that the Edge Function will reject. REVIZUIRE pane
+       mirrors the new layout. Required field count: 6 (name, cui, city,
+       address, contact_name, contact_email) + plan = 7 dots.
   v28: Phase 1.2 (notary office subscriptions) — Plan sub-tab wired to
        admin-create-office-subscription Edge Function; Abonament sub-tab
        extended with tier dropdown, pending-change row, discount line,
@@ -1362,11 +1368,10 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
             <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Denumire<span class="urgency-dot co-req-dot" id="co-dot-name"></span></span><input class="form-inp co-inp" id="co-name" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Cabinet Notarial ..."></div></div>
             <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">CUI<span class="urgency-dot co-req-dot" id="co-dot-cui"></span></span><input class="form-inp co-inp mono" id="co-cui" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="RO123456789"><div class="co-inline-err" id="co-err-cui"></div></div></div>
           </div>
-          <details>
-            <summary>Detalii birou — 2 câmpuri</summary>
-            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Oraș</span><input class="form-inp co-inp" id="co-city" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="București"></div></div>
-            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Adresă</span><input class="form-inp co-inp" id="co-address" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Str. ..."></div></div>
-          </details>
+          <div class="field-pair">
+            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Oraș<span class="urgency-dot co-req-dot" id="co-dot-city"></span></span><input class="form-inp co-inp" id="co-city" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="București"></div></div>
+            <div class="field-stacked"><div class="field-stacked-inner"><span class="fs-lbl">Adresă<span class="urgency-dot co-req-dot" id="co-dot-address"></span></span><input class="form-inp co-inp" id="co-address" data-req="1" style="border-bottom:none;padding:0;" autocomplete="off" placeholder="Str. ..."></div></div>
+          </div>
         </div>
 
         <!-- Pane: Persoană de contact -->
@@ -1426,11 +1431,10 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
               <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Denumire</span><input class="form-inp co-inp" id="co-rev-name" style="border-bottom:none;padding:0;" disabled></div></div>
               <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">CUI</span><input class="form-inp co-inp mono" id="co-rev-cui" style="border-bottom:none;padding:0;" disabled></div></div>
             </div>
-            <details>
-              <summary>Detalii birou — 2 câmpuri</summary>
+            <div class="field-pair">
               <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Oraș</span><input class="form-inp co-inp" id="co-rev-city" style="border-bottom:none;padding:0;" disabled></div></div>
               <div class="field-stacked field-stacked-plain"><div class="field-stacked-inner"><span class="fs-lbl">Adresă</span><input class="form-inp co-inp" id="co-rev-address" style="border-bottom:none;padding:0;" disabled></div></div>
-            </details>
+            </div>
           </div>
           <!-- Pane: Persoană de contact (review) -->
           <div id="co-rev-pane-contact" class="lib-pane" style="display:none;">
@@ -4213,7 +4217,7 @@ function openCreateOffice(){
   submitRev.disabled=true;
   submitRev.innerHTML='<span>Confirmă</span><span>⟶</span>';
   _coSubmitting=false;
-  validateOfficeForm(); // show all 4 required-field dots on fresh open
+  validateOfficeForm(); // show all 7 required-field dots on fresh open
   setCoMainTab('config'); // always land on Configurare main tab
   setCoTab('date'); // always land on Date birou sub-tab
   document.getElementById('om-create-overlay').classList.add('open');
@@ -4276,6 +4280,8 @@ function _setInlineErr(elId,msg){
 function validateOfficeForm(){
   var name=document.getElementById('co-name').value.trim();
   var cui=document.getElementById('co-cui').value.trim();
+  var city=document.getElementById('co-city').value.trim();
+  var address=document.getElementById('co-address').value.trim();
   var cname=document.getElementById('co-contact-name').value.trim();
   var cemail=document.getElementById('co-contact-email').value.trim();
   var plan=document.getElementById('co-plan').value;
@@ -4298,9 +4304,12 @@ function validateOfficeForm(){
     if(dupMail){emailErr='Email deja folosit — '+(dupMail.name||'fără nume')+'.';}
     else{emailOk=true;}
   }
-  // Dot visibility — shown only when field is empty; hidden when present (valid or not)
+  // Dot visibility — shown only when field is empty; hidden when present (valid or not).
+  // v29: city + address added to required set per master chat REQUIRED_OFFICE_FIELDS lock.
   document.getElementById('co-dot-name').style.display=name?'none':'inline-block';
   document.getElementById('co-dot-cui').style.display=cui?'none':'inline-block';
+  document.getElementById('co-dot-city').style.display=city?'none':'inline-block';
+  document.getElementById('co-dot-address').style.display=address?'none':'inline-block';
   document.getElementById('co-dot-contact-name').style.display=cname?'none':'inline-block';
   document.getElementById('co-dot-contact-email').style.display=cemail?'none':'inline-block';
   document.getElementById('co-dot-plan').style.display=plan?'none':'inline-block';
@@ -4309,13 +4318,13 @@ function validateOfficeForm(){
   _setInlineErr('co-err-contact-email',emailErr);
   // Pane-level dots — show on a sub-tab label when its pane has any unfilled required field or inline error.
   // Helps admins find where to look when submit stays disabled.
-  var paneDateNeedsAttn = !name || !cuiOk;                 // Date birou pane has Denumire + CUI required
-  var paneContactNeedsAttn = !cname || !emailOk;           // Persoană de contact pane has Nume + Email required
-  var panePlanNeedsAttn = !plan;                           // Plan pane has only Plan abonament
+  var paneDateNeedsAttn = !name || !cuiOk || !city || !address;  // Date birou: 4 required
+  var paneContactNeedsAttn = !cname || !emailOk;                 // Persoană de contact: Nume + Email required
+  var panePlanNeedsAttn = !plan;                                 // Plan: only Plan abonament required
   document.getElementById('co-tab-dot-date').style.display   = paneDateNeedsAttn    ? 'inline-block' : 'none';
   document.getElementById('co-tab-dot-contact').style.display= paneContactNeedsAttn ? 'inline-block' : 'none';
   document.getElementById('co-tab-dot-plan').style.display   = panePlanNeedsAttn    ? 'inline-block' : 'none';
-  var ok=!!(name&&cuiOk&&cname&&emailOk&&plan);
+  var ok=!!(name&&cuiOk&&city&&address&&cname&&emailOk&&plan);
   document.getElementById('co-submit').disabled=!ok||_coSubmitting;
   document.getElementById('co-submit-rev').disabled=!ok||_coSubmitting;
   return ok;
@@ -4377,7 +4386,13 @@ function createOfficeSubscription(payload,cb){
       // 502 stripe_customer_create_failed / stripe_subscription_create_failed
       var code=b.error||'unknown_error';
       var msg;
-      if(code==='network_error'){
+      if(code==='unknown_error'){
+        // The Edge Function returned a non-OK status but no recognized error
+        // code. Surface the HTTP status + raw body so the admin can diagnose
+        // (and report back to master chat if this becomes recurring).
+        console.error('[createOfficeSubscription] non-OK response with no error code. status=',efRes.status,'body=',b);
+        msg='Răspuns neașteptat de la server (status '+efRes.status+'). Vezi consola pentru detalii.';
+      } else if(code==='network_error'){
         msg='Eroare rețea/CORS. Verifică conexiunea sau deschide dashboard-ul de pe domeniul autorizat (nu file://). Vezi consola pentru detalii.';
       } else if(code==='office_with_cui_already_exists'){
         msg='Birou cu acest CUI există deja.';
