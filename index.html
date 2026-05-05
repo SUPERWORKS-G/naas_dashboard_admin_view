@@ -33,6 +33,39 @@
        the submit button gates correctly), but the red helper text only
        appears once admin leaves the field — eliminates the "error
        flashes mid-typing" friction. Field is cleared on focus/input.
+       ALSO (round 2 — admin-change-office-tier): Plan dropdown wired
+       end-to-end. Three behavioral paths handled per master chat
+       contract: Stripe ↔ Stripe (schedules end-of-period swap), Stripe
+       → complimentary_partner (immediate cancel), complimentary_partner
+       → paid (REJECTED — paid options disabled in dropdown with
+       tooltip; admin uses create-office flow). On success, fresh
+       office_subscriptions row read directly via sb client and
+       Abonament pane re-rendered. Abonament pane logic extracted to
+       renderOfficeAbon() — also called on openOffice for live data.
+       refreshOfficeSubscription() owns the OM[id] cache merge. cdd
+       gained disabled-option support (CSS + click guard + toast on
+       click).
+       ALSO: dashboard-wide date format pass per master chat. New
+       fmtDate() helper produces "1 apr 2026" Romanian short form,
+       always with year. Applied to current_period_end, trial_ends_at,
+       tier_pending_effective_at, raw intake upload stamps, case
+       reschedule preferred-dates. Seed data updated to include years
+       on raw intake + case pref/created. Also fixed Romanian month
+       abbreviation typo (nov → noi) on the case reschedule path.
+       ALSO (round 2 — admin-resend-setup-link): resend button wired
+       end-to-end. In-flight UX: button locks + shows "Se trimite..."
+       during the 2-3s Stripe + Resend round-trip. Success: toast with
+       recipient email from response. 429: button disabled for
+       retry_after_seconds with live countdown ("Așteaptă 42s"). All
+       other typed errors get specific Romanian toasts.
+       ALSO (round 2 — admin-get-office-discount): discount row in
+       Abonament pane wired. Per-session cache keyed by office_id;
+       force-reload on tier change success. formatDiscount() helper
+       produces Romanian display strings: "10% reducere lunar timp de 6
+       luni", "50 RON reducere o singură dată", "25% reducere
+       permanent" etc. Coupon name appended in parens when present.
+       Loading state shows "Se încarcă..."; errors silent (logged only).
+       All 3 round-2 admin functions now wired end-to-end.
   v28: Phase 1.2 (notary office subscriptions) — Plan sub-tab wired to
        admin-create-office-subscription Edge Function; Abonament sub-tab
        extended with tier dropdown, pending-change row, discount line,
@@ -509,6 +542,11 @@ html,body{background:var(--white);color:var(--ink);font-family:var(--sans);font-
 .cdd-opt:hover,.cdd-opt.kb-focus{color:var(--ink);background:var(--bg);}
 .cdd-opt.selected{color:var(--ink);}
 .cdd-opt.selected::before{content:'✓ ';color:var(--ink);}
+/* v29: disabled cdd option — used for path-3 tier change UX (complimentary_partner
+   cannot be promoted to a paid tier from this dropdown; admin must use the
+   create-office flow). title attribute provides the explanatory tooltip. */
+.cdd-opt[disabled]{opacity:.4;cursor:not-allowed;color:var(--grey2)!important;}
+.cdd-opt[disabled]:hover,.cdd-opt[disabled].kb-focus{background:none!important;color:var(--grey2)!important;}
 .form-textarea{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--white);border:1px solid var(--rule);padding:12px;outline:none;width:100%;resize:vertical;min-height:80px;transition:border-color .15s;}
 .form-textarea:focus{border-color:var(--ink);}
 /* Create-office form: field-stacked hosts an inline input; row lights up when focused */
@@ -1600,26 +1638,26 @@ var SEED_OFFICES = [
   {id:'seed-6',name:'Cabinet Notarial Vasilescu',city:'Brașov',     notary:'Elena Vasilescu',email:'vasilescu@acte.legal',phone:'0766 222 333',status:'activ',   since:'Feb 2026',address:'Str. Republicii nr. 34',      cui:'RO45678901',website:'',                            contact_name:'Elena Vasilescu',contact_role:'notar titular',contact_email:'elena@vasilescu-notariat.ro',   contact_phone:'0766 222 334',subscription_status:'active',  plan:'standard',billing_cycle:'monthly',current_period_end:'08 mai 2026',trial_ends_at:null}
 ];
 var SEED_CASES = [
-  {id:'c1', oid:'seed-1',type:'procuri',      act:'Procură',       subtype:'Vânzare imobil',       ref:'NOT-2026-0041',client:'Popescu Maria-Elena',status:'nou',      urgent:true, pref:'17 apr, 14:00',created:'10 apr'},
-  {id:'c2', oid:'seed-1',type:'declaratii',   act:'Declarație',    subtype:'Acceptare succesiune', ref:'NOT-2026-0039',client:'Ionescu Alexandru',  status:'in-lucru', urgent:false,pref:'22 apr, 10:00',created:'8 apr'},
-  {id:'c3', oid:'seed-1',type:'acorduri',     act:'Acord',         subtype:'Partaj bunuri',        ref:'NOT-2026-0036',client:'Stan Gabriela',      status:'programat',urgent:false,pref:'16 apr, 11:00',created:'5 apr'},
-  {id:'c4', oid:'seed-1',type:'legalizari',   act:'Legalizare',    subtype:'Semnătură',            ref:'NOT-2026-0034',client:'Dumitrescu Radu',    status:'nou',      urgent:false,pref:'24 apr, 09:00',created:'4 apr'},
-  {id:'c5', oid:'seed-1',type:'imputerniciri',act:'Împuternicire', subtype:'Bancară',              ref:'NOT-2026-0031',client:'Marin Cristina',     status:'in-lucru', urgent:false,pref:'25 apr, 15:00',created:'2 apr'},
-  {id:'c6', oid:'seed-2',type:'procuri',      act:'Procură',       subtype:'Generală',             ref:'NOT-2026-0045',client:'Georgescu Pavel',    status:'nou',      urgent:false,pref:'16 apr, 16:00',created:'11 apr'},
-  {id:'c7', oid:'seed-2',type:'declaratii',   act:'Declarație',    subtype:'Luare în spațiu',      ref:'NOT-2026-0043',client:'Constantin Elena',   status:'in-lucru', urgent:true, pref:'16 apr, 10:00',created:'10 apr'},
-  {id:'c8', oid:'seed-2',type:'acorduri',     act:'Acord',         subtype:'Între soți — divorț',  ref:'NOT-2026-0040',client:'Radu Mihai',         status:'programat',urgent:false,pref:'18 apr, 14:00',created:'9 apr'},
-  {id:'c9', oid:'seed-2',type:'procuri',      act:'Procură',       subtype:'Cumpărare imobil',     ref:'NOT-2026-0038',client:'Popa Ioana',         status:'nou',      urgent:false,pref:'23 apr, 11:00',created:'8 apr'},
-  {id:'c10',oid:'seed-2',type:'legalizari',   act:'Legalizare',    subtype:'Copie',                ref:'NOT-2026-0035',client:'Dima Silviu',        status:'in-lucru', urgent:false,pref:'26 apr, 09:00',created:'6 apr'},
-  {id:'c11',oid:'seed-2',type:'imputerniciri',act:'Împuternicire', subtype:'Generală',             ref:'NOT-2026-0033',client:'Niculescu Adela',    status:'programat',urgent:false,pref:'19 apr, 15:00',created:'4 apr'},
-  {id:'c12',oid:'seed-2',type:'declaratii',   act:'Declarație',    subtype:'De notorietate',       ref:'NOT-2026-0030',client:'Tudose George',      status:'nou',      urgent:true, pref:'17 apr, 09:00',created:'3 apr'},
-  {id:'c13',oid:'seed-3',type:'procuri',      act:'Procură',       subtype:'ANAF / fiscală',       ref:'NOT-2026-0044',client:'Suciu Mihaela',      status:'nou',      urgent:true, pref:'16 apr, 14:00',created:'11 apr'},
-  {id:'c14',oid:'seed-3',type:'acorduri',     act:'Acord',         subtype:'Mediere',              ref:'NOT-2026-0042',client:'Bota Andrei',        status:'in-lucru', urgent:false,pref:'20 apr, 11:00',created:'10 apr'},
-  {id:'c15',oid:'seed-3',type:'declaratii',   act:'Declarație',    subtype:'Pierdere act',         ref:'NOT-2026-0037',client:'Muresan Dana',       status:'in-lucru', urgent:false,pref:'28 apr, 10:00',created:'7 apr'},
-  {id:'c16',oid:'seed-4',type:'procuri',      act:'Procură',       subtype:'Vânzare imobil',       ref:'NOT-2026-0046',client:'Ardelean Stefania',  status:'nou',      urgent:false,pref:'21 apr, 13:00',created:'12 apr'},
-  {id:'c17',oid:'seed-4',type:'declaratii',   act:'Declarație',    subtype:'Luare în spațiu',      ref:'NOT-2026-0047',client:'Neagu Victor',       status:'in-lucru', urgent:true, pref:'16 apr, 15:30',created:'12 apr'},
-  {id:'c18',oid:'seed-4',type:'legalizari',   act:'Legalizare',    subtype:'Copie',                ref:'NOT-2026-0048',client:'Oprea Liliana',      status:'programat',urgent:false,pref:'22 apr, 09:30',created:'11 apr'},
-  {id:'c19',oid:'seed-1',type:'declaratii',   act:'Declarație',    subtype:'De notorietate',       ref:'NOT-2026-0028',client:'Pop Laura',          status:'anulat',   urgent:false,pref:'15 apr, 10:00',created:'1 apr'},
-  {id:'c20',oid:'seed-2',type:'procuri',      act:'Procură',       subtype:'Generală',             ref:'NOT-2026-0029',client:'Visan Andrei',       status:'anulat',   urgent:false,pref:'12 apr, 14:00',created:'2 apr'}
+  {id:'c1', oid:'seed-1',type:'procuri',      act:'Procură',       subtype:'Vânzare imobil',       ref:'NOT-2026-0041',client:'Popescu Maria-Elena',status:'nou',      urgent:true, pref:'17 apr 2026, 14:00',created:'10 apr 2026'},
+  {id:'c2', oid:'seed-1',type:'declaratii',   act:'Declarație',    subtype:'Acceptare succesiune', ref:'NOT-2026-0039',client:'Ionescu Alexandru',  status:'in-lucru', urgent:false,pref:'22 apr 2026, 10:00',created:'8 apr 2026'},
+  {id:'c3', oid:'seed-1',type:'acorduri',     act:'Acord',         subtype:'Partaj bunuri',        ref:'NOT-2026-0036',client:'Stan Gabriela',      status:'programat',urgent:false,pref:'16 apr 2026, 11:00',created:'5 apr 2026'},
+  {id:'c4', oid:'seed-1',type:'legalizari',   act:'Legalizare',    subtype:'Semnătură',            ref:'NOT-2026-0034',client:'Dumitrescu Radu',    status:'nou',      urgent:false,pref:'24 apr 2026, 09:00',created:'4 apr 2026'},
+  {id:'c5', oid:'seed-1',type:'imputerniciri',act:'Împuternicire', subtype:'Bancară',              ref:'NOT-2026-0031',client:'Marin Cristina',     status:'in-lucru', urgent:false,pref:'25 apr 2026, 15:00',created:'2 apr 2026'},
+  {id:'c6', oid:'seed-2',type:'procuri',      act:'Procură',       subtype:'Generală',             ref:'NOT-2026-0045',client:'Georgescu Pavel',    status:'nou',      urgent:false,pref:'16 apr 2026, 16:00',created:'11 apr 2026'},
+  {id:'c7', oid:'seed-2',type:'declaratii',   act:'Declarație',    subtype:'Luare în spațiu',      ref:'NOT-2026-0043',client:'Constantin Elena',   status:'in-lucru', urgent:true, pref:'16 apr 2026, 10:00',created:'10 apr 2026'},
+  {id:'c8', oid:'seed-2',type:'acorduri',     act:'Acord',         subtype:'Între soți — divorț',  ref:'NOT-2026-0040',client:'Radu Mihai',         status:'programat',urgent:false,pref:'18 apr 2026, 14:00',created:'9 apr 2026'},
+  {id:'c9', oid:'seed-2',type:'procuri',      act:'Procură',       subtype:'Cumpărare imobil',     ref:'NOT-2026-0038',client:'Popa Ioana',         status:'nou',      urgent:false,pref:'23 apr 2026, 11:00',created:'8 apr 2026'},
+  {id:'c10',oid:'seed-2',type:'legalizari',   act:'Legalizare',    subtype:'Copie',                ref:'NOT-2026-0035',client:'Dima Silviu',        status:'in-lucru', urgent:false,pref:'26 apr 2026, 09:00',created:'6 apr 2026'},
+  {id:'c11',oid:'seed-2',type:'imputerniciri',act:'Împuternicire', subtype:'Generală',             ref:'NOT-2026-0033',client:'Niculescu Adela',    status:'programat',urgent:false,pref:'19 apr 2026, 15:00',created:'4 apr 2026'},
+  {id:'c12',oid:'seed-2',type:'declaratii',   act:'Declarație',    subtype:'De notorietate',       ref:'NOT-2026-0030',client:'Tudose George',      status:'nou',      urgent:true, pref:'17 apr 2026, 09:00',created:'3 apr 2026'},
+  {id:'c13',oid:'seed-3',type:'procuri',      act:'Procură',       subtype:'ANAF / fiscală',       ref:'NOT-2026-0044',client:'Suciu Mihaela',      status:'nou',      urgent:true, pref:'16 apr 2026, 14:00',created:'11 apr 2026'},
+  {id:'c14',oid:'seed-3',type:'acorduri',     act:'Acord',         subtype:'Mediere',              ref:'NOT-2026-0042',client:'Bota Andrei',        status:'in-lucru', urgent:false,pref:'20 apr 2026, 11:00',created:'10 apr 2026'},
+  {id:'c15',oid:'seed-3',type:'declaratii',   act:'Declarație',    subtype:'Pierdere act',         ref:'NOT-2026-0037',client:'Muresan Dana',       status:'in-lucru', urgent:false,pref:'28 apr 2026, 10:00',created:'7 apr 2026'},
+  {id:'c16',oid:'seed-4',type:'procuri',      act:'Procură',       subtype:'Vânzare imobil',       ref:'NOT-2026-0046',client:'Ardelean Stefania',  status:'nou',      urgent:false,pref:'21 apr 2026, 13:00',created:'12 apr 2026'},
+  {id:'c17',oid:'seed-4',type:'declaratii',   act:'Declarație',    subtype:'Luare în spațiu',      ref:'NOT-2026-0047',client:'Neagu Victor',       status:'in-lucru', urgent:true, pref:'16 apr 2026, 15:30',created:'12 apr 2026'},
+  {id:'c18',oid:'seed-4',type:'legalizari',   act:'Legalizare',    subtype:'Copie',                ref:'NOT-2026-0048',client:'Oprea Liliana',      status:'programat',urgent:false,pref:'22 apr 2026, 09:30',created:'11 apr 2026'},
+  {id:'c19',oid:'seed-1',type:'declaratii',   act:'Declarație',    subtype:'De notorietate',       ref:'NOT-2026-0028',client:'Pop Laura',          status:'anulat',   urgent:false,pref:'15 apr 2026, 10:00',created:'1 apr 2026'},
+  {id:'c20',oid:'seed-2',type:'procuri',      act:'Procură',       subtype:'Generală',             ref:'NOT-2026-0029',client:'Visan Andrei',       status:'anulat',   urgent:false,pref:'12 apr 2026, 14:00',created:'2 apr 2026'}
 ];
 var SEED_TEMPLATES = [
   {id:'st1',office_id:'seed-1',act_type:'procuri',   subtype:'Vânzare imobil',      name:'Procură — Vânzare imobil',       status:'active',uploaded_at:'15 apr 2026',placeholders:['MANDANT_NAME','MANDANT_CNP','MANDATAR_NAME','CASE_REF'],storage_path:'seed-1/procuri/vanzare-imobil.docx'},
@@ -1634,10 +1672,10 @@ var SEED_TEMPLATES = [
 ];
 // Raw intake seed (UI-only mock; schema matches finalized office_raw_intake — see doc_generator_raw_intake_coordination.md)
 var SEED_RAW_INTAKE = [
-  {id:'ri1',office_id:'seed-1',filename:'procura_cumparare_imobil_ionescu.docx',storage_path:'seed-1/ri1.docx',content_type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',file_size_bytes:48211,uploaded_at:'18 apr',uploaded_by:null,act_type:'procuri',   subtype:'Cumpărare imobil',    status:'pending',linked_template_id:null,notes:null},
-  {id:'ri2',office_id:'seed-1',filename:'acord_partaj_raw.docx',                storage_path:'seed-1/ri2.docx',content_type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',file_size_bytes:31744,uploaded_at:'19 apr',uploaded_by:null,act_type:'acorduri',  subtype:'Partaj bunuri',       status:'pending',linked_template_id:null,notes:null},
-  {id:'ri3',office_id:'seed-2',filename:'declaratie_acceptare_succ_v2.docx',    storage_path:'seed-2/ri3.docx',content_type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',file_size_bytes:27135,uploaded_at:'17 apr',uploaded_by:null,act_type:'declaratii',subtype:'Acceptare succesiune',status:'pending',linked_template_id:null,notes:null},
-  {id:'ri4',office_id:'seed-4',filename:'legalizare_copie.pdf',                 storage_path:'seed-4/ri4.pdf', content_type:'application/pdf',file_size_bytes:112409,uploaded_at:'19 apr',uploaded_by:null,act_type:'',          subtype:'',                    status:'pending',linked_template_id:null,notes:null}
+  {id:'ri1',office_id:'seed-1',filename:'procura_cumparare_imobil_ionescu.docx',storage_path:'seed-1/ri1.docx',content_type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',file_size_bytes:48211,uploaded_at:'18 apr 2026',uploaded_by:null,act_type:'procuri',   subtype:'Cumpărare imobil',    status:'pending',linked_template_id:null,notes:null},
+  {id:'ri2',office_id:'seed-1',filename:'acord_partaj_raw.docx',                storage_path:'seed-1/ri2.docx',content_type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',file_size_bytes:31744,uploaded_at:'19 apr 2026',uploaded_by:null,act_type:'acorduri',  subtype:'Partaj bunuri',       status:'pending',linked_template_id:null,notes:null},
+  {id:'ri3',office_id:'seed-2',filename:'declaratie_acceptare_succ_v2.docx',    storage_path:'seed-2/ri3.docx',content_type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',file_size_bytes:27135,uploaded_at:'17 apr 2026',uploaded_by:null,act_type:'declaratii',subtype:'Acceptare succesiune',status:'pending',linked_template_id:null,notes:null},
+  {id:'ri4',office_id:'seed-4',filename:'legalizare_copie.pdf',                 storage_path:'seed-4/ri4.pdf', content_type:'application/pdf',file_size_bytes:112409,uploaded_at:'19 apr 2026',uploaded_by:null,act_type:'',          subtype:'',                    status:'pending',linked_template_id:null,notes:null}
 ];
 
 // ══ CANONICAL DATA (contract §6) ══════════════════════════════════
@@ -2152,6 +2190,67 @@ function switchView(v){
 
 // ══ OFFICE OVERLAY ═══════════════════════════════════════════════════
 var currentOfficeId=null;
+
+// v29 / Phase 1.2: Abonament pane render. Pulled out of openOffice so it can be
+// re-called after a tier change without rebuilding the rest of the office detail.
+// Reads exclusively from the OM[id] cache; refreshOfficeSubscription is responsible
+// for keeping that cache in sync with office_subscriptions / notary_offices.
+function renderOfficeAbon(o){
+  if(!o)return;
+  var subPill=document.getElementById('of-sub-status');
+  subPill.className='sub-pill '+(o.subscription_status||'active');
+  subPill.textContent=subStatusLabel(o.subscription_status);
+  // Plan dropdown — set silently (no change event so handler doesn't fire).
+  cddSetValue('cdd-of-plan',o.plan||'',false);
+  // Path 3 UX: when current tier is complimentary_partner, disable paid options
+  // in the dropdown. Admin must use the create-office flow to switch to paid.
+  var partnerLock=(o.plan==='complimentary_partner');
+  var lockTip='Pentru a trece la un plan platit, foloseste fluxul de creare cont nou.';
+  Array.prototype.forEach.call(document.querySelectorAll('#cdd-of-plan .cdd-opt'),function(opt){
+    var val=opt.getAttribute('data-v');
+    var disable=(partnerLock&&val!=='complimentary_partner');
+    if(disable){opt.setAttribute('disabled','');opt.setAttribute('title',lockTip);}
+    else{opt.removeAttribute('disabled');opt.removeAttribute('title');}
+  });
+  document.getElementById('of-cycle').textContent=o.billing_cycle==='yearly'?'Anual':(o.billing_cycle==='monthly'?'Lunar':'—');
+  document.getElementById('of-period-end').textContent=fmtDate(o.current_period_end);
+  var trialRow=document.getElementById('of-trial-row');
+  if((o.subscription_status==='trial'||o.subscription_status==='trialing')&&o.trial_ends_at){
+    trialRow.style.display='';
+    document.getElementById('of-trial-end').textContent=fmtDate(o.trial_ends_at);
+  } else {
+    trialRow.style.display='none';
+  }
+  var pendingRow=document.getElementById('of-pending-row');
+  if(o.tier_pending&&o.tier_pending_effective_at){
+    pendingRow.style.display='';
+    document.getElementById('of-pending-val').textContent=planLabel(o.tier_pending)+' din '+fmtDate(o.tier_pending_effective_at);
+  } else {
+    pendingRow.style.display='none';
+  }
+  // Discount line — populated by loadOfficeDiscount via admin-get-office-discount.
+  // o.discount shape (when has_discount=true): { coupon_id, name, percent_off,
+  // amount_off, currency, duration ("once"|"repeating"|"forever"), duration_months }.
+  // 'Se încarcă...' shown while the discount fetch is in flight; admin sees
+  // 'Nicio reducere' once the response confirms there's none.
+  var discountEl=document.getElementById('of-discount');
+  if(o.discount_loading){
+    discountEl.textContent='Se încarcă...';
+  } else if(o.discount){
+    discountEl.textContent=formatDiscount(o.discount);
+  } else {
+    discountEl.textContent='Nicio reducere';
+  }
+  // Resend setup-link row — visible only when status='incomplete' AND tier is
+  // not complimentary_partner (partners have no Stripe subscription).
+  var resendRow=document.getElementById('of-resend-row');
+  if(o.subscription_status==='incomplete'&&o.plan!=='complimentary_partner'){
+    resendRow.style.display='';
+  } else {
+    resendRow.style.display='none';
+  }
+}
+
 function openOffice(oid){
   soundSwitch();
   currentOfficeId=oid;
@@ -2177,51 +2276,10 @@ function openOffice(oid){
   document.getElementById('of-contact-role').textContent=o.contact_role||'—';
   document.getElementById('of-contact-email').textContent=o.contact_email||'—';
   document.getElementById('of-contact-phone').textContent=o.contact_phone||'—';
-  // Subscription block
-  var subPill=document.getElementById('of-sub-status');
-  subPill.className='sub-pill '+(o.subscription_status||'active');
-  subPill.textContent=subStatusLabel(o.subscription_status);
-  // v28: Plan is now a cdd dropdown — set its value via cddSetValue (silent: no
-  // change event fires, so handler doesn't think the admin just picked a new tier).
-  cddSetValue('cdd-of-plan',o.plan||'',false);
-  document.getElementById('of-cycle').textContent=o.billing_cycle==='yearly'?'Anual':(o.billing_cycle==='monthly'?'Lunar':'—');
-  document.getElementById('of-period-end').textContent=o.current_period_end||'—';
-  // Trial expiry row is visible only while on trial (legacy 'trial' or Stripe-native 'trialing')
-  var trialRow=document.getElementById('of-trial-row');
-  if((o.subscription_status==='trial'||o.subscription_status==='trialing')&&o.trial_ends_at){
-    trialRow.style.display='';
-    document.getElementById('of-trial-end').textContent=o.trial_ends_at;
-  } else {
-    trialRow.style.display='none';
-  }
-  // v28 / Phase 1.2: pending tier change row. Visible only when tier_pending IS NOT NULL.
-  // Round 2 (master chat v15+) populates o.tier_pending + o.tier_pending_effective_at via
-  // stripe-webhook on customer.subscription.updated → schedule-fired transition.
-  var pendingRow=document.getElementById('of-pending-row');
-  if(o.tier_pending&&o.tier_pending_effective_at){
-    pendingRow.style.display='';
-    document.getElementById('of-pending-val').textContent=planLabel(o.tier_pending)+' pe '+o.tier_pending_effective_at;
-  } else {
-    pendingRow.style.display='none';
-  }
-  // v28 / Phase 1.2: discount line. STUB — round 2 fetches from Stripe via
-  // admin-get-office-discount Edge Function, normalized output:
-  //   { has_discount, discount: { label, duration, duration_months, coupon_id } }
-  // Until then, render whatever's on the office row (none for seed data).
-  var discountEl=document.getElementById('of-discount');
-  if(o.discount&&o.discount.label){
-    discountEl.textContent=o.discount.label+(o.discount.duration_months?' · '+o.discount.duration_months+' luni':'');
-  } else {
-    discountEl.textContent='Nicio reducere';
-  }
-  // v28 / Phase 1.2: resend setup-link row. Visible only when status='incomplete'
-  // AND tier is not complimentary_partner (partners have no Stripe subscription).
-  var resendRow=document.getElementById('of-resend-row');
-  if(o.subscription_status==='incomplete'&&o.plan!=='complimentary_partner'){
-    resendRow.style.display='';
-  } else {
-    resendRow.style.display='none';
-  }
+  // Subscription block — extracted to renderOfficeAbon so it can be re-called
+  // after admin-change-office-tier success (refreshOfficeSubscription updates the
+  // OM[id] entry, then we re-render the pane in place).
+  renderOfficeAbon(o);
   document.getElementById('of-stat-dosare').textContent=cs.length;
   document.getElementById('of-stat-urgente').textContent=urg;
   document.getElementById('of-stat-tpl').textContent=cov.covered+' / '+cov.target;
@@ -2243,6 +2301,23 @@ function openOffice(oid){
   document.getElementById('om-overlay').classList.add('open');
   document.getElementById('om').classList.add('open');
   activateTab('detalii');
+  // v29 / Phase 1.2: pull fresh office_subscriptions data and re-render the
+  // Abonament pane. The OM[id] cache from the office-list query doesn't include
+  // subscription columns (tier_pending, billing_cycle, current_period_end, etc.)
+  // — they live on office_subscriptions. Lazy-fetch on detail open is cheaper
+  // than joining at list-load time. Background fetch — no spinner, just a soft
+  // upgrade once data arrives.
+  refreshOfficeSubscription(oid,function(){
+    var fresh=OM[oid];
+    if(fresh)renderOfficeAbon(fresh);
+  });
+  // v29 / Phase 1.2 (round 2): pull discount via admin-get-office-discount.
+  // Per-session cached (hit returns immediately). complimentary_partner / no
+  // stripe_subscription_id short-circuit server-side without a Stripe call.
+  loadOfficeDiscount(oid,false,function(){
+    var fresh=OM[oid];
+    if(fresh)renderOfficeAbon(fresh);
+  });
 }
 function closeOffice(){
   soundSwitch();
@@ -2756,9 +2831,7 @@ function rawContentType(ext){
 function addRawIntakeFiles(files){
   if(!files||!files.length)return;
   if(!currentOfficeId)return;
-  var now=new Date();
-  var M=['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','noi','dec'];
-  var stamp=now.getDate()+' '+M[now.getMonth()];
+  var stamp=fmtDate(new Date());
   var added=0;
   Array.prototype.forEach.call(files,function(f){
     var id=rawUuid();
@@ -2840,6 +2913,13 @@ function addRawIntakeFiles(files){
     var opt=e.target.closest?e.target.closest('.cdd-opt'):null;
     if(opt){
       e.stopPropagation();
+      // v29: skip disabled options (path-3 tier change UX). Surface tooltip text
+      // as a toast since title attrs are easy to miss on click.
+      if(opt.disabled||opt.hasAttribute('disabled')){
+        var tip=opt.getAttribute('title');
+        if(tip)showToast(tip);
+        return;
+      }
       var cdd2=opt.parentNode;while(cdd2&&!cdd2.classList.contains('cdd'))cdd2=cdd2.parentNode;
       if(!cdd2)return;
       cddSetValue(cdd2.id,opt.getAttribute('data-v'),true);
@@ -3361,6 +3441,42 @@ var SUB_STATUS_LABELS={trial:'Trial',trialing:'Trial',active:'Activ',past_due:'R
 var PLAN_LABELS={starter:'Starter',standard:'Standard',pro:'Pro',complimentary_trial:'Trial 30 zile',complimentary_partner:'Partner',trial_30d:'Trial 30 zile',complimentary:'Partner'};
 function subStatusLabel(s){return SUB_STATUS_LABELS[s]||'—';}
 function planLabel(p){return PLAN_LABELS[p]||'—';}
+
+// v29 / Phase 1.2: dashboard-wide date formatter. Accepts ISO 8601 strings (from
+// Supabase columns like current_period_end, tier_pending_effective_at), Date
+// objects, or already-formatted Romanian strings (passes them through). Returns
+// "1 apr 2026" — short Romanian month, day with no leading zero, full year.
+// Master chat lock: every date display in the dashboard must include the year.
+var RO_MONTHS_SHORT=['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','noi','dec'];
+function fmtDate(input){
+  if(input==null||input===''||input==='—')return '—';
+  // Already-formatted Romanian string (e.g. "12 apr 2026" from seed data)? Pass through.
+  if(typeof input==='string'&&/^\d{1,2}\s+(ian|feb|mar|apr|mai|iun|iul|aug|sep|oct|noi|dec)\s+\d{4}\b/i.test(input))return input;
+  var d=(input instanceof Date)?input:new Date(input);
+  if(isNaN(d.getTime()))return String(input); // unparseable — return raw
+  return d.getDate()+' '+RO_MONTHS_SHORT[d.getMonth()]+' '+d.getFullYear();
+}
+
+// v29 / Phase 1.2 (round 2): format a normalized discount object from
+// admin-get-office-discount into a Romanian display string.
+//   percent_off=10 + repeating + duration_months=6 → "10% reducere lunar timp de 6 luni"
+//   percent_off=25 + forever                       → "25% reducere permanent"
+//   amount_off=5000 + currency=ron + once          → "50 RON reducere o singură dată"
+// Coupon name (if present) is appended in parens for admin reference.
+function formatDiscount(d){
+  if(!d)return 'Nicio reducere';
+  var amount;
+  if(d.percent_off!=null){amount=d.percent_off+'%';}
+  else if(d.amount_off!=null){amount=Math.round(d.amount_off/100)+' '+(d.currency||'').toUpperCase();}
+  else{amount='—';}
+  var duration;
+  if(d.duration==='once'){duration='o singură dată';}
+  else if(d.duration==='forever'){duration='permanent';}
+  else if(d.duration==='repeating'){duration='lunar timp de '+(d.duration_months||0)+' luni';}
+  else{duration='';}
+  var base=amount+' reducere'+(duration?' '+duration:'');
+  return d.name?(base+' ('+d.name+')'):base;
+}
 
 // v28 / Phase 1.2: stub helper for layout-locked-but-unwired UI elements.
 // Round 2 (master chat v15+) replaces each stub call with a real Edge Function fetch.
@@ -3957,10 +4073,10 @@ function ivCommit(kind){
     var newTime=document.getElementById('iv-pref-time').value;
     reason=document.getElementById('iv-pref-reason').value.trim();
     if(!newDate||!newTime||!reason){errEl.classList.add('show');soundErr();return;}
-    // Assemble display string "28 apr, 14:00" from ISO date + HH:MM
-    var monthsRo=['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','nov','dec'];
+    // Assemble display string "28 apr 2026, 14:00" from ISO date + HH:MM
     var parts=newDate.split('-');
-    var newPref=parseInt(parts[2],10)+' '+monthsRo[parseInt(parts[1],10)-1]+', '+newTime;
+    var dt=new Date(parseInt(parts[0],10),parseInt(parts[1],10)-1,parseInt(parts[2],10));
+    var newPref=fmtDate(dt)+', '+newTime;
     changed={preferred_date:newPref};
     c.pref=newPref;
   } else if(kind==='urgent'){
@@ -4566,31 +4682,228 @@ document.getElementById('co-plan').addEventListener('change',function(){
     note.style.display=document.getElementById('co-plan').value==='complimentary_trial'?'':'none';
   }
 });
-// v28 / Phase 1.2: existing-office Plan dropdown — STUB until round 2 wires
-// admin-change-office-tier. Picking the same tier as current is a no-op visually
-// (cddSetValue from renderOfficeAbon already shows it selected); picking a different
-// tier toasts "funcție în pregătire" and does not change DB. Round 2 handler:
-//   if (newTier === o.plan && !o.tier_pending) → no-op
-//   if (newTier === o.plan && o.tier_pending)  → call admin-change-office-tier to cancel
-//   if (newTier !== o.plan)                    → call admin-change-office-tier to schedule
-//   on success: refresh office row from office_subscriptions, re-render Abonament pane.
+// v29 / Phase 1.2 (round 2): existing-office Plan dropdown — wired to
+// admin-change-office-tier. Three behavioral paths per master chat contract:
+//   Path 1: Stripe ↔ Stripe — schedules end-of-period swap (idempotent: 4 cases)
+//   Path 2: Stripe → complimentary_partner — immediate cancel + DB update
+//   Path 3: complimentary_partner → paid — REJECTED (admin uses create-office flow)
+//
+// On success: re-fetch office_subscriptions row + re-render Abonament pane.
+// On Path 3: 400 with localized error message; we also disable paid options in
+// the dropdown for complimentary_partner offices (UX: never offer a failing action).
+function refreshOfficeSubscription(officeId,cb){
+  // Read live office_subscriptions row + notary_offices columns that may have
+  // changed (lifecycle_status), merge into OM[officeId], call cb. Used after
+  // tier change success and on opening the office detail panel.
+  if(!SUPA_KEY||!officeId){if(cb)cb();return;}
+  Promise.all([
+    sb.from('office_subscriptions').select('tier,tier_pending,tier_pending_effective_at,subscription_status,billing_cycle,current_period_end,trial_ends_at,stripe_customer_id,stripe_subscription_id').eq('office_id',officeId).maybeSingle(),
+    sb.from('notary_offices').select('plan,subscription_status,lifecycle_status,current_period_end,trial_ends_at').eq('id',officeId).maybeSingle()
+  ]).then(function(results){
+    var subRes=results[0],ofRes=results[1];
+    var o=OM[officeId]; if(!o){if(cb)cb();return;}
+    var sub=subRes&&subRes.data;
+    var nof=ofRes&&ofRes.data;
+    if(sub){
+      o.plan=sub.tier||o.plan;
+      o.tier_pending=sub.tier_pending||null;
+      o.tier_pending_effective_at=sub.tier_pending_effective_at||null;
+      o.subscription_status=sub.subscription_status||o.subscription_status;
+      o.billing_cycle=sub.billing_cycle||o.billing_cycle;
+      o.current_period_end=sub.current_period_end||o.current_period_end;
+      o.trial_ends_at=sub.trial_ends_at||o.trial_ends_at;
+      o.stripe_customer_id=sub.stripe_customer_id||o.stripe_customer_id;
+      o.stripe_subscription_id=sub.stripe_subscription_id||o.stripe_subscription_id;
+    }
+    if(nof){
+      // notary_offices.plan is mirrored from office_subscriptions; trust sub if both exist
+      if(!sub){o.plan=nof.plan||o.plan;o.subscription_status=nof.subscription_status||o.subscription_status;}
+      o.lifecycle_status=nof.lifecycle_status||o.lifecycle_status;
+    }
+    if(cb)cb();
+  }).catch(function(err){
+    console.error('[refreshOfficeSubscription] failed',err);
+    if(cb)cb();
+  });
+}
+
+// v29 / Phase 1.2 (round 2): per-session discount cache + fetcher.
+// Discount changes rarely (admin sets them in Stripe Dashboard) so we cache
+// per-session keyed by office_id. Tier change success invalidates the cache
+// for that office (force=true) since it can affect discount eligibility.
+// Master chat contract: complimentary_partner / no stripe_subscription_id
+// returns has_discount=false immediately — no Stripe round-trip.
+var _DISCOUNT_CACHE={};
+function loadOfficeDiscount(officeId,force,cb){
+  if(!SUPA_KEY||!officeId){if(cb)cb();return;}
+  var o=OM[officeId]; if(!o){if(cb)cb();return;}
+  // Cache hit — apply and skip the fetch.
+  if(!force&&_DISCOUNT_CACHE.hasOwnProperty(officeId)){
+    o.discount=_DISCOUNT_CACHE[officeId];
+    o.discount_loading=false;
+    if(cb)cb();
+    return;
+  }
+  o.discount_loading=true;
+  edgeFetch(EDGE_FN.getOfficeDiscount,{office_id:officeId}).then(function(efRes){
+    o.discount_loading=false;
+    if(!efRes.ok){
+      // Don't toast — discount fetch failure is silent. Just leave 'Nicio
+      // reducere' showing. Log for diagnostics.
+      console.error('[loadOfficeDiscount] failed',(efRes.body&&efRes.body.error)||'unknown',efRes.status);
+      o.discount=null;
+      _DISCOUNT_CACHE[officeId]=null;
+      if(cb)cb();
+      return;
+    }
+    var b=efRes.body||{};
+    o.discount=b.has_discount?b.discount:null;
+    _DISCOUNT_CACHE[officeId]=o.discount;
+    if(cb)cb();
+  });
+}
+
 document.getElementById('of-plan').addEventListener('change',function(){
   var picked=document.getElementById('of-plan').value;
   var o=OM[currentOfficeId];
   if(!o||!picked)return;
   // No-op: same tier picked, no pending change.
   if(picked===o.plan&&!o.tier_pending)return;
-  // STUB: resync dropdown to current value (the change isn't real until master
-  // chat v15+ wires admin-change-office-tier). Toast explains why nothing changed.
-  cddSetValue('cdd-of-plan',o.plan||'',false);
-  showToast('Schimbarea de plan necesită backend round 2 — momentan blocată.');
+  // Path 3 guard (defensive — disabled options should already prevent this,
+  // but a keyboard user with focus on a disabled option could still hit Enter).
+  if(o.plan==='complimentary_partner'&&picked!=='complimentary_partner'){
+    cddSetValue('cdd-of-plan',o.plan,false);
+    showToast('Pentru a trece la un plan platit, foloseste fluxul de creare cont nou.');
+    return;
+  }
+  // Optimistic UI: dim the dropdown while in flight (cdd doesn't have a native
+  // disabled state — using a CSS class on the wrapper to prevent re-clicks).
+  var cddEl=document.getElementById('cdd-of-plan');
+  cddEl.style.pointerEvents='none';
+  cddEl.style.opacity='.5';
+  edgeFetch(EDGE_FN.changeOfficeTier,{
+    office_id:currentOfficeId,
+    new_tier:picked
+  }).then(function(efRes){
+    cddEl.style.pointerEvents='';
+    cddEl.style.opacity='';
+    if(!efRes.ok){
+      var code=(efRes.body&&efRes.body.error)||'unknown_error';
+      var msg=(efRes.body&&efRes.body.message)||null;
+      // Resync dropdown to current value — change didn't go through.
+      cddSetValue('cdd-of-plan',o.plan||'',false);
+      if(code==='complimentary_partner_to_paid_not_supported'){
+        showToast(msg||'Pentru a trece la un plan platit, foloseste fluxul de creare cont nou.');
+      } else if(code==='no_active_stripe_subscription'){
+        showToast('Biroul nu are abonament Stripe activ.');
+      } else if(code==='network_error'){
+        showToast('Eroare rețea — încearcă din nou.');
+      } else {
+        showToast('Schimbarea planului a eșuat (cod: '+code+').');
+      }
+      return;
+    }
+    // Success — refresh subscription state + re-render Abonament pane.
+    // Tier change can affect discount eligibility (e.g. promo coupons attached
+    // to specific tiers) so we force-reload the discount cache too.
+    refreshOfficeSubscription(currentOfficeId,function(){
+      var fresh=OM[currentOfficeId];
+      if(fresh)renderOfficeAbon(fresh);
+      // Toast describing what just happened.
+      var b=efRes.body||{};
+      if(b.tier_pending&&b.tier_pending_effective_at){
+        showToast('Schimbare programată: '+planLabel(b.tier_pending)+' din '+fmtDate(b.tier_pending_effective_at)+'.');
+      } else if(b.tier==='complimentary_partner'){
+        showToast('Trecut pe Partner. Stripe anulat.');
+      } else {
+        showToast('Schimbare anulată.');
+      }
+      // Force-reload discount in background; re-render once it lands.
+      loadOfficeDiscount(currentOfficeId,true,function(){
+        var f2=OM[currentOfficeId];
+        if(f2)renderOfficeAbon(f2);
+      });
+    });
+  });
 });
-// v28 / Phase 1.2: resend setup-link button — STUB until round 2.
-// Round 2 handler: POST to admin-resend-setup-link with { office_id }, on 200
-// showToast('Link nou trimis pe email.'), on 429 showToast('Așteaptă un minut...').
-document.getElementById('of-resend-btn').addEventListener('click',function(){
-  stubPending('Trimite link card');
-});
+// v29 / Phase 1.2 (round 2): resend setup-link button — wired to
+// admin-resend-setup-link. Visible only when status='incomplete' AND tier is
+// not complimentary_partner (gated by renderOfficeAbon). Function takes 2-3s
+// (Stripe + Resend round-trips) so we lock the button + show "Se trimite...".
+// 429 rate-limit: disable button for retry_after_seconds, show message inline.
+(function wireResendSetupLink(){
+  var btn=document.getElementById('of-resend-btn');
+  if(!btn)return;
+  var defaultLabel='Trimite link card pe email ⟶';
+  var cooldownTimer=null;
+  function setCooldown(seconds){
+    if(cooldownTimer)clearInterval(cooldownTimer);
+    var remaining=seconds;
+    btn.disabled=true;
+    btn.style.opacity='.5';
+    btn.style.cursor='not-allowed';
+    btn.textContent='Așteaptă '+remaining+'s';
+    cooldownTimer=setInterval(function(){
+      remaining--;
+      if(remaining<=0){
+        clearInterval(cooldownTimer);
+        cooldownTimer=null;
+        btn.disabled=false;
+        btn.style.opacity='';
+        btn.style.cursor='';
+        btn.textContent=defaultLabel;
+      } else {
+        btn.textContent='Așteaptă '+remaining+'s';
+      }
+    },1000);
+  }
+  btn.addEventListener('click',function(){
+    if(btn.disabled||!currentOfficeId)return;
+    btn.disabled=true;
+    btn.style.opacity='.5';
+    btn.style.cursor='wait';
+    btn.textContent='Se trimite...';
+    edgeFetch(EDGE_FN.resendSetupLink,{office_id:currentOfficeId}).then(function(efRes){
+      if(efRes.ok){
+        var b=efRes.body||{};
+        showToast('Email trimis către '+(b.sent_to||'office'));
+        // Reset button after 2s — admin might want to resend (will hit 60s rate
+        // limit on backend, but UX-wise we don't lock the button locally on success).
+        setTimeout(function(){
+          btn.disabled=false;
+          btn.style.opacity='';
+          btn.style.cursor='';
+          btn.textContent=defaultLabel;
+        },2000);
+        return;
+      }
+      var code=(efRes.body&&efRes.body.error)||'unknown_error';
+      var msg=(efRes.body&&efRes.body.message)||null;
+      if(code==='rate_limited'){
+        var secs=(efRes.body&&efRes.body.retry_after_seconds)||60;
+        showToast(msg||'Așteaptă '+secs+' secunde înainte de a trimite din nou.');
+        setCooldown(secs);
+        return;
+      }
+      // All other errors — release the button and toast a useful message.
+      btn.disabled=false;
+      btn.style.opacity='';
+      btn.style.cursor='';
+      btn.textContent=defaultLabel;
+      if(code==='complimentary_partner_no_setup_link'){
+        showToast('Partner nu are nevoie de card.');
+      } else if(code==='no_stripe_customer'){
+        showToast('Biroul nu are client Stripe.');
+      } else if(code==='no_contact_email_on_file'){
+        showToast('Lipsește emailul de contact.');
+      } else if(code==='network_error'){
+        showToast('Eroare rețea — încearcă din nou.');
+      } else {
+        showToast('Trimitere eșuată (cod: '+code+').');
+      }
+    });
+  });
+})();
 Array.prototype.forEach.call(document.querySelectorAll('#om-create .co-inp'),function(inp){
   inp.addEventListener('input',validateOfficeForm);
 });
