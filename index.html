@@ -1,7 +1,27 @@
 <!DOCTYPE html>
 <!--
-  acte.legal — Admin Dashboard v29
+  acte.legal — Admin Dashboard v30
   Visual system: identical to notariat_dashboard_v48.html
+  v30: CUI validator — ANAF checksum REMOVED per George's lock (UX over
+       technical correctness). Previous validator rejected legitimate CUIs
+       and blocked office creation. Frontend now only enforces minimal
+       shape (digits, optional RO prefix, 2–10 digits length). Backend
+       Edge Function admin-create-office-subscription remains the source
+       of truth for CUI uniqueness via 409 office_with_cui_already_exists.
+       Frontend duplicate check against OFFICES list also preserved (catches
+       dupes without round-tripping the server). No contract / endpoint /
+       layout changes. All other v29 wiring intact.
+       ALSO (Phase B step 5 follow-up): tab-focus refresh for the open
+       office detail panel. Webhook v2 reconciles office_subscriptions
+       asynchronously (tier-swap firing, payment failure, cancellation).
+       If admin keeps a panel open while a webhook fires in the background,
+       the panel renders stale state. On visibilitychange → visible, if
+       a panel is open, re-read office_subscriptions + force-refresh the
+       discount and re-render. Throttled to 2s to avoid hammering the DB
+       on rapid tab toggles. List view stays in sync automatically via
+       master chat's new DB trigger that mirrors office_subscriptions →
+       notary_offices.plan / subscription_status. No code changes needed
+       in v30 to consume the mirror — it just works.
   v29: Supabase API key migration — legacy anon JWT (eyJ...) replaced with
        new publishable key (sb_publishable_*). Single SUPA_KEY constant now
        used by both the Supabase client and Edge Function auth headers.
@@ -4352,28 +4372,19 @@ function closeCreateOffice(){
   document.getElementById('om-create-overlay').classList.remove('open');
   document.getElementById('om-create').classList.remove('open');
 }
-// Romanian CUI validator — ANAF checksum algorithm.
+// Romanian CUI sanity-check (v30: checksum REMOVED per George's lock — UX over
+// technical correctness; the ANAF checksum was rejecting legitimate values and
+// blocking office creation. Backend Edge Function admin-create-office-subscription
+// is the source of truth for CUI uniqueness via the 409 office_with_cui_already_exists
+// path. Frontend now only enforces minimal shape: digits with optional RO prefix.)
 // Returns {ok, normalized, error}. Accepts optional "RO" prefix (case-insensitive),
-// 2–10 digits body. Control digit is the last digit; body is verified against
-// weights [7,5,3,2,1,7,5,3,2] aligned from the RIGHT (rightmost N weights for
-// a body of length N). sum·10 mod 11; if 10 → expected control is 0.
+// strips spaces. Length kept generous (2–10 digits) to match ANAF format range
+// without rejecting edge cases.
 function validateCUI(raw){
   if(!raw)return {ok:false,normalized:'',error:''};
-  // Romanian CIF/CUI per ANAF: 2–10 digits, optional 'RO' prefix, last digit is
-  // a checksum computed against test key 753217532 (mod 11, 10→0). Validator
-  // accepts both formats (with or without RO, with or without spaces).
   var s=String(raw).trim().toUpperCase().replace(/^RO/,'').replace(/\s+/g,'');
   if(!/^[0-9]+$/.test(s))return {ok:false,normalized:s,error:'Doar cifre (opțional prefix RO).'};
   if(s.length<2||s.length>10)return {ok:false,normalized:s,error:'Trebuie să aibă între 2 și 10 cifre.'};
-  var ctrl=parseInt(s.charAt(s.length-1),10);
-  var body=s.substring(0,s.length-1);
-  var weights=[7,5,3,2,1,7,5,3,2];
-  var wOffset=weights.length-body.length;
-  var sum=0;
-  for(var i=0;i<body.length;i++){sum+=parseInt(body.charAt(i),10)*weights[wOffset+i];}
-  var expected=(sum*10)%11;
-  if(expected===10)expected=0;
-  if(expected!==ctrl)return {ok:false,normalized:s,error:'Cifră de control greșită — verifică pe ANAF că CUI-ul e real.'};
   return {ok:true,normalized:s,error:''};
 }
 // Normalize CUI for duplicate comparison (strip RO, uppercase, digits only)
@@ -4933,6 +4944,34 @@ document.addEventListener('keydown',function(e){
     closeCreateOffice();
   }
 });
+
+// v30 / Phase B step 5 follow-up: tab-focus refresh for the open office detail panel.
+// Webhook v2 reconciles office_subscriptions asynchronously (Stripe schedule firing,
+// payment failure, cancellation, trial-end). If admin keeps a detail panel open and
+// a webhook fires in the background, the panel renders stale state. On tab regain
+// focus, re-read office_subscriptions + force-refresh the discount, then re-render.
+// Throttled to 2s to avoid hammering the DB on rapid tab toggles.
+(function wireTabFocusRefresh(){
+  var _lastRefreshAt=0;
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState!=='visible')return;
+    if(!currentOfficeId)return; // detail panel not open — nothing to refresh
+    var now=Date.now();
+    if(now-_lastRefreshAt<2000)return; // throttle
+    _lastRefreshAt=now;
+    var oid=currentOfficeId;
+    refreshOfficeSubscription(oid,function(){
+      if(currentOfficeId!==oid)return; // user closed/switched while in flight
+      var fresh=OM[oid];
+      if(fresh)renderOfficeAbon(fresh);
+    });
+    loadOfficeDiscount(oid,true,function(){
+      if(currentOfficeId!==oid)return;
+      var fresh=OM[oid];
+      if(fresh)renderOfficeAbon(fresh);
+    });
+  });
+})();
 
 // ══ EVENT DELEGATION ════════════════════════════════════════════════
 document.getElementById('om-close').addEventListener('click',closeOffice);
