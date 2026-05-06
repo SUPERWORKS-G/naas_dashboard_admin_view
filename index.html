@@ -1,7 +1,35 @@
 <!DOCTYPE html>
 <!--
-  acte.legal — Admin Dashboard v30
+  acte.legal — Admin Dashboard v31
   Visual system: identical to notariat_dashboard_v48.html
+  v31: Template upload wiring aligned to master chat's locked schema
+       (Phase 4c.6 follow-up — Q1-Q4 answers, 2026-05-06).
+       commitUpload() rewritten:
+         • Bucket: 'office-templates' → 'office-assets' (Q1)
+         • Storage path: {oid}/{act}/{slug}.docx →
+           {oid}/{act}/{subtype_key}/{filename} (Q2)
+         • Insert columns aligned: subtype_id (UUID FK to act_subtypes),
+           filename, mime_type, size_bytes. Dropped: name, subtype (text),
+           placeholders, notes — no longer in office_templates schema (Q3)
+         • Supersede flow now: insert new row → mark priors superseded
+           with superseded_by linkage → delete prior storage objects.
+           Orphan delete failure logged but never rolls back (Q2)
+       loadAll() additions:
+         • Loads act_subtypes(id, act_type, subtype_key, label) on boot
+           per master Q4 answer (option (a): direct table read via
+           act_subtypes_read RLS policy). Builds ACT_SUBTYPES_BY_ID and
+           ACT_SUBTYPES_BY_LABEL caches; commitUpload() resolves the
+           subtype_id FK from display label via the BY_LABEL cache.
+         • TEMPLATES post-load mapping derives display fields client-side:
+           subtype label from act_subtypes lookup, name from
+           "{ACT_LABELS_SINGULAR} — {label}", placeholders=[]. The token
+           preview pane shows an info note for DB-loaded templates
+           ("Tokenii nu sunt stocați în baza de date"); in-session
+           uploaded templates still show the full role-grouped token view.
+       restoreTemplate() now matches priors on subtype_id (FK) when both
+       sides have it; falls back to label match for legacy/seed rows.
+       Token validation pane stays advisory only — Edge Function renders
+       unknown tokens as empty strings (verified end-to-end by master).
   v30: CUI validator — ANAF checksum REMOVED per George's lock (UX over
        technical correctness). Previous validator rejected legitimate CUIs
        and blocked office creation. Frontend now only enforces minimal
@@ -21,7 +49,7 @@
        on rapid tab toggles. List view stays in sync automatically via
        master chat's new DB trigger that mirrors office_subscriptions →
        notary_offices.plan / subscription_status. No code changes needed
-       in v30 to consume the mirror — it just works.
+       to consume the mirror — it just works.
   v29: Supabase API key migration — legacy anon JWT (eyJ...) replaced with
        new publishable key (sb_publishable_*). Single SUPA_KEY constant now
        used by both the Supabase client and Edge Function auth headers.
@@ -1648,6 +1676,14 @@ var OM = {};        // office_id → office object
 var CURRENT_USER = null;
 var DB_LIVE = false; // true once Supabase responds
 
+// v31: act_subtypes cache. Loaded by loadAll() per master chat lock (Q4 answer):
+// dashboard reads act_subtypes directly via RLS policy act_subtypes_read.
+// Used by commitUpload() to resolve display label → subtype_id (UUID FK) +
+// subtype_key (slug for storage path). Empty until first loadAll() success.
+var ACT_SUBTYPES_BY_ID = {};
+var ACT_SUBTYPES_BY_LABEL = {};
+function normalizeLabel(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/\s+/g,' ');}
+
 // Seeds — used only when Supabase is unreachable (validation phase)
 var SEED_OFFICES = [
   {id:'seed-1',name:'Cabinet Notarial Ionescu', city:'Timișoara',  notary:'Ana Golana',   email:'ionescu@acte.legal', phone:'0721 111 222',status:'activ',   since:'Ian 2026',address:'Str. Vasile Alecsandri nr. 1',cui:'RO45123456',website:'https://ionescu-notariat.ro',contact_name:'Ana Golana',     contact_role:'notar titular',contact_email:'ana.golana@ionescu-notariat.ro',contact_phone:'0721 111 223',subscription_status:'active', plan:'standard',billing_cycle:'monthly',current_period_end:'12 mai 2026',trial_ends_at:null},
@@ -1860,15 +1896,19 @@ function bootApp(user){
 }
 
 function loadAll(){
-  // Load offices + templates from Supabase; fall back to seeds if infra not yet live
+  // Load offices + templates + act_subtypes from Supabase; fall back to seeds if infra not yet live
   // v29: select aligned to real notary_offices schema (single-contact-person model
   // per master chat lock). Phantom columns (email/phone/notary_name/website/status)
   // removed; status now derived from lifecycle_status.
+  // v31: act_subtypes added so commitUpload() can resolve subtype_id (UUID FK) from
+  // the dashboard's display-label dropdown. Master chat lock (Q4 answer): option (a),
+  // dashboard reads act_subtypes directly via RLS policy act_subtypes_read.
   Promise.all([
     sb.from('notary_offices').select('id,name,city,address,contact_name,contact_email,contact_phone,lifecycle_status,plan,subscription_status,created_at'),
-    sb.from('office_templates').select('*').eq('status','active')
+    sb.from('office_templates').select('*').eq('status','active'),
+    sb.from('act_subtypes').select('id,act_type,subtype_key,label').eq('active',true)
   ]).then(function(results){
-    var offRes=results[0], tplRes=results[1];
+    var offRes=results[0], tplRes=results[1], subRes=results[2];
     if(offRes.error||!offRes.data||offRes.data.length===0){
       // Infra not yet live — use seeds
       setDbBanner(false,'Mod validare — date demonstrative (Supabase: infrastructură în pregătire)');
@@ -1899,12 +1939,43 @@ function loadAll(){
       // Cases: loaded per-office on demand (see loadCasesForOffice).
       // For KPI + today list we do a lightweight fetch of all cases once:
       CASES=SEED_CASES; // placeholder until cases table confirmed in schema
+      // v31: act_subtypes cache. Indexed two ways:
+      //   ACT_SUBTYPES_BY_ID[id] = {id, act_type, subtype_key, label}
+      //   ACT_SUBTYPES_BY_LABEL[act_type+'|'+normalizeLabel(label)] = same row
+      // The label normalization (lowercase + diacritic strip) lets us match the
+      // dashboard's hardcoded SUBTYPES display labels against act_subtypes.label
+      // even with minor whitespace/case drift. If a label miss happens, commitUpload()
+      // surfaces a clear error toast — preferable to inserting a wrong subtype_id.
+      ACT_SUBTYPES_BY_ID={};
+      ACT_SUBTYPES_BY_LABEL={};
+      if(subRes&&!subRes.error&&subRes.data){
+        subRes.data.forEach(function(s){
+          ACT_SUBTYPES_BY_ID[s.id]=s;
+          ACT_SUBTYPES_BY_LABEL[s.act_type+'|'+normalizeLabel(s.label)]=s;
+        });
+      }
+      // v31: office_templates schema dropped name/subtype(text)/placeholders/notes.
+      // Derive display fields client-side from act_subtypes lookup + filename.
+      // placeholders is intentionally empty — re-detection at upload time only.
       TEMPLATES=tplRes.error?[]:tplRes.data.map(function(t){
+        var sub=t.subtype_id?ACT_SUBTYPES_BY_ID[t.subtype_id]:null;
+        var subLabel=sub?sub.label:'—';
+        var displayName=(ACT_LABELS_SINGULAR[t.act_type]||t.act_type)+' — '+subLabel;
         return {
-          id:t.id, office_id:t.office_id, act_type:t.act_type, subtype:t.subtype,
-          name:t.name, storage_path:t.storage_path, placeholders:t.placeholders||[],
-          status:t.status, uploaded_at:t.uploaded_at?new Date(t.uploaded_at).toLocaleDateString('ro-RO',{day:'numeric',month:'short',year:'numeric'}):'—',
-          notes:t.notes||''
+          id:t.id, office_id:t.office_id, act_type:t.act_type,
+          subtype:subLabel,                  // display label (derived)
+          subtype_id:t.subtype_id,           // UUID FK (master's source of truth)
+          subtype_key:sub?sub.subtype_key:null,
+          name:displayName,                  // derived for UI
+          filename:t.filename,
+          storage_path:t.storage_path,
+          mime_type:t.mime_type,
+          size_bytes:t.size_bytes,
+          placeholders:[],                   // not stored in DB; re-detected on upload
+          status:t.status,
+          superseded_by:t.superseded_by,
+          uploaded_at:t.uploaded_at?new Date(t.uploaded_at).toLocaleDateString('ro-RO',{day:'numeric',month:'short',year:'numeric'}):'—',
+          notes:''                           // not stored in DB anymore
         };
       });
     }
@@ -2706,13 +2777,17 @@ function downloadRawIntake(rid){
 function restoreTemplate(tplId){
   var tpl=TEMPLATES.find(function(t){return t.id===tplId;});if(!tpl)return;
   var oid=tpl.office_id;
-  // Find any currently-active template on same slot — demote it
+  // v31: Find any currently-active template on same slot — demote it.
+  // Match on subtype_id (FK) when available; fall back to label match for
+  // legacy/seed rows that predate the subtype_id column.
   var existing=TEMPLATES.find(function(t){
-    return t.office_id===oid&&t.act_type===tpl.act_type&&t.subtype===tpl.subtype&&t.status==='active'&&t.id!==tplId;
+    if(t.office_id!==oid||t.act_type!==tpl.act_type||t.status!=='active'||t.id===tplId)return false;
+    if(tpl.subtype_id&&t.subtype_id) return t.subtype_id===tpl.subtype_id;
+    return t.subtype===tpl.subtype;
   });
   if(DB_LIVE){
     var chain=existing
-      ?sb.from('office_templates').update({status:'superseded'}).eq('id',existing.id)
+      ?sb.from('office_templates').update({status:'superseded',superseded_by:tplId}).eq('id',existing.id)
       :Promise.resolve({error:null});
     chain.then(function(){
       sb.from('office_templates').update({status:'active'}).eq('id',tplId).then(function(res){
@@ -3007,9 +3082,11 @@ function showReplaceNote(actType,subtype){
     return t.office_id===currentOfficeId&&t.act_type===actType&&t.subtype===subtype&&t.status==='active';
   });
   if(!existing){note.style.display='none';note.innerHTML='';return;}
+  // v31: placeholder count dropped — not stored in office_templates anymore.
+  // Show filename instead (more useful than the derived display name).
   var html='<div class="upload-replace-label">Înlocuiește versiunea activă</div>';
-  html+='<div class="upload-replace-body"><strong>'+h(existing.name)+'</strong></div>';
-  html+='<div class="upload-replace-meta">Încărcat '+h(existing.uploaded_at||'—')+' · '+existing.placeholders.length+' tokeni · va fi marcată ca superseded</div>';
+  html+='<div class="upload-replace-body"><strong>'+h(existing.filename||existing.name)+'</strong></div>';
+  html+='<div class="upload-replace-meta">Încărcat '+h(existing.uploaded_at||'—')+' · va fi marcată ca superseded</div>';
   note.innerHTML=html;
   note.style.display='block';
 }
@@ -3254,53 +3331,130 @@ function showValResult(ok,tokens,unknown,msg){
 }
 
 function commitUpload(actType,subtype,name,notes,tokens,done){
+  // v31: rewritten per master chat lock (Phase 4c.6 follow-up answers Q1-Q4).
+  //   Q1: bucket = 'office-assets' (was 'office-templates' — never existed in DB)
+  //   Q2: on supersede → DELETE old storage object (after DB row updated). Orphan
+  //       in storage is recoverable; broken state in DB is not.
+  //   Q3: office_templates schema dropped name/subtype(text)/placeholders/notes.
+  //       Insert columns now: office_id, act_type, subtype_id, filename,
+  //       storage_path, mime_type, size_bytes, status, uploaded_by.
+  //   Q4: subtype_id resolved from ACT_SUBTYPES_BY_LABEL cache (loaded by loadAll).
+  //       Storage path: {office_id}/{act_type}/{subtype_key}/{filename}.docx
+  // The notes/tokens parameters are kept in the signature for caller compatibility
+  // but no longer written to DB. Token validation pane stays advisory only.
   var oid=currentOfficeId;
-  var slug=subtypeSlug(subtype);
-  var storagePath=oid+'/'+actType+'/'+slug+'.docx';
+  var sub=ACT_SUBTYPES_BY_LABEL[actType+'|'+normalizeLabel(subtype)];
+  if(!sub){
+    soundErr();
+    showToast('Subtipul "'+subtype+'" nu este recunoscut în act_subtypes. Reîncarcă pagina sau contactează administratorul.');
+    if(done)done();
+    return;
+  }
+  var fileObj=selectedFile;
+  if(!fileObj){soundErr();showToast('Niciun fișier selectat.');if(done)done();return;}
+  var filename=fileObj.name||'template.docx';
+  var storagePath=oid+'/'+actType+'/'+sub.subtype_key+'/'+filename;
+  var mimeType=fileObj.type||'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  var sizeBytes=fileObj.size||0;
 
   if(DB_LIVE){
-    // 1. Upload file to storage (upsert)
-    sb.storage.from('office-templates').upload(storagePath,selectedFile,{upsert:true}).then(function(res){
-      if(res.error&&res.error.message!=='The resource already exists'){
+    // 1. Upload to office-assets (upsert true so re-uploading the SAME filename
+    //    in the same subtype folder overwrites cleanly. Replacements with a
+    //    DIFFERENT filename create a new path and the supersede step deletes
+    //    the prior path.)
+    sb.storage.from('office-assets').upload(storagePath,fileObj,{upsert:true,contentType:mimeType}).then(function(res){
+      if(res.error){
         soundErr();showToast('Eroare stocare: '+res.error.message);if(done)done();return;
       }
-      // 2. Mark existing active template as superseded if replacing
-      var existing=TEMPLATES.find(function(t){return t.office_id===oid&&t.act_type===actType&&t.subtype===subtype&&t.status==='active';});
-      var chain=existing
-        ?sb.from('office_templates').update({status:'superseded'}).eq('id',existing.id)
-        :Promise.resolve({error:null});
-      chain.then(function(){
-        // 3. Insert new row
-        sb.from('office_templates').insert({
-          office_id:oid,act_type:actType,subtype:subtype,name:name,
-          storage_path:storagePath,placeholders:tokens,
-          status:'active',notes:notes,uploaded_by:CURRENT_USER?CURRENT_USER.id:null
-        }).select().single().then(function(ins){
-          if(ins.error){soundErr();showToast('Eroare înregistrare: '+ins.error.message);if(done)done();return;}
-          soundFinalizat();
-          // update local cache
-          if(existing) existing.status='superseded';
-          TEMPLATES.push({
-            id:ins.data.id,office_id:oid,act_type:actType,subtype:subtype,
-            name:name,storage_path:storagePath,placeholders:tokens,
-            status:'active',uploaded_at:'azi',notes:notes
+      // 2. Insert new office_templates row (status='active'). Insert FIRST so
+      //    we have the new row's id for superseded_by linkage, then update
+      //    prior actives.
+      sb.from('office_templates').insert({
+        office_id:oid,
+        act_type:actType,
+        subtype_id:sub.id,
+        filename:filename,
+        storage_path:storagePath,
+        mime_type:mimeType,
+        size_bytes:sizeBytes,
+        status:'active',
+        uploaded_by:CURRENT_USER?CURRENT_USER.id:null
+      }).select().single().then(function(ins){
+        if(ins.error){
+          soundErr();showToast('Eroare înregistrare: '+ins.error.message);
+          if(done)done();return;
+        }
+        var newId=ins.data.id;
+        // 3. Find prior active rows for the same (office_id, act_type, subtype_id)
+        //    triple. Defensively expects 0 or 1 row (unique partial index on
+        //    status='active' should prevent multiples), but supersedes ALL.
+        var priors=TEMPLATES.filter(function(t){
+          return t.office_id===oid && t.act_type===actType
+              && t.subtype_id===sub.id && t.status==='active' && t.id!==newId;
+        });
+        // 4. Update prior rows: status='superseded', superseded_by=newId.
+        var updateChain=priors.length
+          ?sb.from('office_templates').update({status:'superseded',superseded_by:newId})
+              .in('id',priors.map(function(t){return t.id;}))
+          :Promise.resolve({error:null});
+        updateChain.then(function(updRes){
+          if(updRes&&updRes.error){
+            // Don't roll back — log + continue. Worst case: dashboard shows two
+            // active rows briefly until next loadAll cleans up.
+            console.warn('[commitUpload] supersede update failed',updRes.error);
+          }
+          // 5. Delete prior storage objects. Master lock: log warning on failure,
+          //    don't roll back — orphan is recoverable, broken DB is not. Skip
+          //    paths that match the new path (same filename → already overwritten).
+          var stalePaths=priors.map(function(t){return t.storage_path;})
+            .filter(function(p){return p && p!==storagePath;});
+          var deleteChain=stalePaths.length
+            ?sb.storage.from('office-assets').remove(stalePaths)
+            :Promise.resolve({error:null});
+          deleteChain.then(function(delRes){
+            if(delRes&&delRes.error){
+              console.warn('[commitUpload] orphan storage delete failed',delRes.error);
+            }
+            soundFinalizat();
+            // Update local TEMPLATES cache: mark priors superseded, push new row.
+            priors.forEach(function(t){t.status='superseded';t.superseded_by=newId;});
+            var displayName=(ACT_LABELS_SINGULAR[actType]||actType)+' — '+sub.label;
+            TEMPLATES.push({
+              id:newId, office_id:oid, act_type:actType,
+              subtype:sub.label, subtype_id:sub.id, subtype_key:sub.subtype_key,
+              name:displayName, filename:filename,
+              storage_path:storagePath, mime_type:mimeType, size_bytes:sizeBytes,
+              placeholders:tokens||[],   // local UI only — not persisted
+              status:'active', superseded_by:null,
+              uploaded_at:'azi', notes:''
+            });
+            finishUpload(displayName,newId);
+            if(done)done();
           });
-          finishUpload(name,ins.data.id);if(done)done();
         });
       });
     });
   } else {
-    // In-memory (validation phase)
-    var existing=TEMPLATES.find(function(t){return t.office_id===oid&&t.act_type===actType&&t.subtype===subtype&&t.status==='active';});
-    if(existing) existing.status='superseded';
-    var newId='t'+Date.now();
+    // In-memory (validation phase / seed mode) — no DB write
+    var prior=TEMPLATES.find(function(t){
+      return t.office_id===oid && t.act_type===actType
+          && t.subtype===subtype && t.status==='active';
+    });
+    if(prior) prior.status='superseded';
+    var memId='t'+Date.now();
+    var memDisplayName=(ACT_LABELS_SINGULAR[actType]||actType)+' — '+sub.label;
     TEMPLATES.push({
-      id:newId,office_id:oid,act_type:actType,subtype:subtype,
-      name:name,storage_path:storagePath,placeholders:tokens,
-      status:'active',uploaded_at:'azi',notes:notes
+      id:memId, office_id:oid, act_type:actType,
+      subtype:sub.label, subtype_id:sub.id, subtype_key:sub.subtype_key,
+      name:memDisplayName, filename:filename,
+      storage_path:storagePath, mime_type:mimeType, size_bytes:sizeBytes,
+      placeholders:tokens||[],
+      status:'active', superseded_by:null,
+      uploaded_at:'azi', notes:''
     });
     soundFinalizat();
-    finishUpload(name,newId);if(done)done();
+    finishUpload(memDisplayName,memId);
+    if(done)done();
   }
 }
 
@@ -3383,7 +3537,22 @@ function showPlaceholders(tplId,btn){
   // Collapse any other open panel elsewhere in the library
   var other=document.querySelector('.tpl-tokens-panel');
   if(other)other.remove();
-  // Build role-grouped token view
+  // v31: placeholders are no longer persisted in office_templates. They're only
+  // populated for templates uploaded in the current session. For DB-loaded rows
+  // (placeholders=[]) show an info note instead of rendering an empty panel.
+  var html='<div class="tpl-tokens-inner">';
+  if(!tpl.placeholders||tpl.placeholders.length===0){
+    html+='<div class="tpl-tokens-meta" style="color:var(--grey2);">Tokenii nu sunt stocați în baza de date — re-detectați la următoarea încărcare. Încărcat: '+h(tpl.uploaded_at||'—')+'</div>';
+    html+='</div>';
+    var emptyPanel=document.createElement('div');
+    emptyPanel.className='tpl-tokens-panel';
+    emptyPanel.dataset.tid=tplId;
+    emptyPanel.innerHTML=html;
+    row.parentNode.insertBefore(emptyPanel,row.nextSibling);
+    soundSelect();
+    return;
+  }
+  // Build role-grouped token view (only reached for in-session uploaded templates)
   var roles=ROLES_BY_ACT[tpl.act_type]||[];
   var caseTokens=CASE_TOKENS;
   function tokenRole(t){
